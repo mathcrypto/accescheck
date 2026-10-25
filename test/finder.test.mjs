@@ -81,7 +81,11 @@ test('finder searches immediately for specialty and place', async () => {
     assert.ok(result.results);
     assert.equal(result.state.radiusKm, 5);
     assert.ok(result.results.practices.every((p) => p.specialty === 'Médecin généraliste'));
-    assert.ok(result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5));
+    assert.ok(
+      result.results.practices.every(
+        (p) => p.distanceKm === null || p.distanceKm === undefined || p.distanceKm <= 5,
+      ),
+    );
   } finally {
     db.close();
   }
@@ -105,7 +109,7 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
     assert.ok(result.results?.practices?.length);
     const first = result.results.practices[0];
     assert.match(first.address, /75015/);
-    assert.ok(first.distanceKm == null || first.distanceKm <= 5);
+    assert.ok(first.distanceKm === null || first.distanceKm === undefined || first.distanceKm <= 5);
     assert.ok(first.sourceUrl?.includes('acceslibre'));
   } finally {
     db.close();
@@ -148,7 +152,11 @@ test('bastille paris keeps Bastille as origin within 5 km', async () => {
     assert.match(result.state.origin?.label || '', /bastille/i);
     assert.doesNotMatch(result.state.origin?.label || '', /^Paris$/);
     assert.equal(result.state.radiusKm, 5);
-    assert.ok(result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5));
+    assert.ok(
+      result.results.practices.every(
+        (p) => p.distanceKm === null || p.distanceKm === undefined || p.distanceKm <= 5,
+      ),
+    );
   } finally {
     db.close();
   }
@@ -170,7 +178,11 @@ test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
     assert.equal(result.state.placeQuery, 'denfert paris 14e');
     assert.match(result.state.origin?.label || '', /denfert/i);
     assert.equal(result.state.radiusKm, 5);
-    assert.ok(result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5));
+    assert.ok(
+      result.results.practices.every(
+        (p) => p.distanceKm === null || p.distanceKm === undefined || p.distanceKm <= 5,
+      ),
+    );
   } finally {
     db.close();
   }

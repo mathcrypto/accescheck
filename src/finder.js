@@ -5,11 +5,6 @@ const esc = (value) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
   );
 
-const ORDER_DIRECTORY = {
-  dentiste: 'https://www.ordre-chirurgiens-dentistes.fr/',
-  default: 'https://www.conseil-national.medecin.fr/annuaire',
-};
-
 const NEED_PHRASES = {
   fauteuil: 'Je me déplace en fauteuil électrique et j’ai besoin d’un passage de 90 cm.',
   audition: 'Je suis malentendant.',
@@ -42,12 +37,6 @@ const CRITERIA_LABELS = {
 let state = null;
 let lastOriginLabel = '';
 
-function orderDirectoryUrl(specialty) {
-  const text = String(specialty || '').toLowerCase();
-  if (/dentiste|odontolog|chirurgien dentiste/.test(text)) return ORDER_DIRECTORY.dentiste;
-  return ORDER_DIRECTORY.default;
-}
-
 function setStatus(text, { error = false } = {}) {
   const el = $('status');
   el.textContent = text || '';
@@ -66,7 +55,7 @@ function appendUserBubble(text) {
 function criteriaLines(next) {
   if (!next?.needs?.keys?.length) return [];
   return next.needs.keys.map((key) => {
-    if (key === 'width' && next.needs.minWidth != null)
+    if (key === 'width' && next.needs.minWidth !== null && next.needs.minWidth !== undefined)
       return `${CRITERIA_LABELS[key] || key} (passage ${next.needs.minWidth} cm)`;
     return CRITERIA_LABELS[key] || key;
   });

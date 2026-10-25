@@ -212,8 +212,8 @@ export function extractPlaceQuery(text) {
     { re: /\bvers\s+([^,.!?]+)/ },
     { re: /\bau\s+quartier\s+(?:de\s+)?([^,.!?]+)/ },
     { re: /\bdans le quartier\s+(?:de\s+)?([^,.!?]+)/ },
-    { re: /\bdans (?:la|le) ([a-z][a-z'\-]{2,40})\b/ },
-    { re: /\ba\s+(?!un\b|une\b)([a-z][a-z'\-]{2,40})\b/ },
+    { re: /\bdans (?:la|le) ([a-z][a-z'-]{2,40})\b/ },
+    { re: /\ba\s+(?!un\b|une\b)([a-z][a-z'-]{2,40})\b/ },
   ];
   for (const { re, kind } of patterns) {
     const match = normalized.match(re);
