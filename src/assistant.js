@@ -13,11 +13,26 @@ function node(tag, text, className = '') {
 }
 function turn(text, who = 'agent') {
   const bubble = node('div', '', 'bubble ' + who);
-  bubble.append(node('p', text));
+  bubble.append(node('p', who === 'user' ? 'Vous' : 'AccèsCheck', 'who'));
+  bubble.append(node('p', text, 'say'));
   $('thread').append(bubble);
   return bubble;
 }
+function setResultsMode(on, summary = '') {
+  $('searchPanel').classList.toggle('has-results', on);
+  $('chatFold').open = !on;
+  $('chatFoldSummary').hidden = !on;
+  if (on) {
+    $('chatFoldSummary').textContent = 'Voir la conversation et les critères';
+    $('resultsCriteria').hidden = !summary;
+    $('resultsCriteria').textContent = summary;
+  } else {
+    $('resultsCriteria').hidden = true;
+    $('resultsCriteria').textContent = '';
+  }
+}
 function clearResults() {
+  setResultsMode(false);
   $('resultsSection').hidden = true;
   $('results').replaceChildren();
   $('pagination').replaceChildren();
@@ -67,34 +82,16 @@ async function ask(input, choiceLabel = '') {
       if (event.type === 'status') working(true, event.text);
       if (event.type === 'reply') {
         streamed ||= turn('');
-        streamed.querySelector('p').append(document.createTextNode(event.delta));
+        streamed.querySelector('.say').append(document.createTextNode(event.delta));
       }
     });
     if (active !== controller) return;
     state = data.state;
-    const bubble = streamed || turn('');
-    bubble.querySelector('p').textContent =
-      (data.question ? '' : data.summary + '\n\n') + data.reply;
-    if (data.notice) bubble.append(node('p', data.notice, 'hint'));
-    if (data.question) {
-      bubble.dataset.question = data.question.id;
-      const choices = actions(
-        bubble,
-        data.question.options.map((option) => ({ id: option.value, label: option.label })),
-      );
-      [...choices.children].forEach((button, index) => {
-        const value = data.question.options[index].value;
-        button.onclick = () => {
-          if (value === '__free__') {
-            $('description').focus();
-            return;
-          }
-          ask({ answer: { field: data.question.id, value } }, data.question.options[index].label);
-        };
-      });
-    } else actions(bubble, data.actions || []);
-    if (data.results) {
+    const showingResults = Boolean(data.results);
+    if (showingResults) {
+      streamed?.remove();
       const result = data.results;
+      setResultsMode(true, data.summary || '');
       $('resultsSection').hidden = false;
       $('results').replaceChildren(
         ...result.results.map((practice) => practiceCard(practice, result.origin, state.notes)),
@@ -110,22 +107,48 @@ async function ask(input, choiceLabel = '') {
           (button.onclick = () => ask({ action: 'page', page: Number(pages[index].id) })),
       );
       $('resultsSummary').textContent =
+        (data.reply ? data.reply + ' ' : '') +
         result.total +
         ' fiche(s) · page ' +
         result.page +
-        '. Accessibilité, puis proximité, puis réputation si renseignée. Les inconnus restent à confirmer.';
+        '. Accessibilité, puis proximité, puis réputation si renseignée.';
       $('dataset').textContent =
         'Accès Libre · export du ' +
         new Date(result.dataset.exportedAt).toLocaleDateString('fr-FR') +
         '. ' +
         result.counts.knownObstaclesExcluded +
         ' obstacle(s) connu(s) exclu(s). Distances à vol d’oiseau, aucun itinéraire vérifié.';
+      $('chatStatus').textContent = '';
+      $('resultsTitle').focus({ preventScroll: true });
+      $('resultsSection').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    } else {
+      setResultsMode(false);
+      const bubble = streamed || turn('');
+      bubble.querySelector('.say').textContent =
+        (data.question ? '' : data.summary ? data.summary + '\n\n' : '') + data.reply;
+      if (data.notice) bubble.append(node('p', data.notice, 'hint'));
+      if (data.question) {
+        bubble.dataset.question = data.question.id;
+        const choices = actions(
+          bubble,
+          data.question.options.map((option) => ({ id: option.value, label: option.label })),
+        );
+        [...choices.children].forEach((button, index) => {
+          const value = data.question.options[index].value;
+          button.onclick = () => {
+            if (value === '__free__') {
+              $('description').focus();
+              return;
+            }
+            ask({ answer: { field: data.question.id, value } }, data.question.options[index].label);
+          };
+        });
+      } else actions(bubble, data.actions || []);
+      $('chatStatus').textContent = '';
+      const history = $('chatHistory');
+      history.scrollTop +=
+        bubble.getBoundingClientRect().top - history.getBoundingClientRect().top - 8;
     }
-    $('chatStatus').textContent = '';
-    const history = $('chatHistory');
-    const anchor = data.results ? $('resultsSection') : bubble;
-    history.scrollTop +=
-      anchor.getBoundingClientRect().top - history.getBoundingClientRect().top - 8;
   } catch (error) {
     if (active !== controller || error.name === 'AbortError') return;
     $('chatStatus').textContent = error.message;

@@ -12,8 +12,8 @@ The main reference is Minimal Mind: restrained typography, few controls and deli
 
 | Element    | Rule                                                                                                                                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Font       | `Helvetica Neue`, Helvetica, Arial, sans-serif. Body 14–15 px; helper text 12–13 px. Keep editable mobile text at least 16 px to avoid input zoom.                                                        |
-| Color      | White `#fff`, ink `#171717`, muted `#626262`, border `#e3e3e3`, surface `#f6f6f6`. Red `#bd292e` for the asterisk and focus/error accents.                                                                |
+| Font       | `Helvetica Neue`, Helvetica, Arial, sans-serif. Body 16 px; helper text 13–14 px. Keep editable mobile text at least 16 px to avoid input zoom. Prefer ink over muted for primary copy.                   |
+| Color      | White `#fff`, ink `#171717`, muted `#454545`, border `#e3e3e3`, surface `#f6f6f6`. Red `#bd292e` for the asterisk and focus/error accents.                                                                |
 | Header     | Fixed top left: AccèsCheck with a sharp red, six-arm asterisk. Translucent rectangle, white at 56%, Gaussian backdrop blur 8 px, subtle border and 3 px radius. Keep the mark sharp. Menu sits top right. |
 | Components | Thin borders, small corner radii, restrained shadows. Prefer native buttons, details and dialogs. Interactive targets at least 44 px tall.                                                                |
 | Spacing    | Use 4 px increments. Space separates tasks; it must not push essential actions out of reach.                                                                                                              |
@@ -28,7 +28,7 @@ Do not add decorative gradients, large rounded cards, extra accent colors, overs
 - Start with the hospital photo and a brief pitch. The fixed glass header stays visible while scrolling toward the writing field.
 - Below the photo, keep one chat composer. Ask one missing detail at a time, with short choices, free text and an unknown option. Hide previous choices after answering and show the selected answer in the conversation.
 - Keep a short editable recap and one confirmation action before search. No parallel criteria, location or specialty form.
-- Keep the conversation and result list in one scrollable region, with the composer available outside it. Preserve keyboard access to the history.
+- Mark request and answer turns clearly. Place confirmed cabinet results in a separate panel below the conversation, not inside message bubbles. Keep the composer available; fold the conversation when results appear. Preserve keyboard access to the history.
 - Results distinguish declared matches, unknowns and known obstacles, with source/date and qualified straight-line distance. Open consultation in a new tab, retaining the search in memory.
 - During actual work, show the shared six-arm red SVG at 20 px with a gentle glow/pulse and a text status. Stop/retry stays available. Provider names appear only when a request actually starts. Reduced motion and pause keep the icon static.
 - Reference supplied by the user: https://github.com/RomaGab/2026-mistral-llm-x-law-hackathon-in-paris-2 — central writing area, real preparation steps and a small animated brand mark. Reuse AccèsCheck components and colors.

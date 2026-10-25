@@ -59,37 +59,42 @@
         aria-label="Chat de recherche de cabinet"
         tabindex="-1"
       >
-        <div class="search-panel flow-protected">
+        <div id="searchPanel" class="search-panel flow-protected">
           <h2 class="search-intro" id="chatTitle">
             De quoi avez-vous besoin pour votre rendez-vous ?
           </h2>
-          <div
-            id="chatHistory"
-            class="chat-history"
-            tabindex="0"
-            role="region"
-            aria-label="Historique et résultats de la recherche"
-          >
-            <div id="thread" class="thread" role="log" aria-label="Conversation de recherche"></div>
-            <section
-              id="resultsSection"
-              class="results-area flow-protected"
-              aria-labelledby="resultsTitle"
-              hidden
+          <details id="chatFold" class="chat-fold">
+            <summary id="chatFoldSummary" hidden>Conversation de recherche</summary>
+            <div
+              id="chatHistory"
+              class="chat-history"
+              tabindex="0"
+              role="region"
+              aria-label="Conversation de recherche"
             >
-              <div class="results-heading">
-                <h2 id="resultsTitle" tabindex="-1">Les informations pour votre visite</h2>
-                <p id="resultsSummary">Vos critères d’abord. La proximité ensuite.</p>
-              </div>
-              <div id="resultStatus" role="status"></div>
-              <div id="results" aria-busy="false"></div>
-              <div id="pagination" class="actions"></div>
-              <p id="dataset" class="footnote">
-                Sources : Accès Libre pour les cabinets ; IGN pour les adresses. Les faits déclarés
-                restent visibles avec leur provenance.
-              </p>
-            </section>
-          </div>
+              <div id="thread" class="thread" role="log" aria-label="Échanges"></div>
+            </div>
+          </details>
+          <section
+            id="resultsSection"
+            class="results-area results-panel flow-protected"
+            aria-labelledby="resultsTitle"
+            hidden
+          >
+            <div class="results-heading">
+              <p class="results-kicker">Résultats · hors conversation</p>
+              <h2 id="resultsTitle" tabindex="-1">Les informations pour votre visite</h2>
+              <p id="resultsCriteria" class="results-criteria" hidden></p>
+              <p id="resultsSummary">Vos critères d’abord. La proximité ensuite.</p>
+            </div>
+            <div id="resultStatus" role="status"></div>
+            <div id="results" aria-busy="false"></div>
+            <div id="pagination" class="actions"></div>
+            <p id="dataset" class="footnote">
+              Sources : Accès Libre pour les cabinets ; IGN pour les adresses. Les faits déclarés
+              restent visibles avec leur provenance.
+            </p>
+          </section>
           <form id="descriptionForm">
             <label class="sr-only" for="description">Votre message</label>
             <div class="search-bar">

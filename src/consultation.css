@@ -12,7 +12,7 @@ body {
   color: var(--ink);
   background: var(--paper);
   font:
-    14px/1.5 'Helvetica Neue',
+    16px/1.55 'Helvetica Neue',
     Helvetica,
     Arial,
     sans-serif;
@@ -109,7 +109,7 @@ p {
 }
 .intro p {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 .intro .status {
@@ -133,7 +133,7 @@ p {
   padding: 8px 16px;
   border: 1px solid var(--ink);
   border-radius: 3px;
-  font-size: 13px;
+  font-size: 15px;
   text-decoration: none;
 }
 .primary {
@@ -156,7 +156,7 @@ p {
   padding: 8px 0;
   border: 0;
   background: none;
-  font-size: 12px;
+  font-size: 14px;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -168,7 +168,7 @@ p {
   margin: 0 0 4px;
   background: var(--surface);
   border-left: 2px solid var(--ink);
-  font-size: 12px;
+  font-size: 14px;
 }
 .status.error {
   border-left-color: var(--accent);
@@ -179,7 +179,7 @@ p {
   gap: 4px 12px;
   align-items: baseline;
   margin-bottom: 8px;
-  font-size: 12px;
+  font-size: 14px;
   max-height: 48px;
   overflow: auto;
   flex-wrap: wrap;
@@ -205,7 +205,7 @@ p {
   border: 0;
   border-bottom: 2px solid transparent;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 .tabs button[aria-selected='true'] {
   border-bottom-color: var(--ink);
@@ -243,7 +243,7 @@ p {
   padding-top: 8px;
 }
 .toolbar h2 {
-  font-size: 13px;
+  font-size: 15px;
   margin: 0;
 }
 .mic-status {
@@ -251,7 +251,7 @@ p {
   align-items: center;
   gap: 6px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .indicator {
   width: 6px;
@@ -279,7 +279,7 @@ p {
   gap: 8px;
   min-height: 44px;
   margin: 8px 0;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 .check-label input {
@@ -328,7 +328,7 @@ p {
   max-width: 360px;
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .empty h3 {
   margin-bottom: 4px;
@@ -346,7 +346,7 @@ p {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
 }
 .message p,
@@ -361,7 +361,7 @@ p {
   color: var(--muted);
 }
 .demo-label {
-  font-size: 11px;
+  font-size: 13px;
 }
 .demo-label:empty {
   display: none;
@@ -379,7 +379,7 @@ p {
 .composer h2 {
   grid-column: 1 / -1;
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
 }
 textarea,
 select,
@@ -391,7 +391,7 @@ input[type='url'] {
   border: 1px solid #888;
   border-radius: 3px;
   background: white;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.4;
 }
 #reply {
@@ -414,7 +414,7 @@ input[type='url'] {
 .quick-options > summary {
   min-height: 44px;
   padding: 8px 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 .quick-options {
   min-width: 0;
@@ -431,7 +431,7 @@ input[type='url'] {
   border: 0;
   background: none;
   text-align: left;
-  font-size: 12px;
+  font-size: 14px;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -443,7 +443,7 @@ input[type='url'] {
 }
 .notes-panel p,
 dialog p {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.6;
   color: var(--muted);
 }
@@ -458,7 +458,7 @@ dialog p {
 }
 label,
 .eyebrow {
-  font-size: 12px;
+  font-size: 14px;
 }
 .eyebrow {
   color: var(--muted);
@@ -466,14 +466,14 @@ label,
 }
 #browserSpeechOffer {
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 14px;
   padding: 4px 0;
   max-height: 100px;
   overflow: auto;
 }
 #browserSpeechNote {
   margin: 4px 0;
-  font-size: 11px;
+  font-size: 13px;
 }
 dialog {
   width: min(640px, calc(100% - 32px));
@@ -513,7 +513,7 @@ dialog textarea {
   gap: 16px;
 }
 .connection-badge {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
 }
 .platforms {
@@ -528,7 +528,7 @@ dialog textarea {
   border: 1px solid var(--line);
   border-radius: 3px;
   background: white;
-  font-size: 12px;
+  font-size: 14px;
 }
 .platform[aria-pressed='true'] {
   background: var(--ink);
@@ -547,17 +547,17 @@ dialog textarea {
 }
 .call-link-row small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
 }
 .call-guide > summary,
 #moreOptions > summary {
   min-height: 44px;
   padding-block: 10px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .call-steps {
   padding-left: 20px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .call-steps span {
   display: block;
@@ -568,7 +568,7 @@ dialog textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 .vision .message p,
@@ -596,10 +596,10 @@ dialog textarea {
     gap: 12px;
   }
   .tabs button {
-    font-size: 12px;
+    font-size: 14px;
   }
   .workspace-toolbar > button {
-    font-size: 11px;
+    font-size: 13px;
   }
   .caption-controls {
     flex-wrap: wrap;
@@ -612,7 +612,7 @@ dialog textarea {
     flex: 1;
   }
   .toolbar h2 {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--muted);
   }
   .toolbar {
@@ -626,7 +626,7 @@ dialog textarea {
     display: none;
   }
   .empty p {
-    font-size: 11px;
+    font-size: 13px;
   }
   .message p,
   .interim {
@@ -652,7 +652,7 @@ dialog textarea {
   }
   .composer-extras > .subtle,
   .quick-options > summary {
-    font-size: 11px;
+    font-size: 13px;
   }
   .platforms {
     grid-template-columns: 1fr;
