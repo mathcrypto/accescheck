@@ -1,13 +1,6 @@
 import './assistant.js';
 import './ambient.js';
 
-document.getElementById('description').addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' && !event.isComposing) {
-    event.preventDefault();
-    document.getElementById('local').click();
-  }
-});
-
 const motionButton = document.getElementById('pauseMotion');
 motionButton.addEventListener('click', () => {
   const paused = document.body.classList.toggle('motion-paused');

@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#ffffff" />
     <meta
       name="description"
-      content="Décrivez vos besoins, confirmez vos critères et préparez votre rendez-vous médical à Paris."
+      content="Décrivez vos besoins, confirmez vos critères et préparez votre rendez-vous médical."
     />
     <title>AccèsCheck · Préparer votre rendez-vous</title>
     <style>
@@ -44,8 +44,8 @@
           </div>
           <div class="intro-description">
             <p>
-              Décrivez vos besoins d’accès. Comparez les informations des cabinets à Paris et
-              préparez les questions à leur poser.
+              Décrivez vos besoins d’accès. Comparez les informations des cabinets et préparez les
+              questions à leur poser.
             </p>
             <a class="intro-link" href="#recherche"
               >Décrire mes besoins <span aria-hidden="true">↓</span></a
@@ -56,161 +56,54 @@
       <section
         id="recherche"
         class="search-stage"
-        aria-label="Recherche accompagnée de cabinet"
+        aria-label="Chat de recherche de cabinet"
         tabindex="-1"
       >
         <div class="search-panel flow-protected">
-          <form id="descriptionForm" data-local-default="true">
-            <label class="search-intro" for="description"
-              >De quoi avez-vous besoin pour votre rendez-vous&nbsp;?</label
-            >
+          <h2 class="search-intro" id="chatTitle">
+            De quoi avez-vous besoin pour votre rendez-vous ?
+          </h2>
+          <div id="thread" class="thread" role="log" aria-label="Conversation de recherche"></div>
+          <form id="descriptionForm">
+            <label class="sr-only" for="description">Votre message</label>
             <div class="search-bar">
               <input
                 id="description"
                 name="description"
                 type="text"
                 maxlength="2000"
-                placeholder="Décrivez vos besoins…"
+                placeholder="Un dentiste à Lyon, une entrée sans marche…"
                 autocomplete="off"
-                aria-describedby="descriptionHelp"
                 required
-              /><button
+                aria-describedby="descriptionHelp"
+              />
+              <button
                 id="local"
                 class="search-arrow"
-                type="button"
-                aria-label="Proposer mes critères avec les règles locales"
-                title="Proposer mes critères"
+                type="submit"
+                aria-label="Envoyer mon message"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" /></svg>
               </button>
             </div>
-            <p id="descriptionHelp" class="sr-only">
-              Décrivez des besoins fonctionnels, sans nom ni adresse. Les règles locales vous
-              proposent des critères à vérifier. Le lieu se choisit séparément.
-            </p>
           </form>
-          <div id="proposalStatus" class="notice" role="status" hidden></div>
-          <section id="review" class="review" aria-labelledby="reviewTitle" hidden>
-            <div class="section-heading">
-              <h2 id="reviewTitle" tabindex="-1">Vérifiez vos critères</h2>
-              <button id="clear" class="text-button" type="button">Tout effacer</button>
-            </div>
-            <p id="proposalSource" class="sr-only"></p>
-            <p class="hint">
-              Vérifiez les critères sélectionnés. Les informations manquantes resteront inconnues.
-            </p>
-            <fieldset id="criteria"><legend>Mes critères indispensables</legend></fieldset>
-            <div class="field" id="widthField" hidden>
-              <label for="minWidth">Largeur de passage nécessaire (cm)</label
-              ><input
-                id="minWidth"
-                form="searchForm"
-                type="number"
-                min="40"
-                max="200"
-                step="1"
-                placeholder="À préciser, jamais supposée"
-              /><small
-                >Ce champ sert lorsque le critère « Largeur de la porte d’entrée » est coché.</small
+          <p id="chatStatus" class="hint" role="status"></p>
+          <div class="chat-controls">
+            <button id="clear" class="text-button" type="button">Tout effacer</button>
+            <details class="ai-option">
+              <summary>Assistance OpenAI</summary>
+              <p id="descriptionHelp" class="privacy">
+                La recherche locale reste disponible. Avec votre accord, les messages de besoins
+                sont transmis à OpenAI. Aucun texte n’est enregistré par l’application. Ne donnez
+                pas votre nom ni vos coordonnées.
+              </p>
+              <label class="checkbox"
+                ><input id="consent" type="checkbox" />J’accepte l’envoi de mes besoins à
+                OpenAI.</label
               >
-            </div>
-            <ul id="questions" class="questions"></ul>
-          </section>
-          <form id="searchForm" class="search-settings" hidden>
-            <p id="searchStatus" class="notice" role="status" tabindex="-1" hidden></p>
-            <label class="checkbox"
-              ><input id="confirmed" type="checkbox" required />J’ai vérifié les critères et je
-              confirme cette recherche.</label
-            >
-            <button id="search" class="primary" type="submit" disabled>
-              Confirmer mes critères et chercher <span aria-hidden="true">↗</span>
-            </button>
-            <p id="searchHelp" class="hint">
-              Commencez par décrire vos besoins ou choisir vos critères.
-            </p>
-          </form>
-          <details id="advancedSearch" class="advanced">
-            <summary>
-              Lieu, spécialité et autres options
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
-            </summary>
-            <div class="advanced-body">
-              <h2>Où et auprès de qui&nbsp;?</h2>
-              <div class="settings-grid">
-                <div class="field">
-                  <label for="specialty">Type de professionnel</label
-                  ><select id="specialty" form="searchForm">
-                    <option value="">Toutes les spécialités disponibles</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="radius">Distance maximale à vol d’oiseau</label
-                  ><select id="radius" form="searchForm">
-                    <option value="">Sans limite</option>
-                    <option value="1">1 km</option>
-                    <option value="3">3 km</option>
-                    <option value="5">5 km</option>
-                    <option value="10">10 km</option>
-                  </select>
-                </div>
-              </div>
-              <div class="field">
-                <label for="location"
-                  >Mon point de départ <span class="optional">facultatif</span></label
-                >
-                <div class="location-row">
-                  <input
-                    id="location"
-                    form="searchForm"
-                    maxlength="200"
-                    placeholder="Une adresse ou un quartier"
-                    autocomplete="off"
-                    aria-describedby="locationPrivacy"
-                  /><button id="findLocation" class="secondary" type="button">Trouver</button>
-                </div>
-                <small id="locationPrivacy"
-                  >IGN traite le lieu séparément. Nous ne l’envoyons pas à OpenAI. La distance à vol
-                  d’oiseau ne garantit pas un itinéraire praticable.</small
-                >
-              </div>
-              <div id="locationChoices" aria-live="polite"></div>
-              <p id="origin" class="origin" hidden></p>
-              <button id="removeOrigin" class="text-button" type="button" hidden>
-                Retirer ce point de départ
-              </button>
-              <section class="interpretation" aria-labelledby="interpretationTitle">
-                <div class="section-heading">
-                  <h2 id="interpretationTitle">Vos critères de recherche</h2>
-                </div>
-
-                <button id="manual" class="text-button" type="button">
-                  Choisir mes critères moi-même
-                </button>
-                <details class="ai-option">
-                  <summary>Proposer les critères avec l’IA</summary>
-                  <p id="descriptionPrivacy" class="privacy">
-                    Avec l’IA, votre description constitue une information de santé transmise à
-                    OpenAI. Notre application ne l’enregistre pas. Le lieu, les cabinets et leur
-                    classement ne sont pas transmis au modèle.
-                  </p>
-                  <label id="consentLabel" class="checkbox"
-                    ><input id="consent" type="checkbox" form="descriptionForm" />J’accepte l’envoi
-                    de cette description à OpenAI pour proposer des critères.</label
-                  >
-                  <button
-                    id="translate"
-                    class="secondary"
-                    type="submit"
-                    form="descriptionForm"
-                    disabled
-                  >
-                    Proposer mes critères avec l’IA
-                  </button>
-                  <p id="aiStatus" class="hint" role="status">Vérification de l’assistance IA…</p>
-                </details>
-              </section>
-            </div>
-          </details>
+              <p id="aiStatus" class="hint">Vérification de l’assistance…</p>
+            </details>
+          </div>
         </div>
       </section>
       <section

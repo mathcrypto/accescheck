@@ -742,3 +742,49 @@ summary,
     display: none;
   }
 }
+
+/* Chat: the composer stays available throughout the search. */
+.thread {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.thread:empty {
+  display: none;
+}
+.search-stage:has(.thread:not(:empty)) {
+  align-content: start;
+}
+.bubble {
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.bubble p {
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+}
+.bubble.user {
+  justify-self: end;
+  max-width: 90%;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-radius: 3px;
+}
+.chat-choices,
+.chat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: start;
+}
+.chat-controls {
+  margin-top: 16px;
+  justify-content: space-between;
+}
+.chat-controls details {
+  max-width: 100%;
+}
+.chat-choices button {
+  min-height: 44px;
+}

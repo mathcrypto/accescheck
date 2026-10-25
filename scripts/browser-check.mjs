@@ -33,14 +33,7 @@ try {
       .locator('#description')
       .fill('Je ne suis pas en fauteuil, mais je suis malentendant.');
     await page.locator('#local').click();
-    assert.deepEqual(
-      await page
-        .locator('#criteria input:checked')
-        .evaluateAll((inputs) => inputs.map((input) => input.value)),
-      ['hearing'],
-    );
-    await page.locator('#confirmed').check();
-    await page.locator('#search').click();
+    await page.getByRole('button', { name: 'Chercher', exact: true }).click();
     await page.locator('.practice-card').first().waitFor();
     const popupPromise = page.waitForEvent('popup');
     await page

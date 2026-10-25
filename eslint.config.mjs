@@ -26,6 +26,7 @@ export default defineConfig([
     files: [
       'src/companion.js',
       'src/assistant.js',
+      'src/search-results.js',
       'src/home.js',
       'src/ambient.js',
       'scripts/live-reload-client.js',
