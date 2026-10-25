@@ -4,8 +4,8 @@ import {
   searchTools,
   toolSchemas,
   searchInstructions,
-  searchModel,
 } from './search-contract.mjs';
+import { defaultModel } from './needs-agent.mjs';
 import { geocodePlace } from '../geography.mjs';
 import { findPractices, validateRequirements } from '../discovery.mjs';
 import { createPracticeStore } from '../practice-store.mjs';
@@ -110,7 +110,7 @@ export function searchConfig(env = {}) {
   return {
     available: !!env.OPENAI_API_KEY,
     provider: 'OpenAI',
-    model: env.OPENAI_SEARCH_MODEL || searchModel,
+    model: env.OPENAI_SEARCH_MODEL || env.OPENAI_MODEL || defaultModel,
   };
 }
 export async function runSearchAgent(
@@ -344,7 +344,7 @@ export async function runSearchAgent(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: env.OPENAI_SEARCH_MODEL || searchModel,
+        model: searchConfig(env).model,
         store: false,
         instructions: searchInstructions,
         input: history,
