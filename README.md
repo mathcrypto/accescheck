@@ -21,6 +21,17 @@ Open http://127.0.0.1:4173:
 
 The local preview recompiles source changes and reloads an idle homepage. Entered fields and consultation sessions defer automatic refresh to preserve their contents. Restart after changing the server or reload tooling. The Chrome extension has been removed; the consultation page runs alongside an appointment website.
 
+## Repository and parallel work
+
+`dev-day/accescheck` is the canonical repository for the frontend, backend, database tooling and MCP code. Parallel tasks use temporary Git worktrees rather than independent copies:
+
+```sh
+git fetch origin
+git worktree add -b fix/my-task ../.worktrees/accescheck/my-task origin/main
+```
+
+Give each active worktree its own preview port and local database; the canonical companion preview stays on port 4180. After the branch is merged, save any remaining work and useful reports, stop its preview server, then run `git worktree remove ../.worktrees/accescheck/my-task`. If installed dependencies or other ignored files prevent removal, inspect and preserve anything useful before using `--force`. See [AGENTS.md](AGENTS.md) for the working rules.
+
 ## Search and accessibility evidence
 
 Practice data is imported from the official Accès Libre export into SQLite locally (and a verified read-only snapshot on Vercel). Sync with `npm run data:sync`. The current medical export covers **France** (about **19 750** practices; see [data/source.json](data/source.json) and [Vercel deployment](docs/vercel.md)). Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0. Places use the IGN address API for France. Contact actions prefer a verified [Doctolib](https://www.doctolib.fr/) profile from Accès Libre when present, otherwise the cabinet website/contact page or Accès Libre fiche. The app does not scrape reviews or rank by reputation.

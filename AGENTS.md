@@ -17,6 +17,13 @@ These instructions apply to this repository. It is a separate application from t
 - `src/handler.mjs` serves HTTP routes. `storage/` and `db/` manage public practice data. The Vercel function receives a read-only snapshot; see [docs/vercel.md](docs/vercel.md) when changing deployment or data loading.
 - `prototype/` and `mcp/` implement the local fictional agent workflow. Keep its controls in consultation settings and keep real patient messages outside that bridge.
 
+## Repository and parallel work
+
+- Keep one canonical repository in `dev-day/accescheck`, containing the frontend, backend, database tooling and MCP code together.
+- For parallel work, use a Git worktree and a dedicated branch per task under `dev-day/.worktrees/accescheck/<task>`. Use a separate preview port and local database for each active worktree. Keep the main preview on port 4180.
+- Before removing a finished worktree, verify that its branch is merged into `main`, its tracked and untracked source changes are saved, and its useful ignored artifacts are preserved in the canonical repository. Stop only that worktree's server, then use `git worktree remove` to clean up its directory and Git metadata.
+- Keep credentials in the canonical local configuration; create each worktree's required configuration deliberately without copying or committing secrets. Keep temporary worktrees only while their tasks are active.
+
 ## Privacy and evidence
 
 - Never commit or print keys, `.env` contents, tokens or private meeting links.
