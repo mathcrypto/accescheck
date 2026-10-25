@@ -21,16 +21,22 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' });
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    page.on('dialog', async (dialog) => {
+      errors.push(dialog.message());
+      await dialog.dismiss();
+    });
     await page.route('**/__dev/client.js*', (route) =>
       route.fulfill({ contentType: 'text/javascript', body: '' }),
     );
     await page.route('**/api/ai-config', (route) => route.fulfill({ json: { available: false } }));
     let showResults = false;
+    let unsafeReply = false;
     await page.route('**/api/chat', (route) =>
       route.fulfill({
         json: {
           state: {},
-          summary: '',
+          summary:
+            'Dentiste, chirurgien dentiste\nLyon 3e Arrondissement · 69003\n3 km à vol d’oiseau\nEntrée sans marche',
           results: showResults
             ? {
                 results: [],
@@ -41,9 +47,11 @@ try {
                 counts: { knownObstaclesExcluded: 0 },
               }
             : null,
-          reply: showResults
-            ? 'Aucun cabinet ne correspond à cette recherche.'
-            : 'Quel lieu trouvé par IGN correspond à votre recherche ?',
+          reply: unsafeReply
+            ? '### <img src=x onerror=alert(1)>\n\n- **<script>alert(1)</script>** : texte\n\n3. <a href=javascript:alert(1)>Lien</a>'
+            : showResults
+              ? 'Aucun cabinet ne correspond à cette recherche.'
+              : '### Informations à préciser\n\n- **Entrée** : sans marche demandée\n- **Largeur** : non précisée\n\n1. Choisissez le lieu.\n2. Confirmez les critères.',
           question: showResults
             ? null
             : {
@@ -78,17 +86,25 @@ try {
       'static',
       'The composer must follow the conversation instead of floating over it',
     );
-    for (const message of await page.locator('.bubble').all()) {
-      assert.deepEqual(
-        await message.evaluate((el) => {
-          const style = getComputedStyle(el);
-          return { background: style.backgroundColor, border: style.borderTopWidth };
-        }),
-        { background: 'rgba(0, 0, 0, 0)', border: '0px' },
-        'Conversation messages have no bubble background or border',
-      );
-    }
+    const user = page.locator('.bubble.user').last();
     const latest = page.locator('.bubble.agent').last();
+    const userBox = await user.boundingBox();
+    const agentBox = await latest.boundingBox();
+    assert.ok(userBox.x > agentBox.x, 'User messages sit on the right');
+    assert.equal(
+      await user.evaluate((el) => getComputedStyle(el).backgroundColor),
+      'rgb(246, 246, 246)',
+    );
+    assert.equal(
+      await latest.evaluate((el) => getComputedStyle(el).backgroundColor),
+      'rgba(0, 0, 0, 0)',
+      'Agent replies have no bubble background',
+    );
+    assert.equal(await latest.locator('.chat-recap li').count(), 4);
+    assert.equal(await latest.locator('.say ul > li').count(), 2);
+    assert.equal(await latest.locator('.say ol > li').count(), 2);
+    assert.equal(await latest.locator('.say strong').first().innerText(), 'Entrée');
+    assert.equal(await latest.locator('.say h3').innerText(), 'Informations à préciser');
     const bounds = await latest.boundingBox();
     const historyHeight = await page.locator('#chatHistory').evaluate((el) => el.clientHeight);
     await page.screenshot({ path: `output/chat-layout/question-${width}x${height}.png` });
@@ -133,6 +149,20 @@ try {
       'Results must not pin the composer to the top of the screen',
     );
     await page.screenshot({ path: `output/chat-layout/results-${width}x${height}.png` });
+    showResults = false;
+    unsafeReply = true;
+    await page.locator('#description').fill('Vérifier le rendu du texte');
+    const unsafeResponse = page.waitForResponse((r) => r.url().endsWith('/api/chat'));
+    await page.locator('#description').press('Enter');
+    await unsafeResponse;
+    await page.waitForFunction(
+      () => document.getElementById('thread').getAttribute('aria-busy') === 'false',
+    );
+    const unsafe = page.locator('.bubble.agent').last().locator('.say');
+    assert.equal(await unsafe.locator('img, script, a').count(), 0);
+    assert.equal(await unsafe.locator('strong').innerText(), '<script>alert(1)</script>');
+    assert.equal(await unsafe.locator('ol li').getAttribute('value'), '3');
+    assert.match(await unsafe.innerText(), /onerror=alert/);
     await page.locator('#clear').click();
     assert.equal(await page.locator('.bubble').count(), 0);
     assert.equal(await page.locator('#description').inputValue(), '');
