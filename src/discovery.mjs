@@ -176,7 +176,6 @@ export async function findPractices(database, input) {
   )
     throw new Error('Confirmez vos critères avant la recherche.');
   const needs = validateRequirements(input.needs);
-  if (!needs.keys.length) throw new Error('Sélectionnez au moins un critère.');
   const origin =
     input.origin === null || input.origin === undefined ? null : coordinates(input.origin);
   if (

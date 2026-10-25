@@ -2,6 +2,7 @@ import { practiceTools, runPracticeTool, practiceSummary } from './practice-tool
 import { createPracticeStore, DataUnavailable } from './practice-store.mjs';
 import { speechConfig, generateSpeech } from './speech.mjs';
 import { finderConfig, geocodeQueryFor, runFinder } from './agents/finder.mjs';
+import { runDialogue } from './agents/dialogue.mjs';
 import { findPractices, geocode } from './discovery.mjs';
 
 const headers = {
@@ -130,6 +131,7 @@ export function createHandler({ home, consultationPage }) {
         const body = await readJson(request, 12000);
         if (url.pathname === '/api/locations')
           return json({ locations: await geocode(geocodeQueryFor(body.query)) });
+        if (url.pathname === '/api/chat') return json(await runDialogue(body, env));
         if (url.pathname === '/api/agent') return json(await runFinder(body, env));
         if (url.pathname === '/api/discover') return json(await findPractices(env.DB, body));
         if (url.pathname === '/api/speech') return generateSpeech(body, env);
