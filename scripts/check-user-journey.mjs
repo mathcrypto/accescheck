@@ -37,9 +37,11 @@ try {
     await check(`${width}: compact review and retained search`, async () => {
       await page.goto(base);
       await page.locator('.intro-link').click();
-      await page.locator('#description').fill('Je suis malentendant.');
+      await page
+        .locator('#description')
+        .fill('Généraliste sans contrainte géographique, équipement auditif.');
       await page.locator('#description').press('Enter');
-      await page.getByRole('button', { name: 'Chercher', exact: true }).click();
+      await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
       const link = page
         .locator('.practice-card')
         .first()
@@ -52,7 +54,7 @@ try {
       await popup.waitForLoadState();
       await popup.locator('#practiceContext').waitFor();
       await popup.close();
-      assert.match(await page.locator('#thread').innerText(), /Je suis malentendant/);
+      assert.match(await page.locator('#thread').innerText(), /équipement auditif/);
       assert.ok(await page.locator('.practice-card').count());
     });
     await check(`${width}: missing needs keep the conversation editable`, async () => {
@@ -68,12 +70,16 @@ try {
     await check(`${width}: correcting needs invalidates previous results`, async () => {
       await page.goto(base + '/#recherche');
       await page.locator('#clear').click();
-      await page.locator('#description').fill('Fauteuil roulant');
+      await page
+        .locator('#description')
+        .fill('Généraliste sans contrainte géographique, fauteuil roulant');
       await page.locator('#local').click();
       await page.locator('.bubble.agent').waitFor();
       assert.equal(await page.locator('.practice-card').count(), 0);
       assert.match(await page.locator('#thread').innerText(), /largeur|passage/i);
-      await page.locator('#description').fill('Je suis malentendant.');
+      await page
+        .locator('#description')
+        .fill('Généraliste sans contrainte géographique, équipement auditif.');
       await page.locator('#local').click();
       await page.locator('.bubble.agent').nth(1).waitFor();
       assert.ok(await page.locator('#description').isEditable());

@@ -48,3 +48,11 @@ Revue indépendante : approuvée après corrections pagination, reprise et rayon
 Tests HTTP rouges puis verts ; mutation du garde de redirection détectée.
 107 tests Node, 4 tests Python, format/lint/build/artifact réussis.
 Chromium : recherche locale, négation, consultation et effacement sur quatre tailles.
+
+## Revue — needs-dialogue
+
+Revue indépendante approuvée après régressions ajoutées : combiner les besoins, corriger un groupe sans supprimer les autres, inconnus sans filtre présumé, ne pas redemander une communication déjà précisée.
+123 tests Node et 4 Python réussis ; mutation du garde de vision inconnue détectée.
+Playwright : IGN contrôlé, erreur de largeur, unités, questions inconnues, correction et consentement ; 45 régressions consultation/chat passent. Aucun appel payant utilisé.
+
+Référence ajoutée par l’utilisateur : https://github.com/RomaGab/2026-mistral-llm-x-law-hackathon-in-paris-2 ; reprendre la hiérarchie du champ, les étapes visibles et le signe animé dans les lots résultats/activité, avec les composants AccèsCheck.

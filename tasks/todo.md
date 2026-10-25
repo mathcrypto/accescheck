@@ -1,7 +1,7 @@
 # Réalisation du chat AccèsCheck
 
 - [x] chat-only-entry : entrée unique, redirections, photo/consultation conservées.
-- [ ] needs-dialogue : questions manquantes, QCM/libre/inconnu, correction, confirmation, consentement/repli.
+- [x] needs-dialogue : questions manquantes, QCM/libre/inconnu, correction, confirmation, consentement/repli.
 - [ ] practice-results : preuves, inconnus, distance, classement, pagination, consultation.
 - [ ] agent-activity : flux réel, interruption/reprise, statut et mouvement réduit.
 - [ ] review-sources : recherche multi-source bornée, citations, identité, erreurs.

@@ -13,7 +13,12 @@ const envFile = new URL('../.env', import.meta.url);
 if (direct && existsSync(envFile)) process.loadEnvFile(fileURLToPath(envFile));
 const bridge = createSessionBridge();
 const database = openSqlite(process.env.DATABASE_PATH);
-const workerEnv = { DB: database, DATA_IMPORT_TOKEN: process.env.DATA_IMPORT_TOKEN };
+const workerEnv = {
+  DB: database,
+  DATA_IMPORT_TOKEN: process.env.DATA_IMPORT_TOKEN,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || process.env.openai_api_key,
+  OPENAI_MODEL: process.env.OPENAI_MODEL || process.env.openai_model,
+};
 const agent = createOpenAIAgent({ bridge });
 const live = direct ? await createLiveReload() : null;
 const port = Number(process.env.MCP_TEST_PORT || 4180);

@@ -1,4 +1,3 @@
-import { criteria } from './core.mjs';
 import { practiceCard } from './search-results.js';
 const $ = (id) => document.getElementById(id);
 let state = null;
@@ -52,58 +51,51 @@ async function ask(input) {
   $('thread').setAttribute('aria-busy', 'true');
   if (input.message) turn(input.message, 'user');
   try {
-    if (input.action === 'confirm') {
-      const result = await post(
-        '/api/discover',
-        {
-          confirmed: true,
-          needs: state.needs,
-          specialty: state.specialty,
-          origin: state.origin,
-          radiusKm: state.radiusKm ?? (state.origin ? 5 : null),
-          page: input.page || 1,
-        },
-        active.signal,
+    const data = await post(
+      '/api/chat',
+      { ...input, state, consent: $('consent').checked },
+      active.signal,
+    );
+    if (active !== controller) return;
+    state = data.state;
+    const bubble = turn((data.question ? '' : data.summary + '\n\n') + data.reply);
+    if (data.notice) bubble.append(node('p', data.notice, 'hint'));
+    if (data.question) {
+      bubble.dataset.question = data.question.id;
+      const choices = actions(
+        bubble,
+        data.question.options.map((option) => ({ id: option.value, label: option.label })),
       );
-      if (active !== controller) return;
+      [...choices.children].forEach((button, index) => {
+        const value = data.question.options[index].value;
+        button.onclick = () => {
+          if (value === '__free__') {
+            $('description').focus();
+            return;
+          }
+          ask({ answer: { field: data.question.id, value } });
+        };
+      });
+    } else actions(bubble, data.actions || []);
+    if (data.results) {
+      const result = data.results;
       $('resultsSection').hidden = false;
       $('results').replaceChildren(
         ...result.results.map((practice) => practiceCard(practice, result.origin)),
       );
-      const page = input.page || 1;
+      const page = result.page;
       const pages = [];
       if (page > 1) pages.push({ label: '← Précédent', id: String(page - 1) });
       if (page * result.pageSize < result.total)
         pages.push({ label: 'Résultats suivants →', id: String(page + 1) });
       const navigation = actions($('pagination'), pages);
-      [...navigation.children].forEach((button, index) => {
-        button.onclick = () => ask({ action: 'confirm', page: Number(pages[index].id) });
-      });
+      [...navigation.children].forEach(
+        (button, index) =>
+          (button.onclick = () => ask({ action: 'page', page: Number(pages[index].id) })),
+      );
       $('resultsSummary').textContent =
         result.total +
         ' fiche(s). Accessibilité, puis proximité. Les inconnus restent à confirmer.';
-      turn(
-        result.total
-          ? 'Voici les cabinets correspondant à votre recherche. Vous pouvez préciser ou corriger votre demande.'
-          : 'Aucune fiche pour ces critères. Vous pouvez préciser ou élargir votre demande.',
-      );
-    } else {
-      const data = await post(
-        '/api/agent',
-        { ...input, state, consent: $('consent').checked, reviewOnly: true },
-        active.signal,
-      );
-      if (active !== controller) return;
-      state = data.state;
-      const summary = [
-        state.specialty,
-        state.origin?.label || state.placeQuery,
-        ...state.needs.keys.map((key) => criteria[key].label),
-      ]
-        .filter(Boolean)
-        .join(' · ');
-      const bubble = turn(summary + '\n' + data.reply);
-      actions(bubble, data.actions || []);
     }
     $('chatStatus').textContent = '';
   } catch (error) {

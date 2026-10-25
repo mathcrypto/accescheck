@@ -175,10 +175,11 @@ try {
   assert.deepEqual(errors, []);
   await page.locator('#clearSession').click();
   await page.goto(base + '/#recherche');
-  await page.locator('#description').fill('Je suis malentendant.');
+  await page
+    .locator('#description')
+    .fill('Généraliste sans contrainte géographique, équipement auditif.');
   await page.locator('#local').click();
-  await page.locator('#confirmed').check();
-  await page.locator('#search').click();
+  await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
   await page.locator('.practice-card').first().waitFor();
   const href = await page
     .getByRole('link', { name: /Préparer l’échange/ })

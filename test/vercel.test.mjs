@@ -100,3 +100,17 @@ test('Vercel exposes no local bridge, development client, import token or paid A
     403,
   );
 });
+test('Vercel can enable only the search provider, keeping secrets and other integrations private', async () => {
+  const configured = createVercelHandler(database, {
+    OPENAI_API_KEY: 'private-search-key',
+    OPENAI_MODEL: 'test-model',
+    ELEVENLABS_API_KEY: 'must-not-propagate',
+    DATA_IMPORT_TOKEN: 'must-not-propagate',
+  });
+  const config = await (await configured.fetch(new Request(origin + '/api/ai-config'))).json();
+  assert.equal(config.available, true);
+  assert.equal(config.model, 'test-model');
+  assert.ok(!JSON.stringify(config).includes('private-search-key'));
+  const voice = await (await configured.fetch(new Request(origin + '/api/voice-config'))).json();
+  assert.equal(voice.elevenlabsAvailable, false);
+});

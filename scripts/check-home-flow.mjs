@@ -4,39 +4,56 @@ import { createServer } from 'node:http';
 import { mkdir } from 'node:fs/promises';
 import worker from '../worker/index.js';
 import { createTestDatabase, fixtures } from '../test/helpers/database.mjs';
-
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const origin = {
-  label: '99 Rue de Rivoli 75001 Paris',
-  latitude: 48.86,
-  longitude: 2.34,
-  approximate: false,
-};
+const origin = { label: 'Lyon 69001', latitude: 45.767, longitude: 4.835, approximate: true };
 const records = fixtures.map((record, index) => ({
   ...record,
   location: { latitude: origin.latitude + index * 0.001, longitude: origin.longitude },
-  evidence: {
-    ...record.evidence,
-    hearing: {
-      value: index === 0 ? true : index === 1 ? null : false,
-      status: index === 1 ? 'unknown' : 'declared',
-      date: null,
-    },
-  },
 }));
 const database = await createTestDatabase(records);
+const upstream = [];
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (url, options) => {
+  if (new URL(url).hostname === 'data.geopf.fr')
+    return Response.json({
+      features: [
+        {
+          geometry: { coordinates: [origin.longitude, origin.latitude] },
+          properties: { label: origin.label, postcode: '69001', type: 'municipality' },
+        },
+      ],
+    });
+  assert.equal(url, 'https://api.openai.com/v1/responses');
+  upstream.push(JSON.parse(options.body));
+  return Response.json({
+    status: 'completed',
+    output: [
+      {
+        type: 'message',
+        content: [
+          {
+            type: 'output_text',
+            text: JSON.stringify({ keys: ['hearing'], minWidth: null, questions: [] }),
+          },
+        ],
+      },
+    ],
+  });
+};
+const requests = [];
 const server = createServer(async (request, response) => {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   const body = Buffer.concat(chunks);
+  if (request.url === '/api/chat') requests.push(JSON.parse(body.toString()));
   const result = await worker.fetch(
     new Request('http://' + request.headers.host + request.url, {
       method: request.method,
       headers: request.headers,
       ...(body.length ? { body, duplex: 'half' } : {}),
     }),
-    { DB: database },
+    { DB: database, OPENAI_API_KEY: 'browser-test-key' },
   );
   response.writeHead(result.status, Object.fromEntries(result.headers));
   response.end(Buffer.from(await result.arrayBuffer()));
@@ -51,55 +68,30 @@ const page = await browser.newPage({
   viewport: { width: 1440, height: 1000 },
   reducedMotion: 'no-preference',
 });
-const errors = [],
-  searches = [],
-  proposals = [];
+const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
-page.on('request', (request) => {
-  if (!request.url().endsWith('/api/agent')) return;
-  const body = request.postDataJSON();
-  if (body?.action === 'search') searches.push(body);
-  else if (body?.reviewOnly) proposals.push(body);
-});
-await page.route('**/api/ai-config', (route) =>
-  route.fulfill({ json: { available: true, model: 'test-only' } }),
-);
-await page.route('**/api/agent', async (route) => {
-  const body = route.request().postDataJSON();
-  if (body?.consent === true && body?.reviewOnly === true) {
-    return route.fulfill({
-      json: {
-        reply: 'Confirmez pour lancer la recherche, ou corrigez votre message.',
-        steps: [],
-        state: {
-          needs: { keys: ['hearing'], minWidth: null },
-          specialty: '',
-          origin: null,
-          placeQuery: '',
-          radiusKm: null,
-          source: 'openai',
-        },
-        actions: [{ id: 'confirm', label: 'Chercher' }],
-        results: null,
-      },
-    });
-  }
-  return route.continue();
-});
-await page.route('**/api/locations', (route) => {
-  assert.deepEqual(route.request().postDataJSON(), { query: '99 Rue de Rivoli' });
-  return route.fulfill({ json: { locations: [origin] } });
-});
+const idle = () =>
+  page.waitForFunction(
+    () => document.getElementById('thread').getAttribute('aria-busy') !== 'true',
+  );
+async function send(message) {
+  await page.locator('#description').fill(message);
+  await page.locator('#description').press('Enter');
+  await idle();
+}
+async function choose(name) {
+  await page.getByRole('button', { name, exact: true }).last().click();
+  await idle();
+}
 try {
   await page.goto(base);
   await page.locator('.intro-photo img').evaluate((image) => image.decode());
   await page.waitForFunction(() =>
-    document.querySelector('#aiStatus').textContent.includes('OpenAI propose'),
+    document.getElementById('aiStatus').textContent.includes('disponible'),
   );
-  assert.equal(await page.locator('#advancedSearch').getAttribute('open'), null);
-  assert.equal(await page.locator('#resultsSection').isHidden(), true);
-  assert.equal(searches.length, 0);
-  assert.equal(proposals.length, 0);
+  assert.equal(requests.length, 0);
+  assert.equal(upstream.length, 0);
+  assert.equal(await page.locator('form').count(), 1);
   await page.locator('.intro-link').click();
   assert.equal(
     await page
@@ -109,56 +101,52 @@ try {
       ),
     true,
   );
-  await page.locator('#description').fill('Je suis malentendant.');
-  await page.locator('#description').press('Enter');
-  await page.locator('#review').waitFor({ state: 'visible' });
-  assert.equal(await page.locator('#criteria input[value="hearing"]').isChecked(), true);
-  assert.equal(proposals.length, 1);
-  assert.equal(searches.length, 0);
-  await page.locator('#search').click();
-  assert.equal(searches.length, 0);
-  await page.locator('#advancedSearch>summary').click();
-  await page.locator('#location').fill('99 Rue de Rivoli');
-  await page.locator('#findLocation').click();
-  await page.getByRole('button', { name: origin.label, exact: true }).click();
-  await page.locator('#radius').selectOption('5');
-  await page.locator('#confirmed').check();
-  await page.locator('#search').click();
-  await page.waitForFunction(() => document.querySelectorAll('.practice-card').length === 2);
-  await page.waitForFunction(
-    () => document.querySelector('#resultsTitle').getBoundingClientRect().top < 200,
+  await send('Généraliste à Lyon, fauteuil roulant.');
+  assert.equal(
+    await page.locator('.bubble.agent').last().getAttribute('data-question'),
+    'location',
   );
-  assert.deepEqual(searches[0].state.needs.keys, ['hearing']);
-  assert.equal(searches[0].action, 'search');
-  assert.equal(searches[0].state.radiusKm, 5);
-  assert.equal(searches[0].state.origin.label, origin.label);
-  assert.equal('description' in searches[0], false);
-  assert.match(await page.locator('.distance').first().textContent(), /km à vol d’oiseau/);
-  await page.locator('#criteria input[value="hearing"]').uncheck();
-  assert.equal(await page.locator('#confirmed').isChecked(), false);
-  assert.equal(await page.locator('#resultsSection').isHidden(), true);
+  assert.equal(await page.getByRole('button', { name: /Confirmer et chercher/ }).count(), 0);
+  await choose(origin.label + ' · point approximatif');
+  await choose('3 km');
+  assert.equal(await page.locator('.bubble.agent').last().getAttribute('data-question'), 'width');
+  await send('20 cm');
+  assert.match(await page.locator('#chatStatus').innerText(), /40 à 200/);
+  await send('0,9 m');
+  assert.match(await page.locator('.bubble.agent').last().innerText(), /90 cm/);
+  assert.equal(requests.filter((body) => body.action === 'confirm').length, 0);
+  await choose('Confirmer et chercher');
+  await page.locator('.practice-card').first().waitFor();
+  const confirmed = requests.find((body) => body.action === 'confirm');
+  assert.equal(confirmed.state.radiusKm, 3);
+  assert.equal(confirmed.state.origin.label, origin.label);
+  assert.equal(confirmed.state.needs.minWidth, 90);
+  assert.equal(confirmed.message, undefined);
+  assert.match(await page.locator('.distance').first().innerText(), /km à vol d’oiseau/);
+  await send('Finalement, équipement auditif.');
+  assert.equal(await page.locator('.practice-card').count(), 0);
+  assert.equal(upstream.length, 0);
   await page.locator('#clear').click();
-  await page.locator('#description').fill('Je suis malentendant.');
-  await page.locator('#advancedSearch>summary').click();
+  await send('Bonjour');
+  for (let step = 0; step < 3; step++) await choose('Je ne sais pas');
+  assert.match(await page.locator('.bubble.agent').last().innerText(), /non précisés/);
+  await choose('Confirmer et chercher');
+  await page.locator('.practice-card').first().waitFor();
+  await page.locator('#clear').click();
   await page.locator('.ai-option>summary').click();
-  await page.locator('#translate').click();
-  assert.equal(proposals.filter((body) => body.consent === true).length, 0);
   await page.locator('#consent').check();
-  await page.locator('#translate').click();
-  await page.waitForFunction(() =>
-    document.querySelector('#proposalSource').textContent.includes('OpenAI'),
-  );
-  assert.equal(proposals.filter((body) => body.consent === true).length, 1);
-  assert.equal(searches.length, 1);
+  await send('Généraliste sans contrainte géographique, équipement auditif.');
+  assert.equal(upstream.length, 1);
+  assert.equal(upstream[0].store, false);
+  assert.equal(upstream[0].tools, undefined);
+  assert.equal(upstream[0].input.length, 1);
   await page.locator('#clear').click();
-  await page.locator('#advancedSearch>summary').click();
-  await page.locator('#manual').click();
-  assert.equal(await page.locator('#criteria input:checked').count(), 0);
-  await page.locator('#clear').click();
+  assert.equal(await page.locator('#consent').isChecked(), false);
   await mkdir('output/home-flow', { recursive: true });
-  for (const width of [320, 768, 1024, 1440]) {
+  for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 });
     await page.goto(base);
+    await page.reload();
     await page.locator('.intro-photo img').evaluate((image) => image.decode());
     assert.equal(
       await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
@@ -177,10 +165,11 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    'Homepage passed: no automatic search or AI, local/manual review, consent-gated AI, confirmed distance search via agent, invalidation, logo rotation and four responsive widths.',
+    'Chat passed: contextual choices/free text/unknown, IGN confirmation, width errors and units, explicit confirmation, correction, consent and five responsive widths. Provider responses controlled; no paid call.',
   );
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
   database.close();
+  globalThis.fetch = realFetch;
 }
