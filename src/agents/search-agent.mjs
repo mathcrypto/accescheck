@@ -70,6 +70,21 @@ function query(proposal) {
   delete value.notes;
   return { ...value, confirmed: true };
 }
+function searchCriteriaKey({ origin, specialty, needs, radiusKm }) {
+  return JSON.stringify([
+    origin && [
+      origin.latitude,
+      origin.longitude,
+      origin.cityCode,
+      origin.postcode,
+      origin.district,
+    ],
+    specialty,
+    [...needs.keys].sort(),
+    needs.minWidth,
+    radiusKm,
+  ]);
+}
 function resultContext(results) {
   return {
     page: results.page,
@@ -280,19 +295,25 @@ export async function runSearchAgent(
       validateRequirements(value.needs);
       if (value.needs.minWidth !== null && !value.needs.keys.includes('width'))
         throw new Error('La largeur nécessite le critère passage large.');
-      results = null;
-      state.practiceIds = [];
-      state.autoReviewIds = [];
-      state.lastResults = null;
-      reviews.length = 0;
-      state.proposal = {
-        id: crypto.randomUUID(),
+      const proposal = {
         origin,
         specialty: value.specialty || '',
         needs: value.needs,
         radiusKm: value.radiusKm,
         notes: value.notes,
       };
+      if (state.confirmed && searchCriteriaKey(state.proposal) === searchCriteriaKey(proposal))
+        return {
+          proposalId: state.proposal.id,
+          summary: summary(state.proposal),
+          requiresUserConfirmation: false,
+        };
+      results = null;
+      state.practiceIds = [];
+      state.autoReviewIds = [];
+      state.lastResults = null;
+      reviews.length = 0;
+      state.proposal = { id: crypto.randomUUID(), ...proposal };
       state.notes = value.notes;
       state.confirmed = false;
       return {

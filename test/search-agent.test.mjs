@@ -818,3 +818,29 @@ test('principal model honors the user default and generic configuration before a
     );
   }
 });
+
+test('re-preparing the same search after execution preserves results even if the model repeats notes', async () => {
+  const prepared = await pendingSearch();
+  let step = 0;
+  const result = await runSearchAgent(
+    { action: 'confirm', consent: true, state: prepared.state },
+    env,
+    async (_url, options) => {
+      const body = JSON.parse(options.body);
+      if (step++ === 0) return call('search_practices', { proposalId: prepared.state.proposal.id });
+      if (step === 2) {
+        assert.ok(Array.isArray(toolOutput(body).results));
+        return call('prepare_search', {
+          ...confirmationProposal,
+          notes: ['Lieu déjà validé.'],
+        });
+      }
+      assert.equal(toolOutput(body).requiresUserConfirmation, false);
+      return complete({ reply: 'Voici les cabinets.', question: null });
+    },
+  );
+  assert.ok(result.results);
+  assert.equal(result.state.confirmed, true);
+  assert.equal(result.state.proposal.id, prepared.state.proposal.id);
+  assert.equal(result.actions.length, 0);
+});
