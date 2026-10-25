@@ -1,143 +1,745 @@
-<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#184c42"><meta name="description" content="Voir ce qui est connu avant de réserver un cabinet à Paris. accescompanion montre ce qui est documenté, ce qui ne l’est pas, et reste pendant la visite."><title>accescompanion</title>
-<style>
-:root{--ink:#17332c;--green:#1b5344;--mint:#eaf1e9;--cream:#f6f8f4;--line:#e3ebe4;--muted:#5d6e66;--amber:#88601c;--amber-bg:#fbf3e3;--red:#9a4234;--red-bg:#f9ece9;--grey-bg:#eef0ee}
-*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:17px;line-height:1.5}
-a{color:var(--green)}button,a{outline-offset:4px}:focus-visible{outline:3px solid #b16830}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.skip{position:absolute;top:-100px}.skip:focus{top:8px;left:12px;z-index:5;background:#fff;padding:12px}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 28px;border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}.mark{width:36px;height:36px;display:block;flex:none}
-.wordmark{font-weight:720;letter-spacing:-.06em;font-size:21px;line-height:1}.wordmark i{font-family:Georgia,"Iowan Old Style",serif;font-style:italic;font-weight:520;color:var(--green);letter-spacing:-.03em}
-nav{display:flex;gap:8px}nav a{color:var(--ink);text-decoration:none;font-size:15px;font-weight:650;padding:8px 12px;border-radius:999px}nav a:hover{background:var(--mint);color:var(--green)}
-.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-section{padding:56px 0}section+section{border-top:1px solid var(--line)}
-.kicker{font-size:13px;letter-spacing:.08em;font-weight:700;color:var(--green);margin:0 0 16px;text-transform:uppercase}
-h1{font-size:clamp(32px,4vw,46px);font-weight:700;letter-spacing:-.04em;line-height:1.08;margin:0;max-width:14em}
-h1 em{font-family:Georgia,"Iowan Old Style",serif;font-weight:400;font-style:italic;color:var(--green);letter-spacing:-.02em}
-h2{font-size:clamp(26px,3.2vw,34px);font-weight:680;letter-spacing:-.03em;line-height:1.15;margin:0 0 12px}
-h3{font-size:18px;margin:0 0 6px;letter-spacing:-.01em}
-.lede{font-size:20px;color:#3e564b;max-width:34rem;margin:22px 0 0}
-.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.9fr);gap:40px;align-items:start;padding:36px 0 8px}
-.cta{display:flex;flex-wrap:wrap;gap:12px;margin:32px 0 0}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;border-radius:12px;font-weight:650;font-size:16px;text-decoration:none}
-.btn.primary{background:var(--green);color:#fff}.btn.primary:hover{background:#143f34}
-.btn.ghost{border:1.5px solid #c9d8cc;color:var(--green);background:#fff}.btn.ghost:hover{border-color:var(--green)}
-.chips{margin:28px 0 0}.chips p{font-size:14px;color:var(--muted);margin:0 0 10px}
-.chips ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
-.chips a{display:inline-block;padding:8px 14px;border-radius:999px;background:var(--mint);color:var(--green);text-decoration:none;font-size:15px;font-weight:550}.chips a:hover{background:#dce9da}
-.facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin:28px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}.facts li::before{content:"·";margin-right:8px;color:#a9b8ae}.facts li:first-child::before{content:none}
-.sample{background:var(--cream);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 18px 48px #193b3412}
-.sample-head{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:16px}
-.sample-head b{display:block;font-size:17px}.sample-head span{font-size:14px;color:var(--muted)}
-.tag{font-size:11px;letter-spacing:.06em;font-weight:700;text-transform:uppercase;color:var(--muted);border:1px solid #cfd8d1;border-radius:6px;padding:3px 7px;white-space:nowrap}
-.rows{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.rows li{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:15px}
-.st{font-size:13px;font-weight:650;border-radius:999px;padding:3px 10px;white-space:nowrap}
-.st.ok{background:var(--mint);color:var(--green)}.st.decl{background:var(--amber-bg);color:var(--amber)}.st.unk{background:var(--grey-bg);color:#55605a}.st.bad{background:var(--red-bg);color:var(--red)}
-.ask{margin:14px 0 0;font-size:14px;color:#3e564b;background:#fff;border-left:3px solid var(--amber);padding:10px 14px;border-radius:0 10px 10px 0}
-.stat{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(240px,.8fr);gap:40px;align-items:center}
-.stat-text{font-size:clamp(22px,2.4vw,28px);font-weight:650;letter-spacing:-.03em;line-height:1.2;margin:0}
-.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0}
-.compare p{margin:0;background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:16px}
-.compare b{display:block;font-size:32px;letter-spacing:-.04em;line-height:1}
-.compare span{display:block;margin-top:6px;font-size:14px;color:#3e564b}
-.why{font-size:18px;color:#3e564b;margin:16px 0 0;max-width:36rem}
-.source{font-size:13px;color:var(--muted);margin:14px 0 0}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;list-style:none;padding:0;margin:32px 0 0;counter-reset:s}
-.steps li{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;counter-increment:s;display:flex;flex-direction:column}
-.steps li::before{content:counter(s);display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--mint);color:var(--green);font-weight:750;margin-bottom:14px}
-.steps p{margin:0;color:#3e564b;font-size:16px;flex:1}.steps a{margin-top:16px;font-weight:650;font-size:15px}
-.section-lede{font-size:18px;color:#3e564b;max-width:40rem;margin:0}
-.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;list-style:none;padding:0;margin:32px 0 0}
-.legend li{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fff}.legend .st{display:inline-block;margin-bottom:8px}.legend p{margin:0;font-size:15px;color:#3e564b}
-.legend li.later{background:var(--cream);border-style:dashed}.legend .soon{font-size:12px;color:var(--muted);margin-left:6px}
-.note{margin:24px 0 0;font-size:15px;color:#3e564b;max-width:44rem}
-.limits{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 32px;list-style:none;padding:0;margin:24px 0 0}
-.limits li{font-size:15px;color:#3e564b;padding-left:18px;position:relative}.limits li::before{content:"";position:absolute;left:0;top:.6em;width:7px;height:7px;border-radius:50%;background:#b8c6bb}
-footer{border-top:1px solid var(--line);background:var(--cream);font-size:13px;color:var(--muted)}footer .wrap{padding:28px 24px}footer p{margin:4px 0}
-@media(max-width:860px){.hero,.stat,.compare{grid-template-columns:1fr;gap:28px}.steps{grid-template-columns:1fr}.hero{padding:28px 0 0}}
-@media(max-width:640px){header{padding:14px 16px}nav{gap:4px}.wrap{padding:0 16px}section{padding:40px 0}.btn{flex:1 1 160px}.lede{font-size:18px}}
-@media(prefers-reduced-motion:no-preference){.btn,.chips a{transition:background .15s,border-color .15s}}
-</style></head>
-<body><a class="skip" href="#main">Aller au contenu</a>
-<header><a class="brand" href="/" aria-label="accescompanion, accueil"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#1b5344"/><path d="M12 29V17.2a8 8 0 0 1 16 0V29" fill="none" stroke="#f3f6f1" stroke-width="2.3" stroke-linecap="round"/><circle cx="20" cy="19.2" r="2.15" fill="#d7ebc8"/></svg><b class="wordmark">acces<i>companion</i></b></a><nav aria-label="Navigation principale"><a href="/cabinets">Les cabinets</a><a href="/consultation">L’échange</a></nav></header>
-<main id="main">
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#184c42" />
+    <meta
+      name="description"
+      content="Voir ce qui est connu avant de réserver un cabinet à Paris. accescompanion montre ce qui est documenté, ce qui ne l’est pas, et reste pendant la visite."
+    />
+    <title>accescompanion</title>
+    <style>
+      :root {
+        --ink: #17332c;
+        --green: #1b5344;
+        --mint: #eaf1e9;
+        --cream: #f6f8f4;
+        --line: #e3ebe4;
+        --muted: #5d6e66;
+        --amber: #88601c;
+        --amber-bg: #fbf3e3;
+        --red: #9a4234;
+        --red-bg: #f9ece9;
+        --grey-bg: #eef0ee;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #fff;
+        color: var(--ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        font-size: 17px;
+        line-height: 1.5;
+      }
+      a {
+        color: var(--green);
+      }
+      button,
+      a {
+        outline-offset: 4px;
+      }
+      :focus-visible {
+        outline: 3px solid #b16830;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .skip {
+        position: absolute;
+        top: -100px;
+      }
+      .skip:focus {
+        top: 8px;
+        left: 12px;
+        z-index: 5;
+        background: #fff;
+        padding: 12px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 28px;
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--ink);
+      }
+      .mark {
+        width: 36px;
+        height: 36px;
+        display: block;
+        flex: none;
+      }
+      .wordmark {
+        font-weight: 720;
+        letter-spacing: -0.06em;
+        font-size: 21px;
+        line-height: 1;
+      }
+      .wordmark i {
+        font-family: Georgia, 'Iowan Old Style', serif;
+        font-style: italic;
+        font-weight: 520;
+        color: var(--green);
+        letter-spacing: -0.03em;
+      }
+      nav {
+        display: flex;
+        gap: 8px;
+      }
+      nav a {
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 650;
+        padding: 8px 12px;
+        border-radius: 999px;
+      }
+      nav a:hover {
+        background: var(--mint);
+        color: var(--green);
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      section {
+        padding: 56px 0;
+      }
+      section + section {
+        border-top: 1px solid var(--line);
+      }
+      .kicker {
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        color: var(--green);
+        margin: 0 0 16px;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: clamp(32px, 4vw, 46px);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.08;
+        margin: 0;
+        max-width: 14em;
+      }
+      h1 em {
+        font-family: Georgia, 'Iowan Old Style', serif;
+        font-weight: 400;
+        font-style: italic;
+        color: var(--green);
+        letter-spacing: -0.02em;
+      }
+      h2 {
+        font-size: clamp(26px, 3.2vw, 34px);
+        font-weight: 680;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        margin: 0 0 12px;
+      }
+      h3 {
+        font-size: 18px;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        font-size: 20px;
+        color: #3e564b;
+        max-width: 34rem;
+        margin: 22px 0 0;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.9fr);
+        gap: 40px;
+        align-items: start;
+        padding: 36px 0 8px;
+      }
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 32px 0 0;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 650;
+        font-size: 16px;
+        text-decoration: none;
+      }
+      .btn.primary {
+        background: var(--green);
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #143f34;
+      }
+      .btn.ghost {
+        border: 1.5px solid #c9d8cc;
+        color: var(--green);
+        background: #fff;
+      }
+      .btn.ghost:hover {
+        border-color: var(--green);
+      }
+      .chips {
+        margin: 28px 0 0;
+      }
+      .chips p {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+      .chips ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .chips a {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: var(--green);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 550;
+      }
+      .chips a:hover {
+        background: #dce9da;
+      }
+      .facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        margin: 28px 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .facts li::before {
+        content: '·';
+        margin-right: 8px;
+        color: #a9b8ae;
+      }
+      .facts li:first-child::before {
+        content: none;
+      }
+      .sample {
+        background: var(--cream);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 18px 48px #193b3412;
+      }
+      .sample-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .sample-head b {
+        display: block;
+        font-size: 17px;
+      }
+      .sample-head span {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .tag {
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--muted);
+        border: 1px solid #cfd8d1;
+        border-radius: 6px;
+        padding: 3px 7px;
+        white-space: nowrap;
+      }
+      .rows {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+      }
+      .rows li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-size: 15px;
+      }
+      .st {
+        font-size: 13px;
+        font-weight: 650;
+        border-radius: 999px;
+        padding: 3px 10px;
+        white-space: nowrap;
+      }
+      .st.ok {
+        background: var(--mint);
+        color: var(--green);
+      }
+      .st.decl {
+        background: var(--amber-bg);
+        color: var(--amber);
+      }
+      .st.unk {
+        background: var(--grey-bg);
+        color: #55605a;
+      }
+      .st.bad {
+        background: var(--red-bg);
+        color: var(--red);
+      }
+      .ask {
+        margin: 14px 0 0;
+        font-size: 14px;
+        color: #3e564b;
+        background: #fff;
+        border-left: 3px solid var(--amber);
+        padding: 10px 14px;
+        border-radius: 0 10px 10px 0;
+      }
+      .stat {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(240px, 0.8fr);
+        gap: 40px;
+        align-items: center;
+      }
+      .stat-text {
+        font-size: clamp(22px, 2.4vw, 28px);
+        font-weight: 650;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        margin: 0;
+      }
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 0;
+      }
+      .compare p {
+        margin: 0;
+        background: var(--cream);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+      }
+      .compare b {
+        display: block;
+        font-size: 32px;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .compare span {
+        display: block;
+        margin-top: 6px;
+        font-size: 14px;
+        color: #3e564b;
+      }
+      .why {
+        font-size: 18px;
+        color: #3e564b;
+        margin: 16px 0 0;
+        max-width: 36rem;
+      }
+      .source {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 14px 0 0;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        list-style: none;
+        padding: 0;
+        margin: 32px 0 0;
+        counter-reset: s;
+      }
+      .steps li {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 22px;
+        background: #fff;
+        counter-increment: s;
+        display: flex;
+        flex-direction: column;
+      }
+      .steps li::before {
+        content: counter(s);
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: var(--mint);
+        color: var(--green);
+        font-weight: 750;
+        margin-bottom: 14px;
+      }
+      .steps p {
+        margin: 0;
+        color: #3e564b;
+        font-size: 16px;
+        flex: 1;
+      }
+      .steps a {
+        margin-top: 16px;
+        font-weight: 650;
+        font-size: 15px;
+      }
+      .section-lede {
+        font-size: 18px;
+        color: #3e564b;
+        max-width: 40rem;
+        margin: 0;
+      }
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        list-style: none;
+        padding: 0;
+        margin: 32px 0 0;
+      }
+      .legend li {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px 18px;
+        background: #fff;
+      }
+      .legend .st {
+        display: inline-block;
+        margin-bottom: 8px;
+      }
+      .legend p {
+        margin: 0;
+        font-size: 15px;
+        color: #3e564b;
+      }
+      .legend li.later {
+        background: var(--cream);
+        border-style: dashed;
+      }
+      .legend .soon {
+        font-size: 12px;
+        color: var(--muted);
+        margin-left: 6px;
+      }
+      .note {
+        margin: 24px 0 0;
+        font-size: 15px;
+        color: #3e564b;
+        max-width: 44rem;
+      }
+      .limits {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px 32px;
+        list-style: none;
+        padding: 0;
+        margin: 24px 0 0;
+      }
+      .limits li {
+        font-size: 15px;
+        color: #3e564b;
+        padding-left: 18px;
+        position: relative;
+      }
+      .limits li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.6em;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #b8c6bb;
+      }
+      footer {
+        border-top: 1px solid var(--line);
+        background: var(--cream);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      footer .wrap {
+        padding: 28px 24px;
+      }
+      footer p {
+        margin: 4px 0;
+      }
+      @media (max-width: 860px) {
+        .hero,
+        .stat,
+        .compare {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+        .steps {
+          grid-template-columns: 1fr;
+        }
+        .hero {
+          padding: 28px 0 0;
+        }
+      }
+      @media (max-width: 640px) {
+        header {
+          padding: 14px 16px;
+        }
+        nav {
+          gap: 4px;
+        }
+        .wrap {
+          padding: 0 16px;
+        }
+        section {
+          padding: 40px 0;
+        }
+        .btn {
+          flex: 1 1 160px;
+        }
+        .lede {
+          font-size: 18px;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .btn,
+        .chips a {
+          transition:
+            background 0.15s,
+            border-color 0.15s;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Aller au contenu</a>
+    <header>
+      <a class="brand" href="/" aria-label="accescompanion, accueil"
+        ><svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+          <rect width="40" height="40" rx="12" fill="#1b5344" />
+          <path
+            d="M12 29V17.2a8 8 0 0 1 16 0V29"
+            fill="none"
+            stroke="#f3f6f1"
+            stroke-width="2.3"
+            stroke-linecap="round"
+          />
+          <circle cx="20" cy="19.2" r="2.15" fill="#d7ebc8" /></svg
+        ><b class="wordmark">acces<i>companion</i></b></a
+      >
+      <nav aria-label="Navigation principale">
+        <a href="/cabinets">Les cabinets</a><a href="/consultation">L’échange</a>
+      </nav>
+    </header>
+    <main id="main">
+      <div class="wrap">
+        <div class="hero">
+          <div>
+            <p class="kicker">Paris · médecine</p>
+            <h1>Voir ce qui est <em>connu</em> avant de réserver.</h1>
+            <p class="lede">
+              Décrivez votre besoin avec vos mots. accescompanion compare les cabinets sur ce qui
+              est documenté, montre d’où vient chaque information, et dit clairement ce qui reste
+              inconnu.
+            </p>
+            <div class="cta">
+              <a class="btn primary" href="/cabinets">Trouver un cabinet</a
+              ><a class="btn ghost" href="/consultation">Suivre un rendez-vous</a>
+            </div>
+            <div class="chips">
+              <p id="chips-label">Ou commencez par un besoin :</p>
+              <ul aria-labelledby="chips-label">
+                <li><a href="/cabinets#besoin=fauteuil">Fauteuil roulant</a></li>
+                <li><a href="/cabinets#besoin=audition">Besoin auditif</a></li>
+                <li><a href="/cabinets#besoin=vision">Besoin visuel</a></li>
+                <li><a href="/cabinets#besoin=sans-marche">Entrée sans marche</a></li>
+              </ul>
+            </div>
+            <ul class="facts">
+              <li>510 cabinets parisiens</li>
+              <li>Données Accès Libre</li>
+              <li>Rien n’est enregistré</li>
+            </ul>
+          </div>
 
-<div class="wrap"><div class="hero">
- <div>
-  <p class="kicker">Paris · médecine</p>
-  <h1>Voir ce qui est <em>connu</em> avant de réserver.</h1>
-  <p class="lede">Décrivez votre besoin avec vos mots. accescompanion compare les cabinets sur ce qui est documenté, montre d’où vient chaque information, et dit clairement ce qui reste inconnu.</p>
-  <div class="cta"><a class="btn primary" href="/cabinets">Trouver un cabinet</a><a class="btn ghost" href="/consultation">Suivre un rendez-vous</a></div>
-  <div class="chips"><p id="chips-label">Ou commencez par un besoin :</p><ul aria-labelledby="chips-label">
-   <li><a href="/cabinets#besoin=fauteuil">Fauteuil roulant</a></li>
-   <li><a href="/cabinets#besoin=audition">Besoin auditif</a></li>
-   <li><a href="/cabinets#besoin=vision">Besoin visuel</a></li>
-   <li><a href="/cabinets#besoin=sans-marche">Entrée sans marche</a></li>
-  </ul></div>
-  <ul class="facts"><li>510 cabinets parisiens</li><li>Données Accès Libre</li><li>Rien n’est enregistré</li></ul>
- </div>
+          <figure class="sample" aria-labelledby="sample-cap" style="margin: 0">
+            <div class="sample-head">
+              <div>
+                <b id="sample-cap">Les critères à regarder</b
+                ><span>Selon les informations de chaque fiche</span>
+              </div>
+              <span class="tag">Accès Libre</span>
+            </div>
+            <ul class="rows">
+              <li>Entrée sans marche <span class="st decl">Si renseignée</span></li>
+              <li>Largeur de la porte d’entrée <span class="st decl">Si renseignée</span></li>
+              <li>Trajet jusqu’à l’accueil <span class="st unk">À confirmer</span></li>
+              <li>Équipement auditif <span class="st unk">À confirmer</span></li>
+              <li>Informations contradictoires <span class="st bad">À vérifier</span></li>
+            </ul>
+            <p class="ask">
+              <b>À demander au cabinet :</b> le trajet jusqu’à la salle est-il de plain-pied ? Une
+              boucle magnétique est-elle disponible ?
+            </p>
+          </figure>
+        </div>
+      </div>
 
- <figure class="sample" aria-labelledby="sample-cap" style="margin:0">
-  <div class="sample-head"><div><b id="sample-cap">Cabinet de médecine générale</b><span>Paris 11<sup>e</sup></span></div><span class="tag">Exemple</span></div>
-  <ul class="rows">
-   <li>Entrée sans marche <span class="st decl">Déclaré</span></li>
-   <li>Porte d’entrée : 90 cm <span class="st decl">Déclaré</span></li>
-   <li>Trajet jusqu’à l’accueil <span class="st unk">Inconnu</span></li>
-   <li>Équipement auditif <span class="st unk">Inconnu</span></li>
-   <li>Rampe et marche signalées <span class="st bad">Contradictoire</span></li>
-  </ul>
-  <p class="ask"><b>À demander au cabinet :</b> le trajet jusqu’à la salle est-il de plain-pied ? Une boucle magnétique est-elle disponible ?</p>
- </figure>
-</div></div>
+      <section aria-labelledby="stat-h">
+        <div class="wrap stat">
+          <div>
+            <p class="kicker">France · 2022</p>
+            <h2 id="stat-h" class="stat-text">
+              15 % des personnes handicapées de 16 à 64 ans ont renoncé à des soins.
+            </h2>
+            <p class="why">
+              On réserve sans savoir si l’entrée, la porte ou la salle conviendront. Sur place, une
+              consigne dite une seule fois peut se perdre.
+            </p>
+            <p class="source">Source : DREES, 2022.</p>
+          </div>
+          <div class="compare">
+            <p><b>15 %</b><span>Personnes handicapées</span></p>
+            <p><b>7 %</b><span>Ensemble de la population</span></p>
+          </div>
+        </div>
+      </section>
 
-<section aria-labelledby="stat-h"><div class="wrap stat">
- <div>
-  <p class="kicker">France · 2022</p>
-  <h2 id="stat-h" class="stat-text">15 % des personnes handicapées de 16 à 64 ans ont renoncé à des soins.</h2>
-  <p class="why">On réserve sans savoir si l’entrée, la porte ou la salle conviendront. Sur place, une consigne dite une seule fois peut se perdre.</p>
-  <p class="source">Source : DREES, 2022.</p>
- </div>
- <div class="compare">
-  <p><b>15 %</b><span>Personnes handicapées</span></p>
-  <p><b>7 %</b><span>Ensemble de la population</span></p>
- </div>
-</div></section>
+      <section aria-labelledby="how-h">
+        <div class="wrap">
+          <p class="kicker">Comment ça marche</p>
+          <h2 id="how-h">Du choix du cabinet jusqu’à la consultation.</h2>
+          <ol class="steps">
+            <li>
+              <h3>Décrire et comparer</h3>
+              <p>
+                « Fauteuil électrique, malentendant. » Vos mots deviennent des critères que vous
+                pouvez relire. Les cabinets sont classés sur ce qui est documenté, les obstacles
+                connus en dernier.
+              </p>
+              <a href="/cabinets">Chercher un cabinet</a>
+            </li>
+            <li>
+              <h3>Préparer et réserver</h3>
+              <p>
+                Une fiche de préparation liste les questions à poser au cabinet. Quand la source
+                donne un lien Doctolib, vous réservez directement.
+              </p>
+              <a href="/cabinets">Voir les cabinets</a>
+            </li>
+            <li>
+              <h3>Suivre l’échange</h3>
+              <p>
+                Pendant la visite ou l’appel vidéo, les paroles s’affichent à l’écran et vous pouvez
+                répondre par écrit ou à voix haute.
+              </p>
+              <a href="/consultation">Ouvrir l’échange</a>
+            </li>
+          </ol>
+        </div>
+      </section>
 
-<section aria-labelledby="how-h"><div class="wrap">
- <p class="kicker">Comment ça marche</p>
- <h2 id="how-h">Du choix du cabinet jusqu’à la consultation.</h2>
- <ol class="steps">
-  <li><h3>Décrire et comparer</h3><p>« Fauteuil électrique, malentendant. » Vos mots deviennent des critères que vous pouvez relire. Les cabinets sont classés sur ce qui est documenté, les obstacles connus en dernier.</p><a href="/cabinets">Chercher un cabinet</a></li>
-  <li><h3>Préparer et réserver</h3><p>Une fiche de préparation liste les questions à poser au cabinet. Quand la source donne un lien Doctolib, vous réservez directement.</p><a href="/cabinets">Voir les cabinets</a></li>
-  <li><h3>Suivre l’échange</h3><p>Pendant la visite ou l’appel vidéo, les paroles s’affichent à l’écran et vous pouvez répondre par écrit ou à voix haute.</p><a href="/consultation">Ouvrir l’échange</a></li>
- </ol>
-</div></section>
+      <section aria-labelledby="trust-h">
+        <div class="wrap">
+          <p class="kicker">Confiance</p>
+          <h2 id="trust-h">Jamais « accessible » sans preuve.</h2>
+          <p class="section-lede">
+            Chaque critère porte son origine et son ancienneté. Vous voyez jusqu’où vous fier à
+            chaque réponse, au lieu d’un simple oui ou non.
+          </p>
+          <ul class="legend">
+            <li>
+              <span class="st decl">Déclaré</span>
+              <p>Renseigné dans Accès Libre, sans date de vérification.</p>
+            </li>
+            <li>
+              <span class="st unk">Inconnu</span>
+              <p>Aucune donnée. Nous ne devinons pas : nous proposons la question à poser.</p>
+            </li>
+            <li>
+              <span class="st bad">Contradictoire</span>
+              <p>Deux champs se contredisent. À confirmer avec le cabinet.</p>
+            </li>
+            <li class="later">
+              <span class="st ok">Vérifié</span><span class="soon">à venir</span>
+              <p>Confirmé par photos du cabinet ou par des patients après leur visite.</p>
+            </li>
+          </ul>
+          <p class="note">
+            Aujourd’hui, toutes les informations renseignées sont <b>déclaratives</b> : l’export
+            Accès Libre ne donne pas de date de confirmation par fiche. Nous l’affichons tel quel.
+          </p>
+        </div>
+      </section>
 
-<section aria-labelledby="trust-h"><div class="wrap">
- <p class="kicker">Confiance</p>
- <h2 id="trust-h">Jamais « accessible » sans preuve.</h2>
- <p class="section-lede">Chaque critère porte son origine et son ancienneté. Vous voyez jusqu’où vous fier à chaque réponse, au lieu d’un simple oui ou non.</p>
- <ul class="legend">
-  <li><span class="st decl">Déclaré</span><p>Renseigné dans Accès Libre, sans date de vérification.</p></li>
-  <li><span class="st unk">Inconnu</span><p>Aucune donnée. Nous ne devinons pas : nous proposons la question à poser.</p></li>
-  <li><span class="st bad">Contradictoire</span><p>Deux champs se contredisent. À confirmer avec le cabinet.</p></li>
-  <li class="later"><span class="st ok">Vérifié</span><span class="soon">à venir</span><p>Confirmé par photos du cabinet ou par des patients après leur visite.</p></li>
- </ul>
- <p class="note">Aujourd’hui, toutes les informations renseignées sont <b>déclaratives</b> : l’export Accès Libre ne donne pas de date de confirmation par fiche. Nous l’affichons tel quel.</p>
-</div></section>
-
-<section aria-labelledby="limits-h"><div class="wrap">
- <p class="kicker">Ce que nous ne faisons pas</p>
- <h2 id="limits-h">Un outil d’aide, pas une garantie.</h2>
- <ul class="limits">
-  <li>Aucun profil de santé conservé : vos besoins restent dans la page.</li>
-  <li>Pas de créneaux ni de réservation : nous ouvrons le lien Doctolib de la fiche.</li>
-  <li>Pas un interprète ni un dossier médical : faites confirmer les consignes importantes.</li>
-  <li>Pas de score d’accessibilité universel : chaque besoin est différent.</li>
- </ul>
-</div></section>
-
-</main>
-<footer><div class="wrap"><p>Données : Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0. Export du 24 octobre 2026, cabinets médicaux de Paris.</p><p>Statistique : DREES, 2022.</p></div></footer>
-</body></html>
+      <section aria-labelledby="limits-h">
+        <div class="wrap">
+          <p class="kicker">Ce que nous ne faisons pas</p>
+          <h2 id="limits-h">Un outil d’aide, pas une garantie.</h2>
+          <ul class="limits">
+            <li>
+              Vos besoins sont envoyés au serveur pour la recherche, sans profil de santé
+              enregistré.
+            </li>
+            <li>Pas de créneaux ni de réservation : nous ouvrons le lien Doctolib de la fiche.</li>
+            <li>
+              Pas un interprète ni un dossier médical : faites confirmer les consignes importantes.
+            </li>
+            <li>Pas de score d’accessibilité universel : chaque besoin est différent.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <div class="wrap">
+        <p>
+          Données : Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab
+          2.0. Export du 24 octobre 2026, cabinets médicaux de Paris.
+        </p>
+        <p>Statistique : DREES, 2022.</p>
+      </div>
+    </footer>
+  </body>
+</html>

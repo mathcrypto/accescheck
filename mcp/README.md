@@ -12,14 +12,16 @@ npm run build
 npm run dev:companion
 ```
 
-Keep that process running for consultation tools. Search tools also work without the bridge. In another terminal, `npm run mcp:config` prints a JSON configuration using the current Node executable and absolute server path. Add the `accescheck` entry to a compatible MCP client's configuration. Launch `node mcp/server.mjs` directly; stdout is reserved for MCP messages.
+Keep that process running for consultation tools. Search tools also work without the bridge. In another terminal, `npm run mcp:config` prints a JSON configuration using the current Node executable and absolute server path. Add the `accescompanion` entry to a compatible MCP client's configuration. Launch `node mcp/server.mjs` directly; stdout is reserved for MCP messages.
 
 For Codex desktop, CLI, or IDE, use:
 
 ```sh
-codex mcp add accescheck -- node /absolute/path/to/accescheck/mcp/server.mjs
-codex mcp get accescheck
+codex mcp add accescompanion -- node /absolute/path/to/accescompanion/mcp/server.mjs
+codex mcp get accescompanion
 ```
+
+Existing Codex configurations named `accescheck` continue to work because the executable and server path are unchanged; do not register a duplicate just to rename it.
 
 If Node is not on the desktop app's PATH, use the full Node executable path printed by `npm run mcp:config`. After registering the server, refresh the MCP connection in the client or reopen the client if its tool list has not refreshed. This changes local MCP configuration, not the hosted Site's plugin.
 
@@ -30,12 +32,12 @@ If Node is not on the desktop app's PATH, use the full Node executable path prin
 1. Open http://127.0.0.1:4180/consultation while `npm run dev:companion` is running.
 2. Click **Partager l’exemple et lier un agent**. Share the displayed single-use code with your connected AI client. Pairing does not start captions or audio.
 3. Ask the agent: “Utilise accescompanion avec ce code. Lis la conversation fictive partagée et aide-moi à préparer une question. Propose-la avant de demander sa lecture.”
-4. The agent calls `prepare_consultation`, then `get_consultation_context`. You choose whether to activate captions on the consultation page.
+4. The agent calls `prepare_consultation`, then `get_consultation_context`. The pairing example is text-only. Clear and disconnect it before starting a real conversation.
 5. To request speech, the agent calls `speak_patient_message` with `expected_cursor` from the latest context. The page still requires **Approuver et lire cette réponse**. The request alone never plays audio. Duplicate pending proposals at the same cursor reuse their action ID.
 6. A corrected caption expires pending speech proposals. The agent must read updated context before proposing a replacement. Rejecting a proposal never plays audio.
 7. Ask for `draft_visit_notes` for an exact editable transcript draft, or `stop_session` to revoke access and clear the shared test.
 
-Codex receives server-wide instructions on connection. Hosts with MCP prompt support can also select `accescheck_communication`. Conversation content is source data, not agent instructions. The prompt directs the model to ask about the patient's intent, keep uncertainty visible, and avoid clinical inference.
+Codex receives server-wide instructions on connection. Hosts with MCP prompt support can also select `accescompanion_communication`. Conversation content is source data, not agent instructions. The prompt directs the model to ask about the patient's intent, keep uncertainty visible, and avoid clinical inference.
 
 ## Nine tools
 

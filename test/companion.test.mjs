@@ -1,8 +1,50 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
-import {buildDraft,validateMessage,speechError,speakerLabel} from '../src/companion-core.mjs';import worker from '../worker/index.js';
-test('companion is served on both route forms without caching',async()=>{for(const path of ['/consultation','/consultation/']){const r=await worker.fetch(new Request('https://example.com'+path));assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');const html=await r.text();assert.ok(html.includes('Mon récapitulatif'));assert.ok(html.includes('id="consent"'));assert.ok(!html.includes('/*COMPANION_SCRIPT*/'));const code=html.match(/<script>([\s\S]*?)<\/script>/)[1];new vm.Script(code);}});
-test('draft preserves exact words rather than generating medical claims',()=>{const text='Je prends cinq milligrammes, à confirmer.';const d=buildDraft([{speaker:'captured',text}]);assert.ok(d.includes(text));assert.ok(d.includes('locuteur non identifié'));assert.ok(d.includes('sans interprétation'));assert.ok(!d.includes('Diagnostic :'));});
-test('draft carries fiction and correction provenance',()=>{const d=buildDraft([{speaker:'patient',text:'Exemple.',demo:true,corrected:true}]);assert.ok(d.startsWith('EXEMPLE FICTIF'));assert.ok(d.includes('corrigé'));assert.equal(buildDraft([]),'');});
-test('message validation rejects empty or excessive input',()=>{for(const text of ['', '   ',null,'a'.repeat(4001)])assert.throws(()=>validateMessage(text));assert.equal(validateMessage(' Bonjour '),'Bonjour');});
-test('denied mic and unavailable services have actionable fallbacks',()=>{assert.match(speechError('not-allowed'),/refusé/);assert.match(speechError('network'),/Aucun redémarrage automatique/);assert.match(speechError('language-not-supported'),/pack local/);assert.equal(speakerLabel('captured'),'Parole captée · locuteur non identifié');});
-test('companion has no persistent storage or audio recording code',()=>{const code=readFileSync('src/companion.js','utf8');assert.doesNotMatch(code,/localStorage|sessionStorage|indexedDB|MediaRecorder/);assert.ok(code.includes('r.processLocally=true'));assert.ok(code.includes('v.localService===true'));});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import { buildDraft, validateMessage, speechError, speakerLabel } from '../src/companion-core.mjs';
+import worker from '../worker/index.js';
+test('companion is served on both route forms without caching', async () => {
+  for (const path of ['/consultation', '/consultation/']) {
+    const r = await worker.fetch(new Request('https://example.com' + path));
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get('cache-control'), 'no-store');
+    const html = await r.text();
+    assert.ok(html.includes('Mon récapitulatif'));
+    assert.ok(html.includes('id="consent"'));
+    assert.ok(!html.includes('/*COMPANION_SCRIPT*/'));
+    const code = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+    new vm.Script(code);
+  }
+});
+test('draft preserves exact words rather than generating medical claims', () => {
+  const text = 'Je prends cinq milligrammes, à confirmer.';
+  const d = buildDraft([{ speaker: 'captured', text }]);
+  assert.ok(d.includes(text));
+  assert.ok(d.includes('locuteur non identifié'));
+  assert.ok(d.includes('sans interprétation'));
+  assert.ok(!d.includes('Diagnostic :'));
+});
+test('draft carries fiction and correction provenance', () => {
+  const d = buildDraft([{ speaker: 'patient', text: 'Exemple.', demo: true, corrected: true }]);
+  assert.ok(d.startsWith('EXEMPLE FICTIF'));
+  assert.ok(d.includes('corrigé'));
+  assert.equal(buildDraft([]), '');
+});
+test('message validation rejects empty or excessive input', () => {
+  for (const text of ['', '   ', null, 'a'.repeat(4001)])
+    assert.throws(() => validateMessage(text));
+  assert.equal(validateMessage(' Bonjour '), 'Bonjour');
+});
+test('denied mic and unavailable services have actionable fallbacks', () => {
+  assert.match(speechError('not-allowed'), /refusé/);
+  assert.match(speechError('network'), /Aucun redémarrage automatique/);
+  assert.match(speechError('language-not-supported'), /pack local/);
+  assert.equal(speakerLabel('captured'), 'Parole captée · locuteur non identifié');
+});
+test('companion has no persistent storage or audio recording code', () => {
+  const code = readFileSync('src/companion.js', 'utf8');
+  assert.doesNotMatch(code, /localStorage|sessionStorage|indexedDB|MediaRecorder/);
+  assert.match(code, /processLocally\s*=\s*true/);
+  assert.match(code, /localService\s*===\s*true/);
+});

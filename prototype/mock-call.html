@@ -1,9 +1,190 @@
-<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Votre consultation — accescompanion</title><link rel="stylesheet" href="/mock-call.css"></head>
-<body><a class="skip" href="#main">Aller à la consultation</a><header class="app-header"><a class="brand" href="/consultation"><span class="brand-mark" aria-hidden="true">✳</span>accescompanion</a><span class="header-divider"></span><span class="header-context">Votre espace de consultation</span><span class="demo-badge"><span></span>Mode démonstration</span></header>
-<main id="main"><div class="page-heading"><div><div class="breadcrumb">MON PARCOURS <span>/</span> PENDANT LE RENDEZ-VOUS</div><h1>Une conversation à votre rythme.</h1><p>Un espace pour écouter, comprendre et vous exprimer.</p></div><span class="private-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 3v6c0 4-7 8-7 8s-7-4-7-8V6Z"/><path d="m8.5 11 2.5 2.5 4.5-5"/></svg>Aucun appel réel</span></div>
-<div class="workspace"><section class="call-card" aria-label="Consultation audio fictive"><div class="call-canvas"><div class="room-top"><span class="room-label"><span class="live-dot"></span>Simulation de consultation</span><span class="timer" id="callTimer">00:00 / 00:14</span></div><div class="doctor"><div class="doctor-avatar" aria-hidden="true"><svg viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="60" fill="#dae7e0"/><path d="M22 118c2-29 16-44 38-44s36 15 38 44" fill="#f5faf6"/><path d="m46 77 14 20 14-20" stroke="#b2c8bc" stroke-width="3"/><path d="M49 69v11l11 12 11-12V69" fill="#d6bda9"/><ellipse cx="60" cy="48" rx="22" ry="27" fill="#e2c9b4"/><path d="M38 46c-6-26 8-32 22-32 22 0 30 20 21 37l-3-17c-17 3-22-6-22-6S45 44 38 46Z" fill="#475952"/><path d="M43 83v19m34-19v16" stroke="#587565" stroke-width="3"/><circle cx="77" cy="104" r="5" stroke="#587565" stroke-width="3"/><path d="M36 100c0 14 15 14 15 0" stroke="#587565" stroke-width="3"/></svg></div><span class="voice-tag"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Voix française préenregistrée</span><h2>Soignant de démonstration</h2><p>Un exemple fictif, pour prendre vos repères.</p></div><div class="self-tile"><span class="self-avatar">V</span><span>Vous</span><svg viewBox="0 0 24 24" aria-label="Microphone coupé"><path d="M12 4a3 3 0 0 0-3 3v4m6-3V7m3 4a6 6 0 0 1-9 5M6 11a6 6 0 0 0 1 3m5 3v4m-4 0h8M3 3l18 18"/></svg></div><div class="canvas-footer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10v10H4zM14 10l6-3v10l-6-3M3 3l18 18"/></svg>Caméra et microphone désactivés</div></div>
-<div class="playback"><div class="progress" aria-hidden="true"><div id="playProgress"></div></div><div class="playback-controls"><button id="play" class="play-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg><span>Lire la voix du soignant</span></button><button id="pause" class="round-button" aria-label="Mettre la voix en pause" title="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6v12M16 6v12"/></svg></button><button id="restart" class="round-button" aria-label="Recommencer la voix" title="Recommencer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9a8 8 0 1 1 0 7M5 4v5h5"/></svg></button><span class="audio-label">FR <span>·</span> 14 s</span></div><audio id="doctorAudio" src="/mock-doctor.wav?v=2" preload="metadata"></audio><p id="audioStatus" role="status">La voix est prête. Démarrez les sous-titres dans le panneau, puis lancez la lecture.</p></div></section>
-<aside class="companion-guide"><div class="guide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2M4 12h3v7H4zM17 12h3v7h-3zM17 20c-2 2-4 2-6 2"/></svg></div><span class="section-label">VOTRE COMPAGNON</span><h2>Faites une place<br>à votre voix.</h2><p>accescompanion s’ouvre à côté de l’appel et vous accompagne dans l’échange.</p><ol class="setup-steps"><li><span class="step-number">1</span><div><strong>Ouvrez le panneau</strong><p>Cliquez sur l’icône accescompanion dans la barre de Chrome, sur cet onglet.</p></div></li><li><span class="step-number">2</span><div><strong>Activez les sous-titres</strong><p>Choisissez le mode de reconnaissance et confirmez l’accord de test.</p></div></li><li><span class="step-number">3</span><div><strong>Lancez la conversation</strong><p>Lisez la voix ci-contre. Les paroles apparaissent dans le panneau.</p></div></li></ol><div class="guide-tip"><span aria-hidden="true">✧</span><p>Vous gardez la main : une réponse n’est jamais parlée sans votre action.</p></div></aside></div>
-<div class="under-call"><div class="reassurance"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 3v6c0 4-7 8-7 8s-7-4-7-8V6Z"/><path d="m8 11 3 3 5-5"/></svg><p><strong>Essayez en toute tranquillité.</strong> Ce test utilise uniquement une voix fictive. Aucune caméra ni aucun microphone ne sont activés.</p></div><details class="test-details"><summary>Guide de test et texte de référence <span aria-hidden="true">＋</span></summary><div><h3>Pour la reconnaissance vocale</h3><p>Le mode local nécessite un pack français compatible. Le « Service vocal du navigateur » fonctionne avec votre accord d’envoi de l’audio au fournisseur du navigateur.</p><h3>Texte attendu, pour comparer après le test</h3><p>Bonjour. Ceci est une consultation fictive pour tester les sous-titres. Prenons le temps de lire les phrases ensemble. Vous pouvez écrire une réponse et demander une explication. Aucune consultation médicale réelle ne se déroule ici.</p><p>Le texte de référence reste sur cette page : seule la piste audio est jouée.</p><h3>Relier l’agent MCP</h3><p>Sur la page de consultation locale, cliquez « Partager l’exemple et lier un agent ». Vous décidez d’accepter ou de refuser les propositions.</p></div></details></div>
-<footer><span>accescompanion <span class="footer-dot">·</span> L’inclusion, tout au long du soin.</span><span>Prototype indépendant de Doctolib.</span></footer></main><script src="/mock-call.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Votre consultation — accescompanion</title>
+    <link rel="stylesheet" href="/mock-call.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Aller à la consultation</a>
+    <header class="app-header">
+      <a class="brand" href="/consultation"
+        ><span class="brand-mark" aria-hidden="true">✳</span>accescompanion</a
+      ><span class="header-divider"></span
+      ><span class="header-context">Votre espace de consultation</span
+      ><span class="demo-badge"><span></span>Mode démonstration</span>
+    </header>
+    <main id="main">
+      <div class="page-heading">
+        <div>
+          <div class="breadcrumb">MON PARCOURS <span>/</span> PENDANT LE RENDEZ-VOUS</div>
+          <h1>Une conversation à votre rythme.</h1>
+          <p>Un espace pour écouter, comprendre et vous exprimer.</p>
+        </div>
+        <span class="private-note"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m12 3 7 3v6c0 4-7 8-7 8s-7-4-7-8V6Z" />
+            <path d="m8.5 11 2.5 2.5 4.5-5" /></svg
+          >Aucun appel réel</span
+        >
+      </div>
+      <div class="workspace">
+        <section class="call-card" aria-label="Consultation audio fictive">
+          <div class="call-canvas">
+            <div class="room-top">
+              <span class="room-label"
+                ><span class="live-dot"></span>Simulation de consultation</span
+              ><span class="timer" id="callTimer">00:00 / 00:14</span>
+            </div>
+            <div class="doctor">
+              <div class="doctor-avatar" aria-hidden="true">
+                <svg viewBox="0 0 120 120" fill="none">
+                  <circle cx="60" cy="60" r="60" fill="#dae7e0" />
+                  <path d="M22 118c2-29 16-44 38-44s36 15 38 44" fill="#f5faf6" />
+                  <path d="m46 77 14 20 14-20" stroke="#b2c8bc" stroke-width="3" />
+                  <path d="M49 69v11l11 12 11-12V69" fill="#d6bda9" />
+                  <ellipse cx="60" cy="48" rx="22" ry="27" fill="#e2c9b4" />
+                  <path
+                    d="M38 46c-6-26 8-32 22-32 22 0 30 20 21 37l-3-17c-17 3-22-6-22-6S45 44 38 46Z"
+                    fill="#475952"
+                  />
+                  <path d="M43 83v19m34-19v16" stroke="#587565" stroke-width="3" />
+                  <circle cx="77" cy="104" r="5" stroke="#587565" stroke-width="3" />
+                  <path d="M36 100c0 14 15 14 15 0" stroke="#587565" stroke-width="3" />
+                </svg>
+              </div>
+              <span class="voice-tag"
+                ><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Voix
+                française préenregistrée</span
+              >
+              <h2>Soignant de démonstration</h2>
+              <p>Un exemple fictif, pour prendre vos repères.</p>
+            </div>
+            <div class="self-tile">
+              <span class="self-avatar">V</span><span>Vous</span
+              ><svg viewBox="0 0 24 24" aria-label="Microphone coupé">
+                <path
+                  d="M12 4a3 3 0 0 0-3 3v4m6-3V7m3 4a6 6 0 0 1-9 5M6 11a6 6 0 0 0 1 3m5 3v4m-4 0h8M3 3l18 18"
+                />
+              </svg>
+            </div>
+            <div class="canvas-footer">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h10v10H4zM14 10l6-3v10l-6-3M3 3l18 18" /></svg
+              >Caméra et microphone désactivés
+            </div>
+          </div>
+          <div class="playback">
+            <div class="progress" aria-hidden="true"><div id="playProgress"></div></div>
+            <div class="playback-controls">
+              <button id="play" class="play-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z" /></svg
+                ><span>Lire la voix du soignant</span></button
+              ><button
+                id="pause"
+                class="round-button"
+                aria-label="Mettre la voix en pause"
+                title="Pause"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 6v12M16 6v12" />
+                </svg></button
+              ><button
+                id="restart"
+                class="round-button"
+                aria-label="Recommencer la voix"
+                title="Recommencer"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 9a8 8 0 1 1 0 7M5 4v5h5" />
+                </svg></button
+              ><span class="audio-label">FR <span>·</span> 14 s</span>
+            </div>
+            <audio id="doctorAudio" src="/mock-doctor.wav?v=2" preload="metadata"></audio>
+            <p id="audioStatus" role="status">
+              La voix est prête. Démarrez les sous-titres dans le panneau, puis lancez la lecture.
+            </p>
+          </div>
+        </section>
+        <aside class="companion-guide">
+          <div class="guide-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 13v-2a8 8 0 0 1 16 0v2M4 12h3v7H4zM17 12h3v7h-3zM17 20c-2 2-4 2-6 2" />
+            </svg>
+          </div>
+          <span class="section-label">VOTRE COMPAGNON</span>
+          <h2>Faites une place<br />à votre voix.</h2>
+          <p>accescompanion s’ouvre à côté de l’appel et vous accompagne dans l’échange.</p>
+          <ol class="setup-steps">
+            <li>
+              <span class="step-number">1</span>
+              <div>
+                <strong>Ouvrez le panneau</strong>
+                <p>Cliquez sur l’icône accescompanion dans la barre de Chrome, sur cet onglet.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-number">2</span>
+              <div>
+                <strong>Activez les sous-titres</strong>
+                <p>Choisissez le mode de reconnaissance et confirmez l’accord de test.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-number">3</span>
+              <div>
+                <strong>Lancez la conversation</strong>
+                <p>Lisez la voix ci-contre. Les paroles apparaissent dans le panneau.</p>
+              </div>
+            </li>
+          </ol>
+          <div class="guide-tip">
+            <span aria-hidden="true">✧</span>
+            <p>Vous gardez la main : une réponse n’est jamais parlée sans votre action.</p>
+          </div>
+        </aside>
+      </div>
+      <div class="under-call">
+        <div class="reassurance">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m12 3 7 3v6c0 4-7 8-7 8s-7-4-7-8V6Z" />
+            <path d="m8 11 3 3 5-5" />
+          </svg>
+          <p>
+            <strong>Essayez en toute tranquillité.</strong> Ce test utilise uniquement une voix
+            fictive. Aucune caméra ni aucun microphone ne sont activés.
+          </p>
+        </div>
+        <details class="test-details">
+          <summary>Guide de test et texte de référence <span aria-hidden="true">＋</span></summary>
+          <div>
+            <h3>Pour la reconnaissance vocale</h3>
+            <p>
+              Le mode local nécessite un pack français compatible. Le « Service vocal du navigateur
+              » fonctionne avec votre accord d’envoi de l’audio au fournisseur du navigateur.
+            </p>
+            <h3>Texte attendu, pour comparer après le test</h3>
+            <p>
+              Bonjour. Ceci est une consultation fictive pour tester les sous-titres. Prenons le
+              temps de lire les phrases ensemble. Vous pouvez écrire une réponse et demander une
+              explication. Aucune consultation médicale réelle ne se déroule ici.
+            </p>
+            <p>Le texte de référence reste sur cette page : seule la piste audio est jouée.</p>
+            <h3>Relier l’agent MCP</h3>
+            <p>
+              Sur la page de consultation locale, cliquez « Partager l’exemple et lier un agent ».
+              Vous décidez d’accepter ou de refuser les propositions.
+            </p>
+          </div>
+        </details>
+      </div>
+      <footer>
+        <span
+          >accescompanion <span class="footer-dot">·</span> L’inclusion, tout au long du soin.</span
+        ><span>Prototype indépendant de Doctolib.</span>
+      </footer>
+    </main>
+    <script src="/mock-call.js"></script>
+  </body>
+</html>

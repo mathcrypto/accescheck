@@ -16,5 +16,6 @@ Only fictional messages are shared through the local consultation bridge. The us
 
 export const agentPrompt = {
   name: 'accescompanion_communication',
-  description: 'Accompagner le patient : chercher des preuves d’accessibilité, préparer une question, puis proposer une réponse à valider dans le panneau.'
+  description:
+    'Accompagner le patient : chercher des preuves d’accessibilité, préparer une question, puis proposer une réponse à valider dans le panneau.',
 };

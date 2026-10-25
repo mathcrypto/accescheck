@@ -1,0 +1,6 @@
+# Generated artifacts and imported data are not hand-maintained source.
+worker/
+dist/
+output/
+node_modules/
+package-lock.json

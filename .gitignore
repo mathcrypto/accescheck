@@ -13,3 +13,5 @@ node_modules/
 *.key
 *.crx
 prototype/assets/*.aiff
+__pycache__/
+*.pyc

@@ -1,6 +1,10 @@
 # accescompanion
 
-One place to prepare a medical visit and follow the appointment. Search documented accessibility for Paris practices, book on Doctolib when the source includes a link, then read what is said and answer. The doctor hears a spoken reply only if the device is next to them, or if this page’s sound is shared into the call.
+Prepare a medical visit and follow the conversation: find documented accessibility information, open a practice's Doctolib link when available, read captions, type a reply, and prepare notes to review with the clinician.
+
+## Run locally
+
+Requires Node.js 24 LTS.
 
 ```sh
 npm ci
@@ -8,127 +12,81 @@ npm run build
 npm run dev
 ```
 
-Open http://127.0.0.1:4173. Describe a need, open a practice, choose **Prendre rendez-vous** when Doctolib is listed, then **Suivre l’échange**.
+Open http://127.0.0.1:4173:
 
-The fictional mock call and the MCP pairing code are developer checks. They are not part of the patient path. See [local consultation tools](prototype/README.md).
+- `/`: introduction and links to the patient journey.
+- `/cabinets`: search practices, inspect evidence, and prepare questions for the cabinet.
+- `/consultation`: captions, typed/spoken replies, corrections, and editable notes.
 
-## AI agent connection
+After changing `src/`, rebuild and restart the preview. The Chrome extension has been removed; the consultation page runs alongside an appointment website.
 
-[Connect Codex or another MCP client](mcp/README.md) to the nine local tools with `node mcp/server.mjs`. The host supplies the model. accescompanion provides conversation context, a communication prompt, reply approval, and notes. Correcting a caption expires pending replies; no response is spoken automatically. The hosted Site retains its three search tools.
+## Search and accessibility evidence
 
-## Development
+The bundled dataset contains 510 Paris medical practices from the official Accès Libre export of **2026-10-24**. See [data/provenance.json](data/provenance.json) for publisher, resource, selection, license, and import details. Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0.
 
-- Edit the search and standalone companion in `src/`, and the fictional call/MCP bridge in `prototype/`.
-- After changing `src/`, run `npm run build`.
-- Run `npm test` before pushing. GitHub Actions also runs tests, builds the site artifact, and validates its entry point.
-- Generated packages, local reports, signing keys, and `.env` files are excluded from Git. Keep real appointment data and patient conversations out of fixtures and issues.
+Search sends the submitted needs to the app server for rule-based processing. There is no LLM parsing, patient account, health profile database, or application request logging. Infrastructure may retain operational logs independently of the application.
 
-## Run locally
+Common French/English keywords become criteria the user can review. Complex wording, negation, or unsupported needs may be misunderstood. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles rank last; there is no universal accessibility score, distance calculation, or live availability lookup.
 
-Requires Node.js 24 LTS. Run `npm ci` to install the MCP SDK and test client. The default app and device voice do not require API keys.
+The export omits individual confirmation dates. Populated fields are declared, not photo-verified or patient-confirmed. Missing information stays unknown, and contradictory entrance declarations are flagged. Door width describes the entrance; the documented internal route stops at reception. Transfer suitability, the consultation room, and the rest of the route remain questions for the practice.
+
+104 source records include a validated HTTPS Doctolib link. These links open externally. The app does not log in, read patient records, query appointment slots, book appointments, or join calls. A declared criterion is not a guarantee of access.
+
+## Following the appointment
+
+- **In person:** captions use the device microphone after the user confirms agreement and starts them.
+- **Doctolib or Zoom video:** the user opens their own call, selects its browser tab, and explicitly shares tab audio. Connecting the audio then starts captions if the recognition mode and consent checks pass. Video mode never substitutes the microphone for missing tab audio.
+- **Recognition:** local French processing is the default and requires browser support and a compatible language pack. The optional browser service requires explicit acknowledgment that its provider may receive audio. Silence can restart recognition within the same authorized session; pause, consent withdrawal, or leaving an in-person page stops it. There is no silent switch to remote recognition.
+- **Audio:** desktop Chrome/Edge 135+ is required for the tab-audio recognition path. Screen/window selections and audio-less shares are rejected. The temporary video track is stopped after selection; frames are not displayed or analyzed. A local audio monitor preserves listening to the shared call.
+- **Replies:** users can display text, copy it for the call's chat, or play it with a French voice marked local by the device. Speech pauses captions. The doctor hears that voice only if the device is nearby or the user has arranged outgoing audio sharing; the app does not inject speech into Doctolib or Zoom's microphone.
+- **Notes:** drafts copy messages verbatim. They do not generate a clinical summary. Edits and new messages invalidate review acknowledgment; spoken notes require review.
+
+Captured speech has no reliable speaker identification. Corrections should be confirmed with the person who spoke. This is not an interpreter, a clinical record, or environmental audio description. Real-call compatibility, transcription accuracy, and assistive-device behavior require acceptance testing.
+
+On the patient pages, conversation text stays in page memory until clear or page close. No audio is recorded, and no transcript or notes are sent to the app backend. The browser provider may process audio when the user selects remote recognition. Copying notes uses the system clipboard only on request. The fictional MCP developer workflow below explicitly shares labeled example text with the local bridge and the connected AI host.
+
+### Retained optional voice API
+
+The patient interface currently uses device voices only. The backend retains `/api/voice-config` and `/api/speech` for optional ElevenLabs use; these endpoints are not wired into the current composer. They require a server-side `ELEVENLABS_API_KEY`, explicit text-transfer consent, and a valid voice configuration. `.env.example` includes the requested public voice ID. Never commit real credentials. Provider processing and account charges apply if the API is enabled; tests use a stubbed provider.
+
+## AI agent and MCP
+
+The standard app exposes three read-only MCP tools at `/mcp`: `search_practices`, `get_practice_accessibility`, and `create_visit_briefing`.
+
+The [local consultation prototype](prototype/README.md) adds six tools for fictional sessions. Start it with `npm run dev:companion`, then open http://127.0.0.1:4180/consultation. The pairing controls and prerecorded `/mock-call` are developer checks, separate from the patient path.
+
+[Connect Codex or another MCP host](mcp/README.md) using `node mcp/server.mjs`. The official SDK adapter exposes all nine tools and the `accescompanion_communication` prompt. The host supplies the model; the website does not run a background LLM. Pairing does not start capture or speech. Spoken proposals require browser approval, and correcting a caption expires pending proposals. Real patient conversations cannot be shared through this prototype.
+
+The hosted Site retains the standard app's three search tools until a separately reviewed deployment changes it. Local code changes do not deploy the Site.
+
+## Checks
 
 ```sh
-npm run build
-npm test
-npm run dev
+npm run check
+python3 -m unittest discover -s test -p 'test_*.py'
 ```
 
-Open http://127.0.0.1:4173. The server provides the app, POST /api/search, POST /api/briefing, GET /api/catalog, and POST /mcp. No database, health profile storage, or application request logging. Production infrastructure may retain operational logs independently of application code.
+GitHub Actions runs formatting, lint, tests, importer checks, and build validation with Node 24 and Python 3.12. See [CONTRIBUTING.md](CONTRIBUTING.md) for source conventions. Unit and protocol tests cover search/evidence rules, HTTP handling, speech endpoint validation, session isolation, proposal approval/expiry, and an official MCP client connecting over stdio.
 
-## Data and evidence
+Optional browser checks require Playwright and Chrome/Chromium. With `npm run dev` running:
 
-510 Paris medical practices imported from the official Accès Libre export of **2026-10-24**, plus three synthetic examples available only through the explicit demo switch. `data/provenance.json` documents publisher, resource URL, selection, license, import date, and limitations. Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0. Import is a complete selected subset, not a live API connection.
-
-104 source records include a Doctolib URL in their contact or website field. Links are imported from those fields, validated against exact HTTPS hosts, and opened in a new tab. Identity and destination availability are not independently certified. No Doctolib credentials, availability lookup, scraping, or booking. Doctolib integration beyond links requires authorized access.
-
-The CSV omits per-record confirmation dates. All populated fields are therefore marked declared, not photo-verified or patient-confirmed; null remains unknown. Date of export is never treated as date of inspection. Explicit contradictory entrance fields are flagged. This implementation detects that particular conflict, not every possible cross-field contradiction.
-
-Rules translate common French/English need keywords into criteria. This is not LLM understanding; complex phrasing, negation, or unsupported needs may be misunderstood. Users can review extracted criteria. No door width is assumed for a wheelchair. Width is the entrance door width, not all interior passages. The interior route field describes the journey to reception only. Consultation accessibility does not establish transfer suitability. Briefings explicitly ask about transfer and the remaining route.
-
-Ranking: matching documented criteria first; known obstacles last; no distance, travel-time, live availability, or universal accessibility score. Undated declarations may be outdated. When an observation has a date, freshness expires after three calendar years; dates absent from the export remain absent.
-
-## MCP
-
-Hosted endpoint: `/mcp`. Tools: `search_practices`, `get_practice_accessibility`, `create_visit_briefing`. Supports Sites `server/discover` (2026-07-28), tools/list, tools/call, and stateless initialization compatibility. All tools are read-only. Sites enforces private site access before forwarding requests. Local preview is loopback-only and has no authentication.
-
-Example tools/call params:
-
-```json
-{"name":"search_practices","arguments":{"needs":"fauteuil électrique et malentendant","width":95,"district":"75011","mode":"real"}}
+```sh
+node scripts/browser-check.mjs
+node scripts/check-companion.mjs
+node scripts/check-call-workflow.mjs
 ```
 
-Sites publication with the MCP capability creates a personal plugin. Install/connect the generated plugin in Codex or ChatGPT. For other MCP clients, authenticated remote transport compatibility must be tested; this version has not been verified with all clients.
+Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a browser executable when they are outside the usual paths. `APP_TEST_URL` selects another preview address. Browser checks simulate speech/capture services; passing them does not establish audible output or real-call transcription quality. See [prototype/README.md](prototype/README.md) for MCP integration checks.
 
-## Structure and deployment
+## Source layout and deployment
 
-- `src/core.mjs`: needs, evidence, ranking, briefing, link validation.
-- `src/handler.mjs`: HTTP and MCP entry points, validation, no-store responses.
-- `src/index.html`: responsive UI, keyboard access, labeled forms, evidence dialog, copyable call preparation, and enlarged reading mode.
-- `scripts/compile.mjs`: embeds core, data, UI, and handler in `worker/index.js`.
-- `scripts/build.sh`: packages Worker ESM artifact in `dist`.
-- `scripts/import-data.py`: reproducible importer, run from project root with source CSV path. Update its dated source metadata when importing another export.
-- `test/`: labeled parser cases, full dataset honesty check, trust/ranking tests, API and MCP contract tests.
+- `src/core.mjs`: need parsing, evidence rules, ranking, and briefing.
+- `src/index.html`, `src/search.html`, `src/search.js`: homepage and practice search.
+- `src/consultation.html`, `src/companion.js`: consultation interface and browser speech/capture lifecycle.
+- `src/handler.mjs`, `src/speech.mjs`: HTTP/MCP routes and optional voice API.
+- `prototype/`: fictional call and local in-memory MCP bridge.
+- `mcp/`: official-SDK stdio connection and communication prompt.
+- `scripts/compile.mjs`: generates `worker/index.js` from source and data.
+- `scripts/build.sh`: packages the generated worker and Sites hosting manifest into `dist/`.
 
-Recompile after source edits. `worker/index.js` and `dist` are generated; edit `src`. Sites hosting manifest declares the MCP capability. No runtime secrets or external requests are required.
-
-## Current limitations and next steps
-
-Photo analysis/redaction, patient feedback, write-back payload review, multilingual UI, LLM parsing, and direct Doctolib APIs are deferred. No WCAG conformance claim; manually audit with a screen reader before patient deployment. Enlarged reading is not FALC. Only selected medical activities in Paris are included. Do not use demo fixtures for a real visit.
-
-## Three-minute demo
-
-1. 0:00–0:30: Explain the problem: knowing an address is different from knowing whether a visit is possible.
-2. 0:30–1:30: Describe wheelchair and hearing needs; set the required door width; compare real practices and inspect evidence.
-3. 1:30–2:15: Generate the call briefing, copy unresolved questions, and show a Doctolib link where the source provides one.
-4. 2:15–2:40: Show a read-only MCP call returning the same results.
-5. 2:40–3:00: Report measured tests with their limits; outline photo verification and authorized platform integration.
-
-
-## Appointment companion (v0.2)
-
-Open `/consultation`, or “Mon rendez-vous” from search.
-
-- Live French captions via browser SpeechRecognition when supported. Microphone starts only after an explicit action and an agreement checkbox. Default is strictly on-device recognition (`processLocally=true`). Missing support or French language pack is reported without a silent remote fallback. Optional language pack installation requires a separate click.
-- An explicit browser-service mode is available with an additional acknowledgment that the browser may send audio to its speech provider. accescompanion never receives or uploads audio. Browser-provider processing and retention cannot be guaranteed by this app.
-- Recognized speech is labeled as captured speech with an unidentified speaker: no invented diarization. Provisional words appear separately; final phrases can be corrected.
-- Patients can display typed messages or speak them using French voices marked local by the browser. Phrases are prepared but never automatically spoken. Speech playback stops recognition to avoid self-transcription; microphone does not restart automatically.
-- Enlarged reading mode and spoken interface orientation support low vision and screen-reader use. This does **not** provide camera-based or environmental audio description.
-- Notes can be entered manually, or a verbatim conversation draft can be copied into an editable field. This is not LLM summarization or a medical synthesis. Audio playback requires review acknowledgment; edits or new conversation content invalidate the acknowledgment. Copying notes requires an explicit action.
-- No transcript, audio, or notes are posted to accescompanion, stored in a database, or persisted in browser storage. Page hide clears the session; leaving the foreground stops microphone and playback. Users can explicitly copy notes to their system clipboard.
-- No API credentials required. Unsupported speech browsers retain manual two-way communication. Lack of a French local synthesis voice disables audio playback with an explanation.
-
-The companion is a communication aid, not a clinical record or qualified interpreter. Critical instructions should be confirmed by the clinician.
-
-### Companion verification
-
-`node --test test/*.test.mjs` covers serving, pure helpers, exact transcript preservation, and privacy constraints alongside the existing data/API/MCP tests.
-
-`scripts/check-companion.mjs` runs Playwright interaction tests with deterministic simulated speech recognition and synthesis: consent gates, local/remote handling, language pack errors, mic denial, interim/final captions, correction and XSS escaping, playback stopping the mic, notes review invalidation, overwrite protection, demo isolation, unsupported-browser fallback, mobile overflow, and no POST traffic. Set optional `PLAYWRIGHT_MODULE` and `CHROME_BIN` for your environment. Actual microphone transcription accuracy, French pack availability, audible playback quality, and assistive-device behavior require testing on the intended browser/device.
-
-Browser APIs: [on-device speech recognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/processLocally), [language availability](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/available_static), [speech synthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis).
-
-## Voice and video-call workflow (v0.3)
-
-The four communication tools are now visible directly below the introduction. The consultation setup offers **in-person**, **Doctolib video**, and **Zoom video**. A practice can be carried from a search result into the companion using its public record ID; private appointment URLs are entered separately and never sent to the backend.
-
-This is a **side-by-side companion**, not a native Doctolib or Zoom integration. It does not join a meeting, embed its video, log into either platform, or inject synthesized speech into another app's microphone. Users open their own meeting link and explicitly share that browser tab's audio. Share-audio instructions, a connection indicator, disconnect control, and a copy-to-clipboard action for typed replies are provided. Forwarding spoken replies requires an audio-sharing setup supported by the call platform; the patient must verify that the clinician can hear them.
-
-Shared-tab recognition is limited to desktop Chromium/Chrome/Edge 135+ with getDisplayMedia, following MDN browser compatibility data for `SpeechRecognition.start(audioTrack)`. Other browsers retain microphone/manual communication without silently substituting microphone input for a video call. Only a selected browser-tab surface with a live audio track is accepted. Entire-screen/window or audio-less selections are stopped and rejected. The browser necessarily creates a video track for the chooser; accescompanion does not display, process, transmit, or record its frames. No MediaRecorder is used. Native sharing controls remain available. Ending the share, disconnecting, clearing, navigating away, or recognition errors stop all tracks. Unlike in-person microphone capture, explicitly shared tab audio can continue while the call tab is in the foreground, as explained in the interface. Speech playback pauses transcription but retains an already connected tab until explicit disconnect or session clear.
-
-### French voices
-
-The default remains a French device voice, with no paid API. A sample-voice button is available next to message composition. Missing French local voices are reported rather than silently using an English voice or a remote provider.
-
-The requested ElevenLabs voice `pFZP5JQG7iQjIQuC4Bku` is configured as `ELEVENLABS_VOICE_ID`. Activating that exact voice also requires an **ELEVENLABS_API_KEY server secret** in the Site's runtime environment, followed by deployment. No API key is currently configured; the interface reports this voice as requiring activation and continues with the device voice.
-
-When enabled, `/api/speech` validates explicit user consent, text length (4,000 characters), and reading speed before forwarding text to ElevenLabs with the multilingual v2 model. The API key stays on the server; `/api/voice-config` exposes readiness and the public voice ID only. Audio responses are not cached, object URLs are revoked, and errors do not expose upstream details. Text sent to ElevenLabs is subject to that provider's processing, retention policy, quota, and account charges; zero-retention is not assumed. This optional path changes v0.2's no-POST behavior only when the user selects ElevenLabs and accepts text transfer. French pronunciation and this voice's availability require verification with the configured account. No paid API or actual patient text was used in tests.
-
-Local configuration example (Node 20.6+): copy `.env.example` to `.env`, populate the secret locally, then use `node --env-file=.env scripts/dev.mjs`. Never commit `.env`. Production secrets belong in Sites runtime settings, not the hosting manifest or source code.
-
-### Added checks
-
-`test/speech.test.mjs` covers link validation, browser gating, requested voice selection, secret redaction, same-origin enforcement, consent and length validation, unavailable configuration, provider failures, and audio responses through a stubbed provider.
-
-`scripts/check-call-workflow.mjs` tests the actual UI with simulated capture/speech services: call links, no microphone fallback for video mode, exact shared audio-track routing, missing audio, rejected screen surfaces, cleanup, background sharing, end-share, opt-in ElevenLabs text transfer, device fallback, selected-practice handoff, mobile layout, and no transmission of private meeting URLs. Live Doctolib/Zoom audio, actual OS capture permissions, clinical transcription accuracy, and ElevenLabs audio quality remain device/account acceptance checks.
-
-References: [MDN track recognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/start), [MDN display capture](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia), [ElevenLabs API](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).
+Edit `src/` rather than the generated worker. Build before deployment. Generated reports, local packages, `.env`, and signing keys are excluded from Git. Photo verification, patient feedback, direct Doctolib APIs, and clinical summaries are not implemented. Screen-reader and clinical acceptance audits remain necessary before patient deployment; no WCAG or FALC conformance is claimed.

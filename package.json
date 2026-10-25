@@ -9,13 +9,21 @@
     "validate": "node scripts/validate-artifact.mjs",
     "dev:companion": "node prototype/server.mjs",
     "mcp": "node mcp/server.mjs",
-    "mcp:config": "node scripts/print-mcp-config.mjs"
+    "mcp:config": "node scripts/print-mcp-config.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "check": "npm run format:check && npm run lint && npm test && npm run build && npm run validate"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.4.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@modelcontextprotocol/client": "2.4.0"
+    "@eslint/js": "10.0.1",
+    "@modelcontextprotocol/client": "2.4.0",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "prettier": "3.9.10"
   }
 }

@@ -1,21 +1,313 @@
-(()=>{
- const card=document.createElement('section');card.className='connection-hub';card.id='mcpTestPanel';card.innerHTML='<div class="eyebrow">TEST MCP LOCAL · EXEMPLE FICTIF</div><h2 style="font-size:18px;margin:5px 0">Un agent, relié à cette conversation.</h2><p>Ce prototype partage uniquement les messages marqués fictifs avec le pont local en mémoire. Il ne rejoint aucun appel et n’active pas le micro. La lecture d’une réponse nécessite votre accord ici.</p><button class="primary" id="pairMcpTest">Partager l’exemple et lier un agent</button><p id="mcpTestStatus" role="status"></p><div id="mcpPending"></div><div id="mcpHistory" aria-live="polite"></div><button class="secondary" id="stopMcpTest" hidden>Déconnecter et effacer le test MCP</button>';
- document.querySelector('.connection-hub').before(card);let session=null,timer=null,busy=false,lastSnapshot='',closed=false;const seen=new Set();
- const element=id=>document.getElementById(id);const say=text=>element('mcpTestStatus').textContent=text;
- async function request(action,data={}){const r=await fetch('/bridge/'+action,{method:'POST',headers:{'Content-Type':'application/json',...(session?{Authorization:'Bearer '+session.browser_token}:{})},body:JSON.stringify({...data,...(session?{session_id:session.session_id}:{})})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Pont indisponible');return d;}
- function history(text){const p=document.createElement('p');p.textContent=text;element('mcpHistory').append(p);}
- function clear(){closed=true;if(timer)clearInterval(timer);timer=null;session=null;seen.clear();element('mcpPending').replaceChildren();element('pairMcpTest').disabled=false;element('stopMcpTest').hidden=true;document.getElementById('clearSession').click();say('Test arrêté. Messages, notes et liaison effacés.');}
- async function tick(){if(!session||busy||closed)return;busy=true;try{const state=await request('poll');if(!session||closed)return;if(!state.active){clear();return;}for(const node of element('mcpPending').querySelectorAll('[data-command-id]'))if(!state.commands.some(c=>c.id===node.dataset.commandId))node.remove();if(state.paired)say('Agent lié · seuls les messages fictifs sont partagés.');const current=messages.filter(m=>m.demo===true);const snapshot=JSON.stringify(current);if(snapshot!==lastSnapshot){await request('snapshot',{messages:current});lastSnapshot=snapshot;}
-  for(const c of state.commands){if(seen.has(c.id))continue;seen.add(c.id);
-   if(c.type==='prepare'){document.getElementById(c.mode==='vision'?'modeVision':c.mode==='speak'?'modeSpeak':'modeCaptions').click();await request('ack',{id:c.id,status:'applied'});history('L’agent a préparé le mode de lecture. Aucun microphone activé.');}
-   if(c.type==='draft'){document.getElementById('notesTab').click();if(document.getElementById('notes').value.trim()){await request('ack',{id:c.id,status:'failed'});history('Brouillon non appliqué : vos notes existantes ont été conservées.');continue;}document.getElementById('notes').value=c.text;document.getElementById('notes').dispatchEvent(new Event('input'));await request('ack',{id:c.id,status:'applied'});history('Brouillon fictif reçu via MCP. Relecture requise, aucune lecture automatique.');}
-   if(c.type==='speak'){const wrap=document.createElement('div');wrap.className='callbox';wrap.dataset.commandId=c.id;wrap.style.cssText='border:1px solid #c7d6be;padding:16px;margin:12px 0;border-radius:8px;background:#f1f6eb';const title=document.createElement('strong');title.textContent='L’agent propose cette réponse fictive :';const p=document.createElement('p');p.textContent=c.text;const approve=document.createElement('button');approve.className='primary';approve.textContent='Approuver et lire cette réponse';const reject=document.createElement('button');reject.className='secondary';reject.textContent='Refuser';wrap.append(title,p,approve,reject);element('mcpPending').append(wrap);
-    approve.onclick=async()=>{approve.disabled=reject.disabled=true;try{if(closed||!session)throw new Error('Session arrêtée.');const live=await request('poll');if(!live.active)throw new Error('Session arrêtée.');if(live.commands.every(x=>x.id!==c.id))throw new Error('Action expirée.');await request('ack',{id:c.id,status:'approved'});const ok=await speak(c.text);if(ok){append(c.text,'patient',true);history('Réponse approuvée et lecture demandée au navigateur.');}else{await request('ack',{id:c.id,status:'failed'});history('Lecture indisponible sur cet appareil.');}wrap.remove();}catch(e){say(e.message);wrap.remove();}};
-    reject.onclick=async()=>{approve.disabled=reject.disabled=true;try{await request('ack',{id:c.id,status:'rejected'});history('Réponse refusée. Aucun son joué.');wrap.remove();}catch(e){say(e.message)}};
-   }
+(() => {
+  const consultation = window.accescompanionSession;
+  const connectionHub = document.querySelector('.connection-hub');
+
+  if (!consultation || !connectionHub) {
+    return;
   }
- }catch(e){say(e.message);if(timer)clearInterval(timer);timer=null;}finally{busy=false;}}
- element('pairMcpTest').onclick=async()=>{try{if(messages.some(m=>!m.demo))throw new Error('Effacez votre conversation réelle avant de lancer ce test fictif.');if(!messages.length)document.getElementById('loadDemo').click();closed=false;lastSnapshot='';session=await request('pair',{fictional_test:true});say('Code de liaison à usage unique : '+session.pairing_code+' · valable 5 minutes.');element('mcpTestPanel').dataset.pairingCode=session.pairing_code;element('pairMcpTest').disabled=true;element('stopMcpTest').hidden=false;await tick();timer=setInterval(tick,600);}catch(e){say(e.message)}};
- element('stopMcpTest').onclick=async()=>{try{if(session)await request('end')}finally{clear()}};
- const originalClear=document.getElementById('clearSession').onclick;document.getElementById('clearSession').onclick=()=>{originalClear();if(session){const closing=session;session=null;closed=true;clearInterval(timer);fetch('/bridge/end',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+closing.browser_token},body:JSON.stringify({session_id:closing.session_id}),keepalive:true}).catch(()=>{});element('mcpPending').replaceChildren();element('pairMcpTest').disabled=false;element('stopMcpTest').hidden=true;say('Test déconnecté et conversation effacée.');}};
+
+  const POLL_INTERVAL_MS = 600;
+  const panel = createTestPanel();
+  connectionHub.before(panel);
+
+  const pairingButton = panel.querySelector('#pairMcpTest');
+  const stopButton = panel.querySelector('#stopMcpTest');
+  const statusElement = panel.querySelector('#mcpTestStatus');
+  const pendingElement = panel.querySelector('#mcpPending');
+  const historyElement = panel.querySelector('#mcpHistory');
+  const seenCommands = new Set();
+
+  let session = null;
+  let pollTimer = null;
+  let polling = false;
+  let lastSnapshot = '';
+
+  function createTestPanel() {
+    const element = document.createElement('section');
+    element.className = 'connection-hub';
+    element.id = 'mcpTestPanel';
+    element.innerHTML = `
+      <div class="eyebrow">TEST MCP LOCAL · EXEMPLE FICTIF</div>
+      <h2>Un agent, relié à cette conversation.</h2>
+      <p>
+        Ce prototype partage uniquement les messages marqués fictifs avec le pont
+        local en mémoire. Il ne rejoint aucun appel et n’active pas le micro.
+        La lecture d’une réponse nécessite votre accord ici.
+      </p>
+      <button class="primary" id="pairMcpTest">
+        Partager l’exemple et lier un agent
+      </button>
+      <p id="mcpTestStatus" role="status"></p>
+      <div id="mcpPending"></div>
+      <div id="mcpHistory" aria-live="polite"></div>
+      <button class="secondary" id="stopMcpTest" hidden>
+        Déconnecter et effacer le test MCP
+      </button>
+    `;
+    return element;
+  }
+
+  function setStatus(message) {
+    statusElement.textContent = message;
+  }
+
+  function addHistory(message) {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = message;
+    historyElement.append(paragraph);
+  }
+
+  async function bridgeRequest(action, payload = {}, credentials = session) {
+    const response = await fetch(`/bridge/${action}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(credentials ? { Authorization: `Bearer ${credentials.browser_token}` } : {}),
+      },
+      body: JSON.stringify({
+        ...payload,
+        ...(credentials ? { session_id: credentials.session_id } : {}),
+      }),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Pont indisponible.');
+    }
+
+    return result;
+  }
+
+  function resetConnection() {
+    clearInterval(pollTimer);
+    pollTimer = null;
+    session = null;
+    lastSnapshot = '';
+    seenCommands.clear();
+    pendingElement.replaceChildren();
+    delete panel.dataset.pairingCode;
+    pairingButton.disabled = false;
+    stopButton.hidden = true;
+  }
+
+  function removeExpiredProposals(commands) {
+    for (const element of pendingElement.querySelectorAll('[data-command-id]')) {
+      if (!commands.some((command) => command.id === element.dataset.commandId)) {
+        element.remove();
+      }
+    }
+  }
+
+  async function applyPreparation(command) {
+    consultation.prepareReadingMode(command.mode);
+    await bridgeRequest('ack', { id: command.id, status: 'applied' });
+    addHistory('L’agent a préparé le mode de lecture. Aucun microphone activé.');
+  }
+
+  async function applyDraft(command) {
+    const applied = consultation.applyDraft(command.text);
+    await bridgeRequest('ack', {
+      id: command.id,
+      status: applied ? 'applied' : 'failed',
+    });
+    addHistory(
+      applied
+        ? 'Brouillon fictif reçu via MCP. Relecture requise, aucune lecture automatique.'
+        : 'Brouillon non appliqué : vos notes existantes ont été conservées.',
+    );
+  }
+
+  function createSpeechProposal(command) {
+    const proposal = document.createElement('div');
+    proposal.className = 'callbox';
+    proposal.dataset.commandId = command.id;
+
+    const title = document.createElement('strong');
+    title.textContent = 'L’agent propose cette réponse fictive :';
+    const message = document.createElement('p');
+    message.textContent = command.text;
+    const approveButton = document.createElement('button');
+    approveButton.className = 'primary';
+    approveButton.textContent = 'Approuver et lire cette réponse';
+    const rejectButton = document.createElement('button');
+    rejectButton.className = 'secondary';
+    rejectButton.textContent = 'Refuser';
+    proposal.append(title, message, approveButton, rejectButton);
+
+    function disableButtons() {
+      approveButton.disabled = true;
+      rejectButton.disabled = true;
+    }
+
+    approveButton.addEventListener('click', async () => {
+      disableButtons();
+      const approvingSession = session;
+
+      try {
+        if (!approvingSession) {
+          throw new Error('Session arrêtée.');
+        }
+
+        const state = await bridgeRequest('poll');
+        if (session !== approvingSession || !state.active) {
+          throw new Error('Session arrêtée.');
+        }
+        if (!state.commands.some((pending) => pending.id === command.id)) {
+          throw new Error('Action expirée.');
+        }
+
+        const acknowledgment = await bridgeRequest('ack', {
+          id: command.id,
+          status: 'approved',
+        });
+        if (session !== approvingSession) {
+          throw new Error('Session arrêtée.');
+        }
+        if (acknowledgment.status !== 'approved') {
+          throw new Error('Action expirée. Relisez la conversation avant de proposer une réponse.');
+        }
+
+        const played = await consultation.speakApprovedReply(command.text);
+        if (played) {
+          addHistory('Réponse approuvée et lecture demandée au navigateur.');
+        } else {
+          await bridgeRequest('ack', { id: command.id, status: 'failed' });
+          addHistory('Lecture indisponible sur cet appareil.');
+        }
+      } catch (error) {
+        setStatus(error.message);
+      } finally {
+        proposal.remove();
+      }
+    });
+
+    rejectButton.addEventListener('click', async () => {
+      disableButtons();
+      try {
+        await bridgeRequest('ack', { id: command.id, status: 'rejected' });
+        addHistory('Réponse refusée. Aucun son joué.');
+      } catch (error) {
+        setStatus(error.message);
+      } finally {
+        proposal.remove();
+      }
+    });
+
+    pendingElement.append(proposal);
+  }
+
+  async function applyCommand(command) {
+    switch (command.type) {
+      case 'prepare':
+        await applyPreparation(command);
+        break;
+      case 'draft':
+        await applyDraft(command);
+        break;
+      case 'speak':
+        createSpeechProposal(command);
+        break;
+      default:
+        throw new Error('Commande MCP inconnue.');
+    }
+  }
+
+  async function pollSession() {
+    if (!session || polling) {
+      return;
+    }
+
+    polling = true;
+    const pollingSession = session;
+
+    try {
+      const state = await bridgeRequest('poll');
+      if (session !== pollingSession) {
+        return;
+      }
+      if (!state.active) {
+        resetConnection();
+        consultation.clear();
+        setStatus('Test arrêté. Messages, notes et liaison effacés.');
+        return;
+      }
+      if (state.paired) {
+        setStatus('Agent lié · seuls les messages fictifs sont partagés.');
+      }
+
+      removeExpiredProposals(state.commands);
+      const messages = consultation.getFictionalMessages();
+      const snapshot = JSON.stringify(messages);
+      if (snapshot !== lastSnapshot) {
+        await bridgeRequest('snapshot', { messages });
+        if (session !== pollingSession) {
+          return;
+        }
+        lastSnapshot = snapshot;
+      }
+
+      for (const command of state.commands) {
+        if (session !== pollingSession) {
+          return;
+        }
+        if (!seenCommands.has(command.id)) {
+          await applyCommand(command);
+          seenCommands.add(command.id);
+        }
+      }
+    } catch (error) {
+      setStatus(error.message);
+      clearInterval(pollTimer);
+      pollTimer = null;
+    } finally {
+      polling = false;
+    }
+  }
+
+  async function startTest() {
+    try {
+      if (consultation.hasRealMessages()) {
+        throw new Error('Effacez votre conversation réelle avant de lancer ce test fictif.');
+      }
+      if (!consultation.getFictionalMessages().length) {
+        consultation.loadExample();
+      }
+
+      session = await bridgeRequest('pair', { fictional_test: true });
+      pairingButton.disabled = true;
+      stopButton.hidden = false;
+      panel.dataset.pairingCode = session.pairing_code;
+      setStatus(`Code de liaison à usage unique : ${session.pairing_code} · valable 5 minutes.`);
+      await pollSession();
+      if (session) {
+        pollTimer = setInterval(pollSession, POLL_INTERVAL_MS);
+      }
+    } catch (error) {
+      setStatus(error.message);
+    }
+  }
+
+  function closeSharedSession() {
+    const closingSession = session;
+    resetConnection();
+
+    if (closingSession) {
+      fetch('/bridge/end', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${closingSession.browser_token}`,
+        },
+        body: JSON.stringify({ session_id: closingSession.session_id }),
+        keepalive: true,
+      }).catch(() => {});
+      setStatus('Test déconnecté et conversation effacée.');
+    }
+  }
+
+  pairingButton.addEventListener('click', startTest);
+  stopButton.addEventListener('click', () => {
+    consultation.clear();
+  });
+  window.addEventListener('accescompanion:session-cleared', closeSharedSession);
 })();
