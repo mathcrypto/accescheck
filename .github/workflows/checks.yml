@@ -44,7 +44,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Install Vercel CLI
         run: npm install --global vercel@65.2.0
-      - name: Build and deploy production
+      - name: Build production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
@@ -54,6 +54,29 @@ jobs:
           fi
           vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
           vercel build --prod --token="$VERCEL_TOKEN"
-          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+      - name: Deploy production
+        id: production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          OPENAI_SEARCH_MODEL: ${{ vars.OPENAI_SEARCH_MODEL }}
+          OPENAI_REVIEW_MODEL: ${{ vars.OPENAI_REVIEW_MODEL }}
+        run: |
+          runtime_env=()
+          search_configured=false
+          if [ -n "$OPENAI_API_KEY" ]; then
+            runtime_env+=(--env "OPENAI_API_KEY=$OPENAI_API_KEY")
+            search_configured=true
+          fi
+          for model_name in OPENAI_MODEL OPENAI_SEARCH_MODEL OPENAI_REVIEW_MODEL; do
+            if [ -n "${!model_name}" ]; then
+              runtime_env+=(--env "$model_name=${!model_name}")
+            fi
+          done
+          vercel deploy --prebuilt --prod "${runtime_env[@]}" --token="$VERCEL_TOKEN"
+          echo "search_configured=$search_configured" >> "$GITHUB_OUTPUT"
       - name: Verify public application
+        env:
+          REQUIRE_SEARCH_AGENT: ${{ steps.production.outputs.search_configured }}
         run: node scripts/check-public-deployment.mjs https://accescheck.vercel.app

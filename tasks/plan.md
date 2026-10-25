@@ -119,3 +119,7 @@ Ajouter les quatre thèmes aux observations structurées du même appel web, san
 Départage par réputation uniquement entre les fiches affichées dont l’accessibilité et la distance exacte sont égales, et uniquement aux positions déjà occupées par des fiches ayant un ressenti disponible. Les fiches sans données gardent leur position et aucune meilleure réputation ne compense l’accès ou la distance. L’enrichissement partiel ne prétend pas comparer la réputation de tous les cabinets du répertoire.
 
 Vérifier : avis du médecin exclus, doublons/copies, contradictions entre sites, avis anonymes sans référence, données insuffisantes, absence neutre, ordre accès/distance inchangé, UI sûre et mobile. Aucun appel payant supplémentaire dans les tests.
+
+### Correctif `production-search-config`
+
+Le smoke test final a trouvé le chat et les avis déployés mais `available:false` en production, malgré une clé locale présente. Fournir la clé uniquement au runtime de déploiement via un secret chiffré GitHub et conserver les modèles configurés en variables. Tester l’absence de clé dans pull/build/tests et la présence de configuration au contrôle public, sans appel fournisseur. Branche dédiée, revue puis fusion et vérification réelle de la configuration publique.
