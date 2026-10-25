@@ -48,7 +48,9 @@ test('finder matches short specialty forms and autour-de places', async () => {
   try {
     const catalog = await (
       await import('../src/practice-store.mjs')
-    ).createPracticeStore(db).catalog();
+    )
+      .createPracticeStore(db)
+      .catalog();
     assert.equal(matchSpecialty('un generaliste', catalog.specialties), 'Médecin généraliste');
     assert.equal(matchSpecialty('dentiste', catalog.specialties), 'Dentiste, chirurgien dentiste');
     assert.match(extractPlaceQuery('autour de Bastille'), /bastille/i);
@@ -79,9 +81,7 @@ test('finder searches immediately for specialty and place', async () => {
     assert.ok(result.results);
     assert.equal(result.state.radiusKm, 5);
     assert.ok(result.results.practices.every((p) => p.specialty === 'Médecin généraliste'));
-    assert.ok(
-      result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5),
-    );
+    assert.ok(result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5));
   } finally {
     db.close();
   }
@@ -148,19 +148,14 @@ test('bastille paris keeps Bastille as origin within 5 km', async () => {
     assert.match(result.state.origin?.label || '', /bastille/i);
     assert.doesNotMatch(result.state.origin?.label || '', /^Paris$/);
     assert.equal(result.state.radiusKm, 5);
-    assert.ok(
-      result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5),
-    );
+    assert.ok(result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5));
   } finally {
     db.close();
   }
 });
 
 test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
-  assert.equal(
-    extractPlaceQuery('autour de denfert paris 14eme'),
-    'denfert paris 14e',
-  );
+  assert.equal(extractPlaceQuery('autour de denfert paris 14eme'), 'denfert paris 14e');
   assert.deepEqual(targetPostcodes('denfert paris 14e'), ['75014']);
   const db = openSqlite();
   try {
@@ -175,9 +170,7 @@ test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
     assert.equal(result.state.placeQuery, 'denfert paris 14e');
     assert.match(result.state.origin?.label || '', /denfert/i);
     assert.equal(result.state.radiusKm, 5);
-    assert.ok(
-      result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5),
-    );
+    assert.ok(result.results.practices.every((p) => p.distanceKm == null || p.distanceKm <= 5));
   } finally {
     db.close();
   }
@@ -186,10 +179,7 @@ test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
 test('finder keeps prior needs when a follow-up only adds place or specialty', async () => {
   const db = openSqlite();
   try {
-    const first = await runFinder(
-      { message: 'Je suis malentendant.', consent: false },
-      { DB: db },
-    );
+    const first = await runFinder({ message: 'Je suis malentendant.', consent: false }, { DB: db });
     assert.deepEqual(first.state.needs.keys, ['hearing']);
     assert.ok(first.results);
     const second = await runFinder(

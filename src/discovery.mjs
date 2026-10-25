@@ -122,7 +122,12 @@ export async function geocode(query, transport = fetch) {
       const properties = feature.properties || {};
       const postcode = String(properties.postcode || '');
       const key = `${latitude},${longitude},${properties.label}`;
-      if (!point || typeof properties.label !== 'string' || !/^\d{5}$/.test(postcode) || seen.has(key))
+      if (
+        !point ||
+        typeof properties.label !== 'string' ||
+        !/^\d{5}$/.test(postcode) ||
+        seen.has(key)
+      )
         return [];
       seen.add(key);
       return [
@@ -158,9 +163,15 @@ export async function findPractices(database, input) {
     input.confirmed !== true ||
     Object.keys(input).some(
       (key) =>
-        !['confirmed', 'needs', 'specialty', 'origin', 'radiusKm', 'page', 'preferPostcodes'].includes(
-          key,
-        ),
+        ![
+          'confirmed',
+          'needs',
+          'specialty',
+          'origin',
+          'radiusKm',
+          'page',
+          'preferPostcodes',
+        ].includes(key),
     )
   )
     throw new Error('Confirmez vos critères avant la recherche.');

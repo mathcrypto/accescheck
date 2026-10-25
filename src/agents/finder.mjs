@@ -114,8 +114,9 @@ export function matchSpecialty(text, specialties) {
   const source = plain(text);
   const list = [...specialties].filter(Boolean);
   const exact =
-    [...list].sort((a, b) => b.length - a.length).find((specialty) => source.includes(plain(specialty))) ||
-    '';
+    [...list]
+      .sort((a, b) => b.length - a.length)
+      .find((specialty) => source.includes(plain(specialty))) || '';
   if (exact) return exact;
   for (const alias of SPECIALTY_ALIASES) {
     if (!alias.pattern.test(source)) continue;
@@ -126,7 +127,9 @@ export function matchSpecialty(text, specialties) {
   return (
     [...list]
       .map((specialty) => {
-        const tokens = plain(specialty).split(/[^a-z0-9]+/).filter((token) => token.length >= 4);
+        const tokens = plain(specialty)
+          .split(/[^a-z0-9]+/)
+          .filter((token) => token.length >= 4);
         const tip = tokens.at(-1);
         return tip && new RegExp(String.raw`\b${tip}\b`).test(source) ? specialty : '';
       })
@@ -262,7 +265,9 @@ function emptyState() {
 
 function readState(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return emptyState();
-  const keys = Array.isArray(value.needs?.keys) ? value.needs.keys.filter((key) => labels[key]) : [];
+  const keys = Array.isArray(value.needs?.keys)
+    ? value.needs.keys.filter((key) => labels[key])
+    : [];
   const minWidth =
     value.needs?.minWidth === null || value.needs?.minWidth === undefined
       ? null
@@ -349,9 +354,7 @@ function summary(state) {
   const parts = [listCriteria(state.needs)];
   if (state.specialty) parts.push(state.specialty);
   if (state.origin?.label) {
-    parts.push(
-      state.origin.label + (state.radiusKm ? ` · ≤ ${state.radiusKm} km` : ''),
-    );
+    parts.push(state.origin.label + (state.radiusKm ? ` · ≤ ${state.radiusKm} km` : ''));
   } else if (state.placeQuery) parts.push(state.placeQuery + ' (lieu à préciser)');
   return parts.join(' · ');
 }
@@ -416,9 +419,7 @@ function describeResults(state, found, ranked) {
   const sparse = sparseKeys(ranked.ordered, state.needs.keys);
   const excluded = found.counts?.knownObstaclesExcluded;
   const excludedBit =
-    Number.isFinite(excluded) && excluded > 0
-      ? ` · ${excluded} exclus (obstacle connu)`
-      : '';
+    Number.isFinite(excluded) && excluded > 0 ? ` · ${excluded} exclus (obstacle connu)` : '';
   if (!found.total) {
     return (
       'Aucun cabinet trouvé' +
@@ -555,8 +556,7 @@ export async function runFinder(body, env = {}) {
     if (state.specialty && !catalog.specialties.includes(state.specialty)) state.specialty = '';
     if (!state.origin && state.placeQuery) {
       state.origin = await resolvePlace(state.placeQuery, steps);
-      if (!state.origin)
-        steps.push({ label: 'Lieu non trouvé · recherche sans distance' });
+      if (!state.origin) steps.push({ label: 'Lieu non trouvé · recherche sans distance' });
     }
     return search(state, env, steps);
   }
@@ -612,9 +612,7 @@ export async function runFinder(body, env = {}) {
       if (ai.questions?.length) {
         state = {
           ...state,
-          needs: needs.keys.length
-            ? { keys: needs.keys, minWidth: needs.minWidth }
-            : state.needs,
+          needs: needs.keys.length ? { keys: needs.keys, minWidth: needs.minWidth } : state.needs,
           specialty,
           placeQuery,
           origin: placeChanged ? null : state.origin,
@@ -622,11 +620,7 @@ export async function runFinder(body, env = {}) {
           source,
         };
         return {
-          reply:
-            'Avant de chercher : ' +
-            ai.questions.join(' ') +
-            '\n\n' +
-            summary(state),
+          reply: 'Avant de chercher : ' + ai.questions.join(' ') + '\n\n' + summary(state),
           steps,
           state,
           actions: state.needs.keys.length
@@ -646,9 +640,7 @@ export async function runFinder(body, env = {}) {
 
   // Keep prior accessibility needs when the turn only adds profession / lieu.
   state = {
-    needs: needs.keys.length
-      ? { keys: needs.keys, minWidth: needs.minWidth }
-      : state.needs,
+    needs: needs.keys.length ? { keys: needs.keys, minWidth: needs.minWidth } : state.needs,
     specialty,
     placeQuery,
     origin: placeChanged ? null : state.origin,
