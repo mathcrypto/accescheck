@@ -1,7 +1,7 @@
 import { practiceTools, runPracticeTool, practiceSummary } from './practice-tools.mjs';
 import { createPracticeStore, DataUnavailable } from './practice-store.mjs';
 import { speechConfig, generateSpeech } from './speech.mjs';
-import { finderConfig, runFinder } from './agents/finder.mjs';
+import { finderConfig, geocodeQueryFor, runFinder } from './agents/finder.mjs';
 import { findPractices, geocode } from './discovery.mjs';
 
 const headers = {
@@ -73,34 +73,25 @@ async function importRequest(request, env, path) {
   return json({ error: 'Route introuvable.' }, 404);
 }
 
-export function createHandler({ home, searchPage, consultationPage, assistantPage }) {
+export function createHandler({ home, consultationPage }) {
   return {
     async fetch(request, env = {}) {
       const url = new URL(request.url);
       try {
         if (
           request.method === 'GET' &&
-          ['/', '/cabinets', '/assistant', '/consultation', '/consultation/'].includes(url.pathname)
+          ['/', '/consultation', '/consultation/'].includes(url.pathname)
         )
-          return new Response(
-            url.pathname === '/'
-              ? home
-              : url.pathname === '/assistant'
-                ? assistantPage
-                : url.pathname === '/cabinets'
-                  ? searchPage
-                  : consultationPage,
-            {
-              headers: {
-                'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'no-store',
-                'X-Content-Type-Options': 'nosniff',
-                'Referrer-Policy': 'no-referrer',
-                'Content-Security-Policy':
-                  "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-              },
+          return new Response(url.pathname === '/' ? home : consultationPage, {
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-store',
+              'X-Content-Type-Options': 'nosniff',
+              'Referrer-Policy': 'no-referrer',
+              'Content-Security-Policy':
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
             },
-          );
+          });
         const origin = request.headers.get('Origin');
         if (
           (origin && origin !== url.origin) ||
@@ -126,7 +117,7 @@ export function createHandler({ home, searchPage, consultationPage, assistantPag
         if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
         const body = await readJson(request, 12000);
         if (url.pathname === '/api/locations')
-          return json({ locations: await geocode(body.query) });
+          return json({ locations: await geocode(geocodeQueryFor(body.query)) });
         if (url.pathname === '/api/agent') return json(await runFinder(body, env));
         if (url.pathname === '/api/discover') return json(await findPractices(env.DB, body));
         if (url.pathname === '/api/speech') return generateSpeech(body, env);

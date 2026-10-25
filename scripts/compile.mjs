@@ -6,8 +6,6 @@ const sharedStyles = await readFile('src/ui.css', 'utf8');
 const sharedHeader = await readFile('src/header.html', 'utf8');
 const routes = {
   'src/index.html': '/',
-  'src/assistant.html': '/assistant',
-  'src/finder.html': '/cabinets',
   'src/consultation.html': '/consultation',
 };
 
@@ -45,15 +43,12 @@ async function page(templatePath, entryPoint, stylePath) {
     result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script'),
   );
 }
-const finder = await page('src/finder.html', 'src/finder.js', 'src/finder.css');
 const pages = {
   home: (await page('src/index.html', 'src/home.js', 'src/home.css')).replace(
     '/*HOSPITAL_IMAGE*/',
     (await readFile('src/assets/hospital.jpg')).toString('base64'),
   ),
-  searchPage: finder,
   consultationPage: await page('src/consultation.html', 'src/companion.js', 'src/consultation.css'),
-  assistantPage: await page('src/assistant.html', 'src/assistant.js', 'src/assistant.css'),
 };
 await mkdir('worker', { recursive: true });
 await build({

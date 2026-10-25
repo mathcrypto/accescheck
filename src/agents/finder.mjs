@@ -439,7 +439,7 @@ function describeResults(state, found, ranked) {
   );
 }
 
-async function search(state, env, steps) {
+async function search(state, env, steps, page = 1) {
   steps.push({ label: 'Recherche Accès Libre' });
   const query = withRadius(state);
   const postcodes = targetPostcodes(state.placeQuery);
@@ -450,7 +450,7 @@ async function search(state, env, steps) {
     origin: query.origin,
     radiusKm: query.radiusKm,
     preferPostcodes: postcodes,
-    page: 1,
+    page,
   });
   const withComplete = found.results.map((practice) => ({
     ...practice,
@@ -480,6 +480,9 @@ async function search(state, env, steps) {
     actions,
     results: {
       total: found.total,
+      page: found.page,
+      pageSize: found.pageSize,
+      dataset: found.dataset,
       completeCount,
       bestMet: ranked.bestMet,
       needed: state.needs.keys.length,
@@ -499,6 +502,8 @@ async function search(state, env, steps) {
         doctolibUrl: practice.doctolibUrl,
         websiteUrl: practice.websiteUrl,
         sourceUrl: practice.sourceUrl,
+        source: practice.source,
+        evidence: practice.evidence,
         distanceKm: practice.distanceKm,
         needsConfirmation: practice.needsConfirmation,
         complete: practice.complete,
@@ -551,6 +556,8 @@ export async function runFinder(body, env = {}) {
     };
   }
 
+  const page = Math.max(1, Math.min(50, Number(body.page) || 1));
+
   if (action === 'confirm' || action === 'search') {
     if (!state.needs.keys.length) throw new Error('Aucun critère à confirmer.');
     if (state.specialty && !catalog.specialties.includes(state.specialty)) state.specialty = '';
@@ -558,12 +565,12 @@ export async function runFinder(body, env = {}) {
       state.origin = await resolvePlace(state.placeQuery, steps);
       if (!state.origin) steps.push({ label: 'Lieu non trouvé · recherche sans distance' });
     }
-    return search(state, env, steps);
+    return search(state, env, steps, page);
   }
 
   if (action === 'widen' && state.origin) {
     const next = Math.min(25, (state.radiusKm || 10) + 10);
-    return search({ ...state, radiusKm: next }, env, [{ label: `Rayon ${next} km` }]);
+    return search({ ...state, radiusKm: next }, env, [{ label: `Rayon ${next} km` }], page);
   }
 
   if (action === 'relax' && state.needs.keys.length > 1) {
@@ -576,9 +583,12 @@ export async function runFinder(body, env = {}) {
         minWidth: keys.includes('width') ? state.needs.minWidth : null,
       },
     };
-    return search(state, env, [
-      { label: 'Critère retiré' + (drop && labels[drop] ? ' · ' + labels[drop] : '') },
-    ]);
+    return search(
+      state,
+      env,
+      [{ label: 'Critère retiré' + (drop && labels[drop] ? ' · ' + labels[drop] : '') }],
+      page,
+    );
   }
 
   const message = typeof body.message === 'string' ? body.message.trim() : '';
@@ -667,6 +677,9 @@ export async function runFinder(body, env = {}) {
   if (needs.clarification && needs.keys.includes('width') && needs.minWidth === null) {
     return confirmPayload(state, steps, needs.clarification);
   }
+
+  // Homepage review flow: propose criteria and place, never search until confirm.
+  if (body.reviewOnly === true) return confirmPayload(state, steps);
 
   // Search immediately when criteria are clear; only width without measure waits.
   if (source === 'local' || state.needs.keys.length) return search(state, env, steps);

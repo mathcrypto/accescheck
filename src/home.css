@@ -591,16 +591,40 @@ summary,
 .card-links,
 .actions {
   display: flex;
-  gap: 24px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
   margin-top: 20px;
   font-size: 12px;
 }
 .card-links a {
-  min-height: 40px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.card-links a:hover,
+.card-links a:focus-visible {
+  border-color: var(--ink);
+}
+.card-links a.card-action {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: white;
+}
+.card-links .hint {
+  margin: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.search-settings .primary {
+  width: 100%;
+  max-width: 420px;
 }
 .footnote {
   margin: 28px 0 0;
@@ -616,10 +640,17 @@ summary,
   color: var(--muted);
   font-size: 12px;
 }
+.footer-sources {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
 .footer a {
   min-height: 36px;
   display: inline-flex;
   align-items: center;
+  color: var(--ink);
 }
 @media (max-width: 600px) {
   .intro {

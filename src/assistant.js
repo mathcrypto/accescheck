@@ -1,4 +1,4 @@
-import { criteria, evidenceState, parseNeeds } from './core.mjs';
+import { criteria, evidenceState } from './core.mjs';
 
 const $ = (id) => document.getElementById(id);
 let controller = null;
@@ -6,6 +6,7 @@ let locationController = null;
 let origin = null;
 let proposal = null;
 let confirmedInput = null;
+let placeQuery = '';
 let aiAvailable = false;
 const date = (value) => new Date(value).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
 function element(tag, className, text) {
@@ -63,6 +64,22 @@ function updateWidth() {
   $('widthField').hidden = !selected;
   $('minWidth').disabled = !selected;
 }
+function applyPlace(state) {
+  placeQuery = state.placeQuery || '';
+  if (state.specialty) $('specialty').value = state.specialty;
+  if (state.placeQuery) $('location').value = state.placeQuery;
+  if (state.origin) {
+    origin = state.origin;
+    $('origin').hidden = false;
+    $('origin').textContent = 'Départ choisi : ' + state.origin.label;
+    $('removeOrigin').hidden = false;
+    if (!$('radius').value) $('radius').value = String(state.radiusKm || 5);
+  }
+  if (state.specialty || state.placeQuery || state.origin) {
+    const advanced = $('advancedSearch');
+    if (advanced) advanced.open = true;
+  }
+}
 function review(value) {
   proposal = value;
   invalidate();
@@ -119,24 +136,39 @@ async function translate(local = false) {
     local ? 'Traduction par les règles locales…' : 'Proposition de critères en cours…',
   );
   try {
-    // Only this description goes to the model. Origin and directory records have a separate path.
-    const value = local
-      ? parseNeeds($('description').value)
-      : await api(
-          '/api/interpret',
-          { description: $('description').value, consent: true },
-          controller.signal,
-        );
+    const result = await api(
+      '/api/agent',
+      {
+        message: $('description').value,
+        consent: !local && $('consent').checked,
+        reviewOnly: true,
+      },
+      controller.signal,
+    );
     if (controller !== active || active.signal.aborted) return;
+    const needs = result.state?.needs || { keys: [], minWidth: null };
+    const questions = [];
+    if (result.reply) {
+      for (const line of String(result.reply).split('\n')) {
+        const text = line.trim();
+        if (text && !text.startsWith('Confirmez') && !text.includes(' · ')) questions.push(text);
+      }
+    }
+    applyPlace(result.state || {});
     review({
-      ...value,
-      questions: value.questions || (value.clarification ? [value.clarification] : []),
+      keys: needs.keys,
+      minWidth: needs.minWidth,
+      questions,
+      parser:
+        result.state?.source === 'openai'
+          ? 'Proposition OpenAI · à corriger avant recherche'
+          : 'Proposition des règles locales · à corriger avant recherche',
     });
     status(
       'proposalStatus',
       local
         ? 'Proposition des règles locales. Relisez-la : elles peuvent manquer des nuances ou des négations.'
-        : 'Voici la proposition IA. Elle ne recherche ni ne juge les cabinets. À vous de la corriger.',
+        : 'Voici la proposition. Elle ne recherche ni ne juge les cabinets. À vous de la corriger.',
     );
   } catch (error) {
     if (error.name !== 'AbortError') status('proposalStatus', error.message, true);
@@ -150,6 +182,16 @@ function selectedNeeds() {
   return {
     keys,
     minWidth: keys.includes('width') && $('minWidth').value ? Number($('minWidth').value) : null,
+  };
+}
+function agentStateFromForm(needs) {
+  return {
+    needs,
+    specialty: $('specialty').value,
+    origin,
+    placeQuery: placeQuery || $('location').value.trim(),
+    radiusKm: $('radius').value ? Number($('radius').value) : null,
+    source: 'local',
   };
 }
 function factText(field, key) {
@@ -186,7 +228,7 @@ function card(practice) {
     element(
       'p',
       'distance',
-      practice.distanceKm === null
+      practice.distanceKm === null || practice.distanceKm === undefined
         ? 'Distance non calculée'
         : practice.distanceKm.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) +
             ' km à vol d’oiseau' +
@@ -194,7 +236,7 @@ function card(practice) {
     ),
   );
   const facts = element('ul', 'facts');
-  for (const check of practice.checks) {
+  for (const check of practice.checks || []) {
     const label = criteria[check.key].label + ' : ' + factText({ value: check.value }, check.key);
     const trust = {
       declared: 'Déclaré',
@@ -212,7 +254,7 @@ function card(practice) {
   const details = element('details');
   details.append(element('summary', '', 'Tous les faits et leur provenance'));
   const allFacts = element('dl');
-  for (const [key, field] of Object.entries(practice.evidence)) {
+  for (const [key, field] of Object.entries(practice.evidence || {})) {
     allFacts.append(
       element('dt', '', criteria[key]?.label || key),
       element('dd', '', factText(field, key) + ' · ' + stateLabel(field)),
@@ -224,16 +266,9 @@ function card(practice) {
       'p',
       '',
       'Source : ' +
-        practice.source +
+        (practice.source || 'Accès Libre') +
         '. Les dates de vérification individuelles ne sont pas disponibles dans cet export. Une déclaration n’est pas une garantie d’accès.',
     ),
-  );
-  const source = sourceLink('Voir la fiche Accès Libre', practice.sourceUrl, [
-    'acceslibre.beta.gouv.fr',
-  ]);
-  if (source) details.append(source);
-  details.append(
-    element('h4', '', 'Informations administratives'),
     element(
       'p',
       '',
@@ -242,13 +277,15 @@ function card(practice) {
   );
   article.append(details);
   const links = element('div', 'card-links');
-  const booking = sourceLink('Ouvrir la fiche Doctolib', practice.doctolibUrl, [
+  const source = sourceLink('Fiche Accès Libre ↗', practice.sourceUrl, ['acceslibre.beta.gouv.fr']);
+  if (source) links.append(source);
+  const booking = sourceLink('Fiche Doctolib ↗', practice.doctolibUrl, [
     'doctolib.fr',
     'www.doctolib.fr',
   ]);
   if (booking) links.append(booking);
   else links.append(element('span', 'hint', 'Aucun lien Doctolib dans la source.'));
-  const companion = element('a', '', 'Préparer l’échange ↗');
+  const companion = element('a', 'card-action', 'Préparer l’échange ↗');
   companion.href = '/consultation?practice=' + encodeURIComponent(practice.id);
   companion.target = '_blank';
   companion.rel = 'noopener noreferrer';
@@ -271,46 +308,50 @@ async function search(page = 1) {
   status('searchStatus', '');
   const request =
     page === 1
-      ? {
-          confirmed: true,
-          needs,
-          specialty: $('specialty').value,
-          origin,
-          radiusKm: $('radius').value ? Number($('radius').value) : null,
-        }
-      : confirmedInput;
+      ? { action: 'search', consent: false, state: agentStateFromForm(needs), page: 1 }
+      : { ...confirmedInput, page };
   if (!request) return;
   const resultsSection = $('resultsSection');
   if (resultsSection) resultsSection.hidden = false;
   controller?.abort();
   controller = new AbortController();
-  confirmedInput = request;
+  confirmedInput = { action: 'search', consent: false, state: request.state };
   const active = controller;
   $('search').disabled = true;
   $('results').setAttribute('aria-busy', 'true');
   status('resultStatus', 'Comparaison des critères confirmés avec les données publiques…');
   try {
-    const result = await api('/api/discover', { ...request, page }, controller.signal);
+    const payload = await api('/api/agent', request, controller.signal);
     if (controller !== active || active.signal.aborted) return;
-    $('results').replaceChildren(...result.results.map(card));
+    if (payload.state) {
+      applyPlace(payload.state);
+      confirmedInput = { action: 'search', consent: false, state: payload.state };
+    }
+    const result = payload.results || { total: 0, practices: [], counts: {}, pageSize: 12 };
+    $('results').replaceChildren(...(result.practices || []).map(card));
+    const declared = result.counts?.declaredMatches ?? result.completeCount ?? 0;
     $('resultsSummary').textContent =
-      result.counts.declaredMatches +
+      declared +
       ' fiche(s) dont les déclarations correspondent aux critères ; ' +
-      (result.total - result.counts.declaredMatches) +
+      Math.max(0, (result.total || 0) - declared) +
       ' à confirmer. L’accessibilité passe avant la distance.';
     status(
       'resultStatus',
       result.total
-        ? 'Les données manquantes restent inconnues. Aucun score ni garantie d’accessibilité.'
+        ? payload.reply ||
+            'Les données manquantes restent inconnues. Aucun score ni garantie d’accessibilité.'
         : 'Aucune fiche sans obstacle connu pour ces critères et cette zone. Essayez une autre spécialité ou une zone plus large.',
     );
-    $('dataset').textContent =
-      'Accès Libre · export du ' +
-      date(result.dataset.exportedAt) +
-      '. ' +
-      result.counts.knownObstaclesExcluded +
-      ' fiche(s) avec un obstacle connu écartée(s) de cette recherche ; toutes les fiches restent consultables dans l’annuaire. Distances calculées à partir des coordonnées importées, à vol d’oiseau.';
+    if (result.dataset?.exportedAt) {
+      $('dataset').textContent =
+        'Accès Libre · export du ' +
+        date(result.dataset.exportedAt) +
+        '. ' +
+        (result.counts?.knownObstaclesExcluded || 0) +
+        ' fiche(s) avec un obstacle connu écartée(s) de cette recherche ; toutes les fiches restent consultables dans l’annuaire. Distances calculées à partir des coordonnées importées, à vol d’oiseau.';
+    }
     $('pagination').replaceChildren();
+    const pageSize = result.pageSize || 12;
     const addPage = (label, target) => {
       const button = element('button', 'secondary', label);
       button.type = 'button';
@@ -318,7 +359,7 @@ async function search(page = 1) {
       $('pagination').append(button);
     };
     if (page > 1) addPage('← Précédent', page - 1);
-    if (page * result.pageSize < result.total) addPage('Résultats suivants →', page + 1);
+    if (page * pageSize < result.total) addPage('Résultats suivants →', page + 1);
     $('resultsTitle').focus();
     if (resultsSection) $('resultsTitle').scrollIntoView({ block: 'start' });
   } catch (error) {
@@ -353,6 +394,7 @@ $('searchForm').onsubmit = (event) => {
 };
 $('description').oninput = () => {
   proposal = null;
+  placeQuery = '';
   $('review').hidden = true;
   if ($('advancedSearch')) $('searchForm').hidden = true;
   $('search').disabled = true;
@@ -375,6 +417,7 @@ $('findLocation').onclick = async () => {
   $('findLocation').disabled = true;
   $('locationChoices').textContent = 'Recherche du lieu auprès d’IGN…';
   try {
+    placeQuery = $('location').value.trim();
     const result = await api('/api/locations', { query: $('location').value }, active.signal);
     if (locationController !== active || active.signal.aborted) return;
     $('locationChoices').replaceChildren();
@@ -391,6 +434,7 @@ $('findLocation').onclick = async () => {
         $('origin').textContent = 'Départ choisi : ' + location.label;
         $('removeOrigin').hidden = false;
         $('locationChoices').replaceChildren();
+        if (!$('radius').value) $('radius').value = '5';
         invalidate();
       };
       $('locationChoices').append(button);
@@ -406,6 +450,7 @@ $('findLocation').onclick = async () => {
 $('location').oninput = () => {
   locationController?.abort();
   origin = null;
+  placeQuery = $('location').value.trim();
   $('origin').hidden = true;
   $('removeOrigin').hidden = true;
   $('locationChoices').replaceChildren();
@@ -413,6 +458,7 @@ $('location').oninput = () => {
 };
 $('removeOrigin').onclick = () => {
   origin = null;
+  placeQuery = '';
   $('origin').hidden = true;
   $('removeOrigin').hidden = true;
   $('location').value = '';
@@ -422,6 +468,7 @@ $('clear').onclick = () => {
   controller?.abort();
   locationController?.abort();
   origin = proposal = confirmedInput = null;
+  placeQuery = '';
   $('descriptionForm').reset();
   $('searchForm').reset();
   $('review').hidden = true;

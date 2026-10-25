@@ -52,29 +52,39 @@ const page = await browser.newPage({
   reducedMotion: 'no-preference',
 });
 const errors = [],
-  discoveries = [],
-  interpretations = [];
+  searches = [],
+  proposals = [];
 page.on('pageerror', (error) => errors.push(error.message));
 page.on('request', (request) => {
-  if (request.url().endsWith('/api/discover')) discoveries.push(request.postDataJSON());
+  if (!request.url().endsWith('/api/agent')) return;
+  const body = request.postDataJSON();
+  if (body?.action === 'search') searches.push(body);
+  else if (body?.reviewOnly) proposals.push(body);
 });
 await page.route('**/api/ai-config', (route) =>
   route.fulfill({ json: { available: true, model: 'test-only' } }),
 );
-await page.route('**/api/interpret', (route) => {
+await page.route('**/api/agent', async (route) => {
   const body = route.request().postDataJSON();
-  interpretations.push(body);
-  assert.deepEqual(Object.keys(body).sort(), ['consent', 'description']);
-  assert.equal(body.consent, true);
-  return route.fulfill({
-    json: {
-      keys: ['hearing'],
-      minWidth: null,
-      questions: [],
-      parser: 'Proposition IA simulée',
-      requiresConfirmation: true,
-    },
-  });
+  if (body?.consent === true && body?.reviewOnly === true) {
+    return route.fulfill({
+      json: {
+        reply: 'Confirmez pour lancer la recherche, ou corrigez votre message.',
+        steps: [],
+        state: {
+          needs: { keys: ['hearing'], minWidth: null },
+          specialty: '',
+          origin: null,
+          placeQuery: '',
+          radiusKm: null,
+          source: 'openai',
+        },
+        actions: [{ id: 'confirm', label: 'Chercher' }],
+        results: null,
+      },
+    });
+  }
+  return route.continue();
 });
 await page.route('**/api/locations', (route) => {
   assert.deepEqual(route.request().postDataJSON(), { query: '99 Rue de Rivoli' });
@@ -88,8 +98,8 @@ try {
   );
   assert.equal(await page.locator('#advancedSearch').getAttribute('open'), null);
   assert.equal(await page.locator('#resultsSection').isHidden(), true);
-  assert.equal(discoveries.length, 0);
-  assert.equal(interpretations.length, 0);
+  assert.equal(searches.length, 0);
+  assert.equal(proposals.length, 0);
   await page.locator('.intro-link').click();
   assert.equal(
     await page
@@ -103,10 +113,10 @@ try {
   await page.locator('#description').press('Enter');
   await page.locator('#review').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#criteria input[value="hearing"]').isChecked(), true);
-  assert.equal(interpretations.length, 0);
-  assert.equal(discoveries.length, 0);
+  assert.equal(proposals.length, 1);
+  assert.equal(searches.length, 0);
   await page.locator('#search').click();
-  assert.equal(discoveries.length, 0);
+  assert.equal(searches.length, 0);
   await page.locator('#advancedSearch>summary').click();
   await page.locator('#location').fill('99 Rue de Rivoli');
   await page.locator('#findLocation').click();
@@ -118,11 +128,11 @@ try {
   await page.waitForFunction(
     () => document.querySelector('#resultsTitle').getBoundingClientRect().top < 200,
   );
-  assert.deepEqual(discoveries[0].needs.keys, ['hearing']);
-  assert.equal(discoveries[0].confirmed, true);
-  assert.equal(discoveries[0].radiusKm, 5);
-  assert.equal(discoveries[0].origin.label, origin.label);
-  assert.equal('description' in discoveries[0], false);
+  assert.deepEqual(searches[0].state.needs.keys, ['hearing']);
+  assert.equal(searches[0].action, 'search');
+  assert.equal(searches[0].state.radiusKm, 5);
+  assert.equal(searches[0].state.origin.label, origin.label);
+  assert.equal('description' in searches[0], false);
   assert.match(await page.locator('.distance').first().textContent(), /km à vol d’oiseau/);
   await page.locator('#criteria input[value="hearing"]').uncheck();
   assert.equal(await page.locator('#confirmed').isChecked(), false);
@@ -132,14 +142,14 @@ try {
   await page.locator('#advancedSearch>summary').click();
   await page.locator('.ai-option>summary').click();
   await page.locator('#translate').click();
-  assert.equal(interpretations.length, 0);
+  assert.equal(proposals.filter((body) => body.consent === true).length, 0);
   await page.locator('#consent').check();
   await page.locator('#translate').click();
   await page.waitForFunction(() =>
-    document.querySelector('#proposalSource').textContent.includes('simulée'),
+    document.querySelector('#proposalSource').textContent.includes('OpenAI'),
   );
-  assert.equal(interpretations.length, 1);
-  assert.equal(discoveries.length, 1);
+  assert.equal(proposals.filter((body) => body.consent === true).length, 1);
+  assert.equal(searches.length, 1);
   await page.locator('#clear').click();
   await page.locator('#advancedSearch>summary').click();
   await page.locator('#manual').click();
@@ -167,7 +177,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    'Homepage passed: no automatic search or AI, local/manual review, consent-gated AI, confirmed distance search, invalidation, logo rotation and four responsive widths.',
+    'Homepage passed: no automatic search or AI, local/manual review, consent-gated AI, confirmed distance search via agent, invalidation, logo rotation and four responsive widths.',
   );
 } finally {
   await browser.close();

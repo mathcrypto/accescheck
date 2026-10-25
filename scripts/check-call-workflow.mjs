@@ -174,12 +174,14 @@ try {
   assert.ok(!urls.some((u) => u.includes('private-meeting') || u.includes('private=meeting')));
   assert.deepEqual(errors, []);
   await page.locator('#clearSession').click();
-  await page.goto(base + '/cabinets');
-  await page.locator('#message').fill('Je suis malentendant.');
-  await page.locator('#send').click();
-  await page.locator('.card').first().waitFor();
+  await page.goto(base + '/#recherche');
+  await page.locator('#description').fill('Je suis malentendant.');
+  await page.locator('#local').click();
+  await page.locator('#confirmed').check();
+  await page.locator('#search').click();
+  await page.locator('.practice-card').first().waitFor();
   const href = await page
-    .getByRole('link', { name: /Préparer la visite/ })
+    .getByRole('link', { name: /Préparer l’échange/ })
     .first()
     .getAttribute('href');
   assert.ok(href.startsWith('/consultation?practice='));

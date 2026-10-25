@@ -14,9 +14,7 @@ npm run dev
 
 Open http://127.0.0.1:4173:
 
-- `/`: AccèsCheck homepage and entry to search.
-- `/assistant`: accompanied search on the homepage flow.
-- `/cabinets`: chat with the finder agent over Accès Libre, then open Doctolib when listed.
+- `/` and `/#recherche`: AccèsCheck homepage — describe needs, review criteria, then search Accès Libre.
 - `/consultation`: captions and replies during a visit (separate from finding a cabinet).
 
 The local preview recompiles source changes and reloads an idle homepage. Entered fields and consultation sessions defer automatic refresh to preserve their contents. Restart after changing the server or reload tooling. The Chrome extension has been removed; the consultation page runs alongside an appointment website.
@@ -36,7 +34,7 @@ Give each active worktree its own preview port and local database; the canonical
 
 Practice data is imported from the official Accès Libre export into SQLite locally (and a verified read-only snapshot on Vercel). Sync with `npm run data:sync`. The current medical export covers **France** (about **19 750** practices; see [data/source.json](data/source.json) and [Vercel deployment](docs/vercel.md)). Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0. Places use the IGN address API for France. Contact actions prefer a verified [Doctolib](https://www.doctolib.fr/) profile from Accès Libre when present, otherwise the cabinet website/contact page or Accès Libre fiche. The app does not scrape reviews or rank by reputation.
 
-Search and the finder chat send submitted needs to the app server. Local rules are the default; optional OpenAI interpretation requires explicit consent and the patient reviews proposed criteria before searching. The model never receives cabinet records or rankings. No patient account, health profile database or application request logging is created. Infrastructure may retain operational logs independently of the application.
+Homepage search sends submitted needs to `/api/agent`. Local rules are the default; optional OpenAI interpretation requires explicit consent and the patient reviews proposed criteria before searching. The model never receives cabinet records or rankings. No patient account, health profile database or application request logging is created. Infrastructure may retain operational logs independently of the application.
 
 Common French/English needs become criteria the user can review. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles are excluded from the finder list; unknowns stay visible. There is no universal accessibility score or live availability lookup. Distances use imported coordinates and remain straight-line estimates.
 
@@ -65,7 +63,7 @@ The patient interface currently uses device voices only. The backend retains `/a
 
 The proposed next iteration is defined in [CAPABILITY-MAP.md](CAPABILITY-MAP.md): a single chat, contextual multiple-choice questions, visible agent activity and sourced review reputation. Its proposed features are not yet implemented.
 
-`/cabinets` is one stateful finder (session needs, specialty, place). The UI keeps a single current request: a correction replaces the previous turn; **Nouvelle conversation** clears everything. Simple accessibility phrases search immediately; mixed requests (profession or quartier) ask for confirmation first. Local rules translate the patient’s sentence. Optional OpenAI extraction remains available server-side for other callers, but the patient finder does not send descriptions to OpenAI. Search and ranking stay deterministic on Accès Libre data.
+`src/agents/finder.mjs` powers homepage search: place and specialty extraction, 5 km default radius, Accès Libre ranking. The AccèsCheck UI always asks for explicit criterion review before searching (`reviewOnly`). Optional OpenAI extraction requires consent. Search and ranking stay deterministic on Accès Libre data.
 
 ## MCP and consultation tools
 
@@ -96,8 +94,8 @@ Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a 
 
 - `src/core.mjs`: need parsing, evidence rules, ranking, and briefing.
 - `src/ui.css`, `src/header.html`: shared visual tokens, header and navigation across patient pages.
-- `src/index.html`, `src/home.js`, `src/assistant.*`: AccèsCheck homepage and accompanied search.
-- `src/finder.html`, `src/finder.js`, `src/agents/finder.mjs`: `/cabinets` finder chat over Accès Libre.
+- `src/index.html`, `src/home.js`, `src/home.css`, `src/assistant.js`: AccèsCheck homepage and search UI.
+- `src/agents/finder.mjs`: finder agent used by homepage search via `/api/agent`.
 - `src/consultation.html`, `src/consultation.css`, `src/companion.js`: consultation interface and browser speech/capture lifecycle.
 - `src/handler.mjs`, `src/speech.mjs`: HTTP/MCP routes and optional voice API.
 - `prototype/`: fictional call and local in-memory MCP bridge.

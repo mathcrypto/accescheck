@@ -309,6 +309,28 @@ test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
   }
 });
 
+test('reviewOnly proposes criteria and place without searching', async () => {
+  const db = await createTestDatabase(finderRecords);
+  try {
+    const result = await runFinder(
+      {
+        message:
+          'Je me déplace avec une canne blanche. je cherche un generaliste autour de bastille paris',
+        consent: false,
+        reviewOnly: true,
+      },
+      { DB: db },
+    );
+    assert.equal(result.state.specialty, 'Médecin généraliste');
+    assert.match(result.state.placeQuery, /bastille/i);
+    assert.ok(result.state.origin);
+    assert.equal(result.results, null);
+    assert.match(result.reply, /Confirmez/);
+  } finally {
+    db.close();
+  }
+});
+
 test('finder keeps prior needs when a follow-up only adds place or specialty', async () => {
   const db = await createTestDatabase(finderRecords);
   try {

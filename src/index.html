@@ -116,6 +116,19 @@
             </div>
             <ul id="questions" class="questions"></ul>
           </section>
+          <form id="searchForm" class="search-settings" hidden>
+            <p id="searchStatus" class="notice" role="status" tabindex="-1" hidden></p>
+            <label class="checkbox"
+              ><input id="confirmed" type="checkbox" required />J’ai vérifié les critères et je
+              confirme cette recherche.</label
+            >
+            <button id="search" class="primary" type="submit" disabled>
+              Confirmer mes critères et chercher <span aria-hidden="true">↗</span>
+            </button>
+            <p id="searchHelp" class="hint">
+              Commencez par décrire vos besoins ou choisir vos critères.
+            </p>
+          </form>
           <details id="advancedSearch" class="advanced">
             <summary>
               Lieu, spécialité et autres options
@@ -198,19 +211,6 @@
               </section>
             </div>
           </details>
-          <form id="searchForm" class="search-settings" hidden>
-            <p id="searchStatus" class="notice" role="status" tabindex="-1" hidden></p>
-            <label class="checkbox"
-              ><input id="confirmed" type="checkbox" required />J’ai vérifié les critères et je
-              confirme cette recherche.</label
-            >
-            <button id="search" class="primary" type="submit" disabled>
-              Confirmer mes critères et chercher <span aria-hidden="true">↗</span>
-            </button>
-            <p id="searchHelp" class="hint">
-              Commencez par décrire vos besoins ou choisir vos critères.
-            </p>
-          </form>
         </div>
       </section>
       <section
@@ -233,7 +233,15 @@
       </section>
     </main>
     <footer class="footer flow-protected">
-      <span>Cabinets médicaux</span><a href="/cabinets">Sources et fiches publiques</a>
+      <span class="footer-sources"
+        >Sources&nbsp;:
+        <a href="https://acceslibre.beta.gouv.fr/" target="_blank" rel="noopener noreferrer"
+          >Accès Libre</a
+        >
+        ·
+        <a href="https://www.doctolib.fr/" target="_blank" rel="noopener noreferrer">Doctolib</a>
+      </span>
+      <a href="/#recherche">Chercher un cabinet</a>
     </footer>
     <script>
       /*PAGE_SCRIPT*/

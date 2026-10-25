@@ -84,7 +84,7 @@ try {
       await page.locator('#confirmed').check();
       let requests = 0;
       const count = (request) => {
-        if (request.url().endsWith('/api/discover')) requests++;
+        if (request.url().endsWith('/api/agent')) requests++;
       };
       page.on('request', count);
       await page.locator('#search').click();

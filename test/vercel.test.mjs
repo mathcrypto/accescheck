@@ -26,16 +26,17 @@ writer.close();
 const database = openSqlite(path, { readOnly: true });
 const app = createVercelHandler(database);
 const origin = 'https://accescheck.example';
-const request = (path, body) =>
+const request = (path, body, init = {}) =>
   app.fetch(
     new Request(
       origin + path,
       body === undefined
-        ? {}
+        ? { ...init }
         : {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Origin: origin },
             body: JSON.stringify(body),
+            ...init,
           },
     ),
   );
@@ -45,7 +46,7 @@ test.after(async () => {
 });
 
 test('Vercel serves patient pages and database-backed catalog and distance search', async () => {
-  for (const path of ['/', '/cabinets', '/assistant', '/consultation']) {
+  for (const path of ['/', '/consultation']) {
     const response = await request(path);
     assert.equal(response.status, 200, path);
     const html = await response.text();

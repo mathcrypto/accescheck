@@ -14,7 +14,7 @@ For chat-only search, contextual questions, or review reputation work, read [CAP
 
 - Edit `src/`, not generated `worker/` or `dist/`. `scripts/compile.mjs` bundles page templates, styles and browser scripts.
 - Shared visual tokens and header styles live in `src/ui.css`; shared navigation and the red asterisk live in `src/header.html`. Change these sources rather than copying their markup or styles into individual pages.
-- Home and `/assistant` share `src/assistant.js`; changes must work on both. Shared need parsing belongs in `src/core.mjs`.
+- Search lives only on the homepage (`/#recherche`) via `src/assistant.js` calling `/api/agent` (`src/agents/finder.mjs`). Shared need parsing belongs in `src/core.mjs`.
 - Consultation behavior belongs in `src/companion.js`, markup in `src/consultation.html`, styles in `src/consultation.css`. Preserve consent, audio cleanup, session clearing and the local bridge interface.
 - `src/handler.mjs` serves HTTP routes. `storage/` and `db/` manage public practice data. The Vercel function receives a read-only snapshot; see [docs/vercel.md](docs/vercel.md) when changing deployment or data loading.
 - `prototype/` and `mcp/` implement the local fictional agent workflow. Keep its controls in consultation settings and keep real patient messages outside that bridge.
