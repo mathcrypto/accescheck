@@ -146,65 +146,16 @@ function cleanPlace(value) {
     .trim();
 }
 
-/** IGN alone resolves « Bastille » to Brittany — known Paris landmarks, longest first. */
-const PARIS_LANDMARKS = [
-  'denfert rochereau',
-  'hotel de ville',
-  'gare de lyon',
-  'gare du nord',
-  'gare de l est',
-  'saint lazare',
-  'place d italie',
-  'chateau rouge',
-  'ledru rollin',
-  'la defense',
-  'montparnasse',
-  'belleville',
-  'oberkampf',
-  'charonne',
-  'republique',
-  'chatelet',
-  'bastille',
-  'pigalle',
-  'barbes',
-  'barbès',
-  'denfert',
-  'nation',
-  'opera',
-].map((word) => plain(word));
-
-const PARIS_LANDMARK_SET = new Set(PARIS_LANDMARKS);
-
-function matchParisLandmark(normalized) {
-  for (const landmark of PARIS_LANDMARKS) {
-    const re = new RegExp(String.raw`\b${landmark.replace(/\s+/g, String.raw`\s+`)}\b`);
-    if (re.test(normalized)) return landmark;
-  }
-  return '';
-}
-
-function matchParisArrondissement(normalized) {
-  const match =
-    normalized.match(/\bparis\s+(\d{1,2})\s*e(?:r|me)?\b/) ||
-    normalized.match(/\bdans le\s+(\d{1,2})\s*e(?:r|me)?\b/) ||
-    normalized.match(/\b(\d{1,2})\s*e(?:r|me)?\s+arrondissement\b/);
-  if (!match) return null;
-  const n = Number(match[1]);
-  return n >= 1 && n <= 20 ? n : null;
-}
-
 /** Keep the place the patient typed (landmark + arrondissement), not only the IGN city. */
 export function extractPlaceQuery(text) {
   const normalized = plain(text);
-  const landmark = matchParisLandmark(normalized);
-  const arr = matchParisArrondissement(normalized);
-
-  // « denfert paris 14eme » → denfert + Paris 14e (geocode Place Denfert-Rochereau 75014).
-  if (landmark && arr) return `${landmark} paris ${arr}e`;
-  if (landmark && /\bparis\b/.test(normalized)) return `${landmark} paris`;
-  if (landmark) return landmark;
-  if (arr) return `Paris ${arr}e`;
-
+  const district = normalized.match(/\b([a-z][a-z'-]{2,40})\s+(\d{1,2})(?:er|e(?:me)?)\b/);
+  if (district && !PLACE_STOP.has(district[1])) {
+    const context = normalized.match(/\b(?:autour|pres|a proximite)\s+de\s+([^,.!?]+)/);
+    return context && context[1].includes(district[0])
+      ? cleanPlace(context[1]).replace(/(\d+)(?:eme|er)\b/g, '$1e')
+      : `${district[1]} ${district[2]}e`;
+  }
   const patterns = [
     { re: /\b(\d{5})\b/, kind: 'postal' },
     { re: /\b(?:autour|pres|a proximite)\s+de\s+([^,.!?]+)/ },
@@ -226,8 +177,8 @@ export function extractPlaceQuery(text) {
   // Fallback: leftover city/place token (e.g. « grenoble ») after removing need words.
   const leftover = normalized
     .split(/[^a-z0-9]+/)
-    .filter((token) => token.length >= 3 && !PLACE_STOP.has(token) && !/^\d+$/.test(token));
-  return leftover.at(-1) || '';
+    .filter((token) => token.length >= 3 && !PLACE_STOP.has(token) && !/^\d/.test(token));
+  return leftover.join(' ');
 }
 
 /** Label shown in the chat: what they typed, plus rayon. */
@@ -309,8 +260,7 @@ export function targetPostcodes(placeQuery = '') {
   if (explicit) return [explicit[1]];
   const parisArr =
     plainText.match(/\bparis\s+(\d{1,2})\s*e(?:r|me)?\b/) ||
-    plainText.match(/\b(\d{1,2})\s*e(?:r|me)?\s+arrondissement\b/) ||
-    plainText.match(/\bdans le\s+(\d{1,2})\s*e(?:r|me)?\b/);
+    plainText.match(/\bparis.*\b(\d{1,2})\s*e(?:r|me)?\s+arrondissement\b/);
   if (parisArr) {
     const n = Number(parisArr[1]);
     if (n >= 1 && n <= 20) return [`75${String(n).padStart(3, '0')}`];
@@ -319,15 +269,7 @@ export function targetPostcodes(placeQuery = '') {
 }
 
 export function geocodeQueryFor(placeQuery) {
-  const q = String(placeQuery || '').trim();
-  if (!q) return q;
-  const p = plain(q);
-  if (/\b\d{5}\b/.test(q)) return q;
-  if (PARIS_LANDMARK_SET.has(p)) return `${q} Paris`;
-  // « bastille paris » is already explicit for IGN.
-  if (PARIS_LANDMARKS.some((landmark) => p === `${landmark} paris`)) return q;
-  if (/\bparis\b/.test(p) && !PARIS_LANDMARKS.some((landmark) => p.includes(landmark))) return q;
-  return q;
+  return String(placeQuery || '').trim();
 }
 
 function inTargetDistrict(practice, postcodes) {

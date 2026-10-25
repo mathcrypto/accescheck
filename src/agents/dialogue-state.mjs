@@ -7,6 +7,21 @@ const point = z
     longitude: z.number().min(-180).max(180),
     label: z.string().max(250),
     approximate: z.boolean().default(true),
+    source: z.literal('IGN · Base Adresse Nationale').optional(),
+    city: z.string().max(100).nullable().optional(),
+    cityCode: z
+      .string()
+      .regex(/^[0-9A-Z]{5}$/)
+      .nullable()
+      .optional(),
+    postcode: z
+      .string()
+      .regex(/^\d{5}$/)
+      .optional(),
+    district: z.number().int().min(1).max(20).nullable().optional(),
+    context: z.string().max(250).nullable().optional(),
+    sourceId: z.string().max(150).nullable().optional(),
+    type: z.string().max(40).nullable().optional(),
   })
   .strict();
 const stateSchema = z
@@ -81,7 +96,15 @@ export function nextQuestion(state, specialties) {
       id = 'location';
       text = 'Quel lieu trouvé par IGN correspond à votre recherche ?';
       options = state.locationChoices.map((place, index) =>
-        option(place.label + (place.approximate ? ' · point approximatif' : ''), String(index)),
+        option(
+          place.label +
+            (place.postcode && !place.label.includes(place.postcode)
+              ? ' · ' + place.postcode
+              : '') +
+            (place.context ? ' · ' + place.context : '') +
+            (place.approximate ? ' · point approximatif' : ''),
+          String(index),
+        ),
       );
       options.push(option('Saisir un autre lieu', '__free__'));
     } else {

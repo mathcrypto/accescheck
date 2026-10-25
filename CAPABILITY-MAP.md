@@ -106,3 +106,5 @@ Identifiant ajouté : `search-agent`, branche `feature/search-agent`, après rev
 L’accord explicite devra expliquer l’envoi du contexte de recherche au modèle. Les données restent hors stockage navigateur, URL, journaux et pont de consultation. La recherche d’avis ne reçoit toujours que l’identité publique.
 
 Commencer avec un agent principal capable. Un modèle rapide « système 1 » est une option à comparer en coût, latence et conservation du contexte ; il ne tranche pas seul une géographie ambiguë.
+
+Précision validée : retirer du parcours principal le dialogue imposé et l’extraction par regex. Le principal choisit ses outils et les précisions. Garder les contrôles serveur de données et de provenance, le consentement, les bornes et les priorités de classement. Le mode sans IA est un annuaire dégradé explicite, sans prétendre interpréter la demande ni fonctionner en agent autonome.

@@ -1,7 +1,7 @@
 import { parseNeeds } from '../core.mjs';
 import { createPracticeStore } from '../practice-store.mjs';
 import { findPractices, geocode } from '../discovery.mjs';
-import { matchSpecialty, extractPlaceQuery, geocodeQueryFor } from './finder.mjs';
+import { matchSpecialty, extractPlaceQuery } from './finder.mjs';
 import { interpretNeeds } from './needs-agent.mjs';
 import { dialogueInput, answered, nextQuestion, dialogueSummary } from './dialogue-state.mjs';
 const plain = (text) =>
@@ -34,9 +34,7 @@ async function locate(state, query, transport) {
   state.origin = null;
   state.placeQuery = query;
   state.answered = state.answered.filter((field) => field !== 'place');
-  state.locationChoices = (await geocode(geocodeQueryFor(query), transport)).map(
-    ({ latitude, longitude, label, approximate }) => ({ latitude, longitude, label, approximate }),
-  );
+  state.locationChoices = await geocode(query, transport);
   return state.locationChoices.length
     ? ''
     : 'Aucun lieu trouvé par IGN. Précisez le lieu ou continuez sans localisation.';

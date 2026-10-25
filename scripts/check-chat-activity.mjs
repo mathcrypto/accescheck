@@ -29,7 +29,14 @@ globalThis.fetch = async (url, options) => {
           features: [
             {
               geometry: { coordinates: [4.835, 45.767] },
-              properties: { label: 'Lyon 69001', postcode: '69001', type: 'municipality' },
+              properties: {
+                label: 'Lyon 69001',
+                name: 'Lyon',
+                city: 'Lyon',
+                citycode: '69123',
+                postcode: '69001',
+                type: 'municipality',
+              },
             },
           ],
         }),
