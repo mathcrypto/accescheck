@@ -998,3 +998,27 @@ summary,
     opacity: 1;
   }
 }
+
+.review-info {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  font-size: 14px;
+}
+.review-info h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.review-sources {
+  padding-left: 20px;
+}
+.review-sources li {
+  margin: 12px 0;
+}
+.review-sources p {
+  margin: 4px 0;
+}
+.review-content a {
+  overflow-wrap: anywhere;
+}

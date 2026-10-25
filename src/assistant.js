@@ -1,10 +1,14 @@
 import { readChatResponse } from './chat-events.mjs';
+import { mountReviewCards } from './review-cards.js';
 import { practiceCard } from './search-results.js';
 const $ = (id) => document.getElementById(id);
 let state = null;
 let controller = null;
 let lastInput = null;
 let lastLabel = '';
+let reviewJob = null;
+let reviewsAvailable = false;
+const reviewCache = new Map();
 function node(tag, text, className = '') {
   const element = document.createElement(tag);
   element.textContent = text;
@@ -59,6 +63,8 @@ function retry(input, text) {
 }
 
 async function ask(input, choiceLabel = '') {
+  reviewJob?.dispose();
+  reviewJob = null;
   controller?.abort();
   const active = (controller = new AbortController());
   lastInput = input;
@@ -68,6 +74,8 @@ async function ask(input, choiceLabel = '') {
   $('chatStatus').textContent = '';
   working(true, 'Envoi de la demande');
   let streamed = null;
+  let practices = null;
+  let automaticReviews = false;
   $('thread').setAttribute('aria-busy', 'true');
   if (input.message || choiceLabel) turn(input.message || choiceLabel, 'user');
   try {
@@ -91,6 +99,8 @@ async function ask(input, choiceLabel = '') {
     if (showingResults) {
       streamed?.remove();
       const result = data.results;
+      practices = result.results;
+      automaticReviews = result.page === 1 && $('reviewConsent').checked;
       setResultsMode(true, data.summary || '');
       $('resultsSection').hidden = false;
       $('results').replaceChildren(
@@ -157,6 +167,13 @@ async function ask(input, choiceLabel = '') {
     if (active === controller) {
       $('thread').setAttribute('aria-busy', 'false');
       working(false);
+      if (practices)
+        reviewJob = mountReviewCards(practices, {
+          available: reviewsAvailable,
+          automatic: automaticReviews,
+          cache: reviewCache,
+          onActivity: working,
+        });
     }
   }
 }
@@ -168,6 +185,10 @@ $('descriptionForm').onsubmit = (event) => {
   ask({ message });
 };
 $('clear').onclick = () => {
+  reviewJob?.dispose();
+  reviewJob = null;
+  reviewCache.clear();
+  $('reviewConsent').checked = false;
   controller?.abort();
   controller = null;
   state = null;
@@ -182,6 +203,12 @@ $('clear').onclick = () => {
   $('description').focus();
 };
 $('stopSearch').onclick = () => {
+  if (reviewJob) {
+    reviewJob.stop();
+    $('chatStatus').textContent = 'Recherche d’avis interrompue. Les cabinets restent disponibles.';
+    $('description').focus();
+    return;
+  }
   controller?.abort();
   controller = null;
   working(false);
@@ -193,12 +220,15 @@ $('stopSearch').onclick = () => {
 fetch('/api/ai-config')
   .then((response) => response.json())
   .then((config) => {
+    reviewsAvailable = config.available === true;
+    $('reviewConsent').disabled = !reviewsAvailable;
     $('consent').disabled = !config.available;
     $('aiStatus').textContent = config.available
       ? 'OpenAI disponible avec votre accord.'
       : 'OpenAI indisponible. La recherche locale fonctionne.';
   })
   .catch(() => {
+    $('reviewConsent').disabled = true;
     $('consent').disabled = true;
     $('aiStatus').textContent = 'La recherche locale reste disponible.';
   });
