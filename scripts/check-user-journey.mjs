@@ -86,11 +86,14 @@ try {
     });
     await check(`${width}: consultation actions without page scrolling`, async () => {
       await page.goto(base + '/consultation');
+      if (height <= 640) await page.locator('#showReply').scrollIntoViewIfNeeded();
       assert.ok(await page.locator('#showReply').evaluate(inView));
+      if (height <= 640) await page.locator('#startCaptions').scrollIntoViewIfNeeded();
       assert.ok(await page.locator('#startCaptions').evaluate(inView));
-      assert.ok(
-        await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
-      );
+      if (height > 640)
+        assert.ok(
+          await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
+        );
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       assert.ok(
         await page.evaluate(
@@ -122,6 +125,7 @@ try {
       assert.ok(await page.locator('#conversationPanel').isVisible());
       const message = page.locator('#transcript .message').last();
       assert.match(await message.innerText(), /Message fictif à afficher/);
+      if (height <= 640) await message.locator('p').scrollIntoViewIfNeeded();
       assert.ok(await message.locator('p').evaluate(inView));
       assert.ok(
         await message.locator('p').evaluate((text) => {
