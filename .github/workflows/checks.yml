@@ -22,3 +22,38 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run validate
+  deploy-production:
+    needs: test-and-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: vercel-production
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_rzuudNu04kyY0gpX920s2JKa
+      VERCEL_PROJECT_ID: prj_7kwbByf2dDyZrhV1tCLmtMqAuuLZ
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - name: Install Vercel CLI
+        run: npm install --global vercel@65.2.0
+      - name: Build and deploy production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::Ajoutez le secret Actions VERCEL_TOKEN dans les paramètres du dépôt."
+            exit 1
+          fi
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          vercel build --prod --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+      - name: Verify public application
+        run: node scripts/check-public-deployment.mjs https://accescheck.vercel.app

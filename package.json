@@ -2,8 +2,12 @@
   "name": "accescompanion",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "build": "node scripts/compile.mjs && bash scripts/build.sh",
+    "build:vercel": "node scripts/build-vercel.mjs",
     "test": "node scripts/compile.mjs && node --test test/*.test.mjs",
     "dev": "node --env-file-if-exists=.env.local scripts/dev.mjs",
     "validate": "node scripts/validate-artifact.mjs",

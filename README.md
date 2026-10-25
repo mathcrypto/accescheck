@@ -18,15 +18,15 @@ Open http://127.0.0.1:4173:
 - `/cabinets`: search practices, inspect evidence, and prepare questions for the cabinet.
 - `/consultation`: captions, typed/spoken replies, corrections, and editable notes.
 
-After changing `src/`, rebuild and restart the preview. The Chrome extension has been removed; the consultation page runs alongside an appointment website.
+The local preview recompiles source changes and reloads an idle homepage. Entered fields and consultation sessions defer automatic refresh to preserve their contents. Restart after changing the server or reload tooling. The Chrome extension has been removed; the consultation page runs alongside an appointment website.
 
 ## Search and accessibility evidence
 
-The bundled dataset contains 510 Paris medical practices from the official Accès Libre export of **2026-10-24**. See [data/provenance.json](data/provenance.json) for publisher, resource, selection, license, and import details. Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0.
+Practice data is imported from the official Accès Libre export into SQLite locally and D1 on Sites. The Vercel build generates a verified, read-only SQLite snapshot; the current export contains 510 Paris medical practices. The API returns the export date, checksum and source with the results. See [data/source.json](data/source.json) and [Vercel deployment](docs/vercel.md). Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0.
 
-Search sends the submitted needs to the app server for rule-based processing. There is no LLM parsing, patient account, health profile database, or application request logging. Infrastructure may retain operational logs independently of the application.
+Search sends the submitted needs to the app server. Local rules are the homepage default; optional OpenAI interpretation requires explicit consent and the patient reviews the proposed criteria before searching. No patient account, health profile database or application request logging is created. Infrastructure may retain operational logs independently of the application.
 
-Common French/English keywords become criteria the user can review. Complex wording, negation, or unsupported needs may be misunderstood. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles rank last; there is no universal accessibility score, distance calculation, or live availability lookup.
+Common French/English keywords become criteria the user can review. Complex wording, negation, or unsupported needs may be misunderstood. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles rank last; there is no universal accessibility score or live availability lookup. The optional location lookup uses IGN separately from the needs description; distances use imported coordinates and remain straight-line estimates.
 
 The export omits individual confirmation dates. Populated fields are declared, not photo-verified or patient-confirmed. Missing information stays unknown, and contradictory entrance declarations are flagged. Door width describes the entrance; the documented internal route stops at reception. Transfer suitability, the consultation room, and the rest of the route remain questions for the practice.
 
@@ -90,3 +90,9 @@ Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a 
 - `scripts/build.sh`: packages the generated worker and Sites hosting manifest into `dist/`.
 
 Edit `src/` rather than the generated worker. Build before deployment. Generated reports, local packages, `.env`, and signing keys are excluded from Git. Photo verification, patient feedback, direct Doctolib APIs, and clinical summaries are not implemented. Screen-reader and clinical acceptance audits remain necessary before patient deployment; no WCAG or FALC conformance is claimed.
+
+## Vercel and automatic deployment
+
+Public app: **https://accescheck.vercel.app**. A push to `main` triggers formatting, lint, Node tests, Python importer tests, build and artifact validation. After those checks pass, GitHub Actions builds and deploys to Vercel, then verifies the public homepage, consultation and database-backed search. Pull requests and pushes to other branches run checks without publishing. See [CI/CD](docs/ci-cd.md) and [Vercel data snapshot](docs/vercel.md).
+
+The public Function receives only the read-only practices database. The optional OpenAI communication agent remains on the local consultation server; use `npm run dev:companion`, the server-side `.env` key and explicit fictional text-transfer consent. Spoken proposals still require manual approval.

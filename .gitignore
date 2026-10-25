@@ -22,3 +22,7 @@ __pycache__/
 *.sqlite-wal
 evals/results/
 worker/
+
+.vercel/
+public/
+.vercel-data/
