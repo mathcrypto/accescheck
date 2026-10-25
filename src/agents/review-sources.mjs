@@ -59,8 +59,17 @@ function knownDate(value) {
 function identityMatch(item, practice) {
   if (item.entityType !== 'establishment') return 'different_scope';
   if (item.ambiguous) return 'ambiguous';
+  // Same name, street and postcode; city order, commas or a trailing country may differ.
+  const [street, postcode] = [
+    practice.address.split(/\b\d{5}\b/)[0],
+    practice.address.match(/\b\d{5}\b/)?.[0],
+  ].map((part) => normalize(part || ''));
+  const address = normalize(item.entityAddress);
   return normalize(item.entityName) === normalize(practice.name) &&
-    normalize(item.entityAddress) === normalize(practice.address)
+    street &&
+    postcode &&
+    address.includes(street) &&
+    address.includes(postcode)
     ? 'matched'
     : 'unconfirmed';
 }

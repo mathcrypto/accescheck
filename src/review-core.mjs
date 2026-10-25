@@ -37,20 +37,18 @@ const normalizedText = (value) =>
 export function summarizeReviews(sources) {
   const records = new Map(),
     texts = new Map();
-  let unidentifiedCount = 0;
   for (const source of sources) {
     const sourceUrl = safeReviewUrl(source.url);
     if (source.match !== 'matched' || !sourceUrl) continue;
     for (const observation of source.observations || []) {
       const origin = safeReviewUrl(observation.originalUrl) || sourceUrl;
-      if (!observation.reviewId && !observation.originalUrl) {
-        unidentifiedCount++;
-        continue;
-      }
+      const textKey = normalizedText(observation.text);
+      // Most review pages (Google, directories) expose no public id: identify by page + text.
       const identity = observation.reviewId
         ? reviewSite(origin) + ':' + observation.reviewId
-        : origin;
-      const textKey = normalizedText(observation.text);
+        : observation.originalUrl
+          ? origin
+          : sourceUrl + '#' + textKey;
       const identityMatch = records.get(identity),
         textMatch = texts.get(textKey);
       if (identityMatch && textMatch && identityMatch !== textMatch) {
@@ -143,7 +141,6 @@ export function summarizeReviews(sources) {
     status: available ? 'available' : 'insufficient',
     sampleSize: reviews.length,
     distinctSites,
-    unidentifiedCount,
     topics,
     score,
     label: !available

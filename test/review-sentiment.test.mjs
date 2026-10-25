@@ -67,16 +67,19 @@ test('contradictory sources remain visible and detectable copies count once', ()
   assert.equal(topic.assessment, 'contrasté');
   assert.equal(topic.mixed, 1);
 });
-test('unidentified observations are displayed cautiously but cannot establish a reputation score', () => {
+test('reviews without a public id count once each, and a copy of the same text counts once', () => {
   const result = summarizeReviews([
-    source('https://avis.exemple.fr/cabinet', [observation(null)]),
-    source('https://avis.autre.fr/cabinet', [
-      observation(null, 'accueil', 'positive', { text: 'Autre extrait' }),
+    source('https://www.google.com/maps/place/cabinet', [
+      observation(null, 'accueil', 'positive', { text: 'Accueil chaleureux' }),
+      observation(null, 'attente', 'positive', { text: 'Peu d’attente' }),
+      observation(null, 'ecoute', 'positive', { text: 'Très à l’écoute' }),
+    ]),
+    source('https://annuaire.exemple.fr/cabinet', [
+      observation(null, 'accueil', 'positive', { text: 'Accueil chaleureux' }),
     ]),
   ]);
-  assert.equal(result.status, 'insufficient');
-  assert.equal(result.score, null);
-  assert.equal(result.sampleSize, 0);
+  assert.equal(result.status, 'available');
+  assert.equal(result.sampleSize, 3);
 });
 test('reputation cannot override accessibility, distance or punish missing evidence', () => {
   const rows = [
