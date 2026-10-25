@@ -1054,29 +1054,24 @@ summary,
 .results-panel .status {
   white-space: normal;
 }
-/* Colour carries meaning only (good / to check / problem); text labels stay the reference. */
-.results-panel {
-  --good: #146c2e;
-  --good-bg: #e6f4ea;
-  --warn: #7a4d00;
-  --warn-bg: #fff4d6;
-  --bad: #a3242a;
-  --bad-bg: #fdecec;
+/* Charter palette only: ink fill = good, outline/surface = to check, red = obstacle. */
+.results-panel .status,
+.results-panel .fact-highlights li,
+.results-panel .review-sentiment {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--muted);
 }
 .results-panel .status {
-  border: 0;
-  border-radius: 999px;
-  padding: 2px 10px;
+  padding: 2px 8px;
   font-weight: 500;
-  background: var(--surface);
 }
-.results-panel .status.declared {
-  color: var(--good);
-  background: var(--good-bg);
-}
-.results-panel .status.pending {
-  color: var(--warn);
-  background: var(--warn-bg);
+.results-panel .status.declared,
+.results-panel .review-sentiment.good {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: white;
 }
 .results-panel .fact-highlights {
   display: flex;
@@ -1088,41 +1083,27 @@ summary,
 }
 .results-panel .fact-highlights li {
   padding: 2px 8px;
-  border-radius: 3px;
-  background: var(--surface);
 }
 .results-panel .fact-highlights .met {
-  color: var(--good);
-  background: var(--good-bg);
+  border-color: var(--ink);
+  background: white;
+  color: var(--ink);
 }
 .results-panel .fact-highlights .unknown {
-  color: var(--warn);
-  background: var(--warn-bg);
+  border-style: dashed;
 }
-.results-panel .fact-highlights .unmet {
-  color: var(--bad);
-  background: var(--bad-bg);
+.results-panel .fact-highlights .unmet,
+.results-panel .review-sentiment.bad {
+  border-color: var(--accent);
+  background: white;
+  color: var(--accent);
 }
 .results-panel .review-sentiment {
   display: inline-block;
   margin: 0 0 4px;
-  padding: 2px 10px;
-  border-radius: 999px;
+  padding: 2px 8px;
   font-size: 14px;
   font-weight: 500;
-  background: var(--surface);
-}
-.results-panel .review-sentiment.good {
-  color: var(--good);
-  background: var(--good-bg);
-}
-.results-panel .review-sentiment.mixed {
-  color: var(--warn);
-  background: var(--warn-bg);
-}
-.results-panel .review-sentiment.bad {
-  color: var(--bad);
-  background: var(--bad-bg);
 }
 .results-panel .review-info {
   margin-top: 4px;
@@ -1131,24 +1112,20 @@ summary,
 .results-panel .practice-card details {
   font-size: 13px;
 }
-.results-panel .practice-card summary {
-  min-height: 32px;
-  padding: 4px 0;
-}
 #results[data-page='1'] > .practice-card:first-child {
-  border: 2px solid var(--good);
-  box-shadow: 0 2px 10px rgb(20 108 46 / 12%);
+  border: 2px solid var(--ink);
+  box-shadow: 0 2px 8px rgb(23 23 23 / 8%);
 }
 #results[data-page='1'] > .practice-card:first-child::before {
-  content: '★ Meilleur choix · accès, proximité, avis' / 'Meilleur choix';
+  content: 'Meilleur choix · accès, proximité, avis';
   display: inline-block;
-  margin-bottom: 6px;
-  padding: 2px 10px;
-  border-radius: 999px;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: white;
-  background: var(--good);
+  background: var(--ink);
 }
 .chat-choices:has(button:disabled) {
   display: none;

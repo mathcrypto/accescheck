@@ -222,7 +222,7 @@ export async function collectReviewSources(body, env = {}, transport = fetch, si
       ).size,
     },
     limitations: [
-      'Collecte partielle des pages accessibles, jamais exhaustive. Trois avis identifiables et deux sites permettent un ressenti limité, pas une conclusion représentative.',
+      'Collecte partielle des pages accessibles, jamais exhaustive. Trois avis identifiables, même sur un seul site, permettent un ressenti limité, pas une conclusion représentative.',
       'Seuls les doublons repérables par référence ou texte sont fusionnés ; les copies reformulées peuvent échapper au repérage.',
       'Les avis décrivent des expériences rapportées ; ils ne prouvent ni la qualité clinique ni l’accessibilité.',
       'Le nom et l’adresse doivent correspondre ; les avis du médecin ne sont pas attribués au cabinet.',
