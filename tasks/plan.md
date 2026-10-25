@@ -108,7 +108,7 @@ Le mode sans IA devient un annuaire dégradé explicitement choisi, sans fausse 
 2. Brancher le chat existant : choix de question produits par l’agent, saisie libre/inconnu, consentement au contexte complet, traces d’actions réelles et annuaire public dégradé explicitement choisi. Retirer l’ancien arbre et ses heuristiques de recherche ; conserver les contrôles de données et le pont fictif.
 3. Remplacer les anciennes attentes de parcours imposé par les régressions d’agent : géographies Lyon 3e/Paris 14e/Marseille 8e, homonymes, correction, incohérences, consentement, provenance, limites et arrêt. Vérifier le prompt complet dans Chromium avec IGN réel et modèle contrôlé, mobile/clavier/erreurs, sans appel payant.
 
-Modèle principal proposé : `gpt-6.1-sol`, effort medium, configurable par `OPENAI_SEARCH_MODEL` sans changement métier. Documentation officielle consultée : function-calling, model-selection et page modèle. Ce choix répond aux capacités nécessaires ; les simulations ne prouvent pas le coût/la latence réels. Aucun modèle rapide ajouté sans comparaison autorisée. Les plafonds sont par requête ; le budget du compte reste externe.
+Choix utilisateur confirmé : `gpt-5.4-mini`, effort medium. `OPENAI_SEARCH_MODEL` peut remplacer explicitement `OPENAI_MODEL` ; sinon le choix utilisateur commun s’applique sans changement métier. Documentation officielle consultée : function-calling, model-selection et page modèle. Ce choix répond aux capacités nécessaires ; les simulations ne prouvent pas le coût/la latence réels. Aucun modèle d’assistance supplémentaire ajouté sans comparaison autorisée. Les plafonds sont par requête ; le budget du compte reste externe.
 
 Vérification search-agent : boucle réelle exécutée avec fournisseur contrôlé, IGN réel pour Lyon 3e et Marseille 8e dans Chromium à 320/390/768/1440 px ; revue indépendante et régressions des corrections de consentement, identité, références héritées et cohérence résultats/récapitulatif. Les contrôles du modèle réel restent non exécutés conformément à la règle sans appels payants supplémentaires.
 
@@ -123,3 +123,7 @@ Vérifier : avis du médecin exclus, doublons/copies, contradictions entre sites
 ### Correctif `production-search-config`
 
 Le smoke test final a trouvé le chat et les avis déployés mais `available:false` en production, malgré une clé locale présente. Fournir la clé uniquement au runtime de déploiement via un secret chiffré GitHub et conserver les modèles configurés en variables. Tester l’absence de clé dans pull/build/tests et la présence de configuration au contrôle public, sans appel fournisseur. Branche dédiée, revue puis fusion et vérification réelle de la configuration publique.
+
+### Alignement du modèle utilisateur
+
+Branche `fix/preferred-api-model` : conserver `gpt-5.4-mini`, faire respecter `OPENAI_MODEL` par le moteur principal en l’absence de surcharge dédiée, et aligner les exemples et valeurs par défaut. Tests contrôlés uniquement ; aucun appel de génération payant et aucune modification de la session Codex ni du fichier `.env` utilisateur.

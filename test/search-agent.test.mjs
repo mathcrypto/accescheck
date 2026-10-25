@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { runSearchAgent } from '../src/agents/search-agent.mjs';
+import { runSearchAgent, searchConfig } from '../src/agents/search-agent.mjs';
 import { createTestDatabase } from './helpers/database.mjs';
 const db = await createTestDatabase();
 test.after(() => db.close());
@@ -99,7 +99,7 @@ for (const [city, district, code, postcode] of [
         });
       const body = JSON.parse(options.body);
       assert.equal(body.store, false);
-      assert.equal(body.model, 'gpt-6.1-sol');
+      assert.equal(body.model, 'gpt-5.4-mini');
       if (round++ === 0) {
         assert.ok(JSON.stringify(body.input).includes(`Un dentiste à ${city} ${district}e`));
         return call('geocode_place', place(city, district));
@@ -711,5 +711,27 @@ test('a displayed-order hint cannot override accessibility priority or widen aut
     assert.deepEqual(next.state.autoReviewIds, ids.slice(0, 3));
   } finally {
     database.close();
+  }
+});
+
+test('principal model honors the user default and generic configuration before any generation', async () => {
+  for (const [settings, expected] of [
+    [{}, 'gpt-5.4-mini'],
+    [{ OPENAI_MODEL: 'user-preferred-model' }, 'user-preferred-model'],
+    [{ OPENAI_MODEL: 'user-preferred-model', OPENAI_SEARCH_MODEL: '' }, 'user-preferred-model'],
+    [
+      { OPENAI_MODEL: 'user-preferred-model', OPENAI_SEARCH_MODEL: 'explicit-search-model' },
+      'explicit-search-model',
+    ],
+  ]) {
+    assert.equal(searchConfig(settings).model, expected);
+    await runSearchAgent(
+      { message: 'Bonjour', consent: true },
+      { ...env, ...settings },
+      async (_url, options) => {
+        assert.equal(JSON.parse(options.body).model, expected);
+        return complete({ reply: 'Bonjour.', question: null });
+      },
+    );
   }
 });
