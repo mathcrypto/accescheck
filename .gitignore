@@ -3,3 +3,13 @@ site.tar.gz
 .env
 .env.*
 !.env.example
+
+# Local previews, packaging, and operating-system files
+output/
+node_modules/
+.DS_Store
+*.log
+*.pem
+*.key
+*.crx
+prototype/assets/*.aiff

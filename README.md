@@ -2,6 +2,29 @@
 
 Accessibility evidence for medical practices in Paris, with a French patient interface and an MCP server. This is an initial working vertical slice, not an appointment system.
 
+## Browser extension and consultation demo
+
+The project includes a Chrome extension that opens a communication panel beside a selected Doctolib tab: French captions, typed replies spoken with a device voice, and reviewable notes. A prerecorded fictional call provides a test without a medical appointment. This is an independent prototype; live Doctolib call compatibility and outgoing reply audio remain unverified.
+
+With Node.js 24 LTS installed:
+
+```sh
+npm run build
+npm test
+npm run dev:companion
+```
+
+Open http://127.0.0.1:4180/mock-call in desktop Chrome. In `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select the repository's `extension` folder. Click AccèsCheck's toolbar icon on the mock-call tab. Activate captions, explicitly select the recognition mode and consent, then play the fictional recording. Local recognition requires a compatible French pack; browser-service recognition requires a separate audio-processing acknowledgment.
+
+See [extension setup and limits](extension/README.md) and [local consultation MCP tools](prototype/README.md). No paid voice API or API key is needed for the default device voice. Speech plays on the patient's device; it is not automatically sent into Doctolib's outgoing microphone.
+
+## Development
+
+- Edit the search and standalone companion in `src/`, the extension in `extension/`, and the fictional call/MCP bridge in `prototype/`.
+- After changing `src/`, run `npm run build`. After changing extension files, click **Reload** on its Chrome extensions card and reopen its panel.
+- Run `npm test` before pushing. GitHub Actions also runs tests, builds the site artifact, and validates its entry point.
+- Generated packages, local reports, signing keys, and `.env` files are excluded from Git. Keep real appointment data and patient conversations out of fixtures and issues.
+
 ## Run locally
 
 Requires Node.js 20+; no npm packages or API keys required.

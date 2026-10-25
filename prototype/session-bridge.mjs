@@ -1,0 +1,33 @@
+import {randomBytes,randomUUID} from 'node:crypto';
+import {buildDraft} from '../src/companion-core.mjs';
+const token=()=>randomBytes(24).toString('base64url');
+const authProps={session_id:{type:'string'},agent_token:{type:'string'}};
+const schema=(properties,required)=>({type:'object',properties,required,additionalProperties:false});
+export const consultationTools=[
+ {name:'prepare_consultation',description:'Pair with a browser-approved fictional local test using its single-use pairing code. Does not start microphone or audio.',inputSchema:schema({pairing_code:{type:'string'},reading_mode:{type:'string',enum:['captions','speak','vision']}},['pairing_code'])},
+ {name:'get_caption_updates',description:'Read new fictional transcript events explicitly shared by the paired browser. Not live Doctolib audio.',inputSchema:schema({...authProps,after:{type:'integer',minimum:0}},['session_id','agent_token'])},
+ {name:'speak_patient_message',description:'Propose a fictional patient reply. Browser approval is required before any playback.',inputSchema:schema({...authProps,text:{type:'string',maxLength:1000}},['session_id','agent_token','text'])},
+ {name:'draft_visit_notes',description:'Create an exact fictional transcript draft and send it to the browser for review; no clinical inference or automatic speech.',inputSchema:schema(authProps,['session_id','agent_token'])},
+ {name:'stop_session',description:'Clear the paired local test data and request browser cleanup. Revoke agent access immediately.',inputSchema:schema(authProps,['session_id','agent_token'])}
+];
+export function createSessionBridge(now=()=>Date.now()){
+ const sessions=new Map();
+ function sweep(){for(const[id,s]of sessions)if(now()>s.expires)sessions.delete(id);}
+ function session(id,key,role){sweep();const s=sessions.get(id);if(!s||s[role]!==key||(!s.active&&role==='agentToken'))throw new Error('Session unavailable or access denied.');return s;}
+ function command(s,type,payload={}){if(s.commands.filter(c=>c.status==='pending').length>=10)throw new Error('Too many pending actions.');const c={id:randomUUID(),type,status:'pending',...payload};s.commands.push(c);return c;}
+ function validate(name,args){const t=consultationTools.find(t=>t.name===name);if(!t||!args||typeof args!=='object'||Array.isArray(args))throw new Error('Invalid tool or arguments.');if(Object.keys(args).some(k=>!Object.hasOwn(t.inputSchema.properties,k)))throw new Error('Unknown argument.');for(const key of t.inputSchema.required)if(typeof args[key]!=='string'||!args[key])throw new Error('Missing or invalid '+key);if(args.after!==undefined&&(!Number.isInteger(args.after)||args.after<0))throw new Error('Invalid cursor.');if(args.reading_mode!==undefined&&!['captions','speak','vision'].includes(args.reading_mode))throw new Error('Invalid reading mode.');}
+ return {
+  create(){sweep();if(sessions.size>=8)throw new Error('Local session limit reached.');const id=randomUUID(),browserToken=token();let code;do{code=randomBytes(5).toString('hex').toUpperCase()}while([...sessions.values()].some(s=>s.code===code));sessions.set(id,{id,browserToken,agentToken:token(),code,pairUntil:now()+300000,expires:now()+900000,active:true,paired:false,messages:[],events:[],seq:0,commands:[]});return {session_id:id,browser_token:browserToken,pairing_code:code,expires_in_seconds:900,demo:true};},
+  browser(id,key,action,body={}){const s=session(id,key,'browserToken');if(action==='poll')return {active:s.active,paired:s.paired,commands:s.active?s.commands.filter(c=>c.status==='pending'):[],demo:true};if(!s.active)throw new Error('Session stopped.');if(action==='snapshot'){
+   if(!Array.isArray(body.messages)||body.messages.length>150)throw new Error('Invalid snapshot.');let total=0;const clean=body.messages.map(m=>{if(m.demo!==true||typeof m.text!=='string'||m.text.length>4000||!['doctor','patient','captured'].includes(m.speaker)||!Number.isInteger(m.id))throw new Error('Only labeled fictional messages are allowed.');total+=m.text.length;return {id:m.id,text:m.text,speaker:m.speaker,demo:true,corrected:m.corrected===true};});if(total>20000)throw new Error('Snapshot too large.');
+   for(const m of clean){const old=s.messages.find(x=>x.id===m.id);if(!old||old.text!==m.text||old.corrected!==m.corrected)s.events.push({sequence:++s.seq,type:old?'correction':'caption',...m});}if(s.events.length>500)s.events=s.events.slice(-500);s.messages=clean;return {accepted:clean.length,demo:true};
+  }if(action==='ack'){const c=s.commands.find(c=>c.id===body.id);if(!c||!['approved','rejected','failed','applied'].includes(body.status))throw new Error('Invalid acknowledgment.');if(c.type==='speak'&&!['approved','rejected','failed'].includes(body.status))throw new Error('Speech needs browser approval.');if(c.status==='pending'||c.status==='approved'&&body.status==='failed')c.status=body.status;return {status:c.status};}if(action==='end'){sessions.delete(id);return {cleared:true};}throw new Error('Unknown browser action.');},
+  call(name,args){validate(name,args);if(name==='prepare_consultation'){sweep();const s=[...sessions.values()].find(s=>s.active&&!s.paired&&s.code===args.pairing_code&&now()<=s.pairUntil);if(!s)throw new Error('Pairing code expired or invalid.');s.paired=true;s.code=null;command(s,'prepare',{mode:args.reading_mode||'captions'});return {session_id:s.id,agent_token:s.agentToken,demo:true,paired:true,microphone_started:false};}
+   const s=session(args.session_id,args.agent_token,'agentToken');if(!s.paired)throw new Error('Browser not paired.');
+   if(name==='get_caption_updates')return {demo:true,events:s.events.filter(e=>e.sequence>(args.after||0)),cursor:s.seq,actions:s.commands.map(({id,type,status})=>({id,type,status}))};
+   if(name==='speak_patient_message'){if(args.text.length>1000||!args.text.trim())throw new Error('Reply must have 1–1000 characters.');const c=command(s,'speak',{text:args.text.trim()});return {request_id:c.id,status:'awaiting_browser_approval',played:false,demo:true};}
+   if(name==='draft_visit_notes'){if(!s.messages.length)throw new Error('No shared captions.');const draft=buildDraft(s.messages);const c=command(s,'draft',{text:draft});return {request_id:c.id,draft,review_required:true,clinical_summary:false,demo:true};}
+   if(name==='stop_session'){s.active=false;s.messages=[];s.events=[];s.commands=[];s.code=null;s.agentToken=null;s.expires=now()+60000;return {stopped:true,data_cleared:true,browser_cleanup:'requested'};}
+  },clear(){sessions.clear();},sweep
+ };
+}
