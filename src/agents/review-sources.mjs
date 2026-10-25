@@ -98,7 +98,7 @@ const instructions = [
   'Ne fabrique ni avis, ni note, ni volume, ni date, ni identifiant. Utilise null ou une liste vide si l’information n’est pas effectivement visible dans la source consultée.',
   'Conserve la distinction établissement / praticien. Un avis de médecin ne devient pas un avis du cabinet. Si homonyme ou adresse ambiguë, marque ambiguous=true.',
   'Chaque source doit être une page directe effectivement retournée par web_search. Reprends le nom et l’adresse tels que lus, sans les forcer pour correspondre à la demande.',
-  'Observations : paraphrases courtes et anonymes d’avis individuels effectivement lus, sur accueil, écoute, attente ou organisation. Aucun nom de patient ni détail de santé. Pas de citation longue.',
+  'Observations : relève jusqu’à 8 avis individuels distincts par source, en paraphrases courtes et anonymes d’avis effectivement lus, sur accueil, écoute, attente ou organisation. Aucun nom de patient ni détail de santé. Pas de citation longue.',
   'themes : pour chaque observation individuelle réellement lue, indique les seuls thèmes explicitement décrits (accueil, ecoute, attente, organisation) et leur tonalité positive, negative ou mixed. Une durée d’attente seule n’est pas forcément une plainte. Aucun thème déduit de la note globale. Une liste vide convient si aucun thème n’est établi.',
   'reviewId : identifiant public réellement présent, sinon null. publishedAt : date réellement connue, sinon null. originalUrl : origine réellement identifiée d’un avis repris ailleurs, sinon null.',
   'Les extraits ou agrégats seuls ne sont pas des témoignages individuels supplémentaires. La collecte est partielle ; ne prétends pas couvrir tous les patients.',
@@ -134,7 +134,7 @@ export async function collectReviewSources(body, env = {}, transport = fetch, si
       ...((env.OPENAI_REVIEW_MODEL || env.OPENAI_MODEL || defaultModel).startsWith('gpt-4')
         ? {}
         : { reasoning: { effort: 'low' } }),
-      tools: [{ type: 'web_search', search_context_size: 'low' }],
+      tools: [{ type: 'web_search', search_context_size: 'medium' }],
       tool_choice: 'required',
       include: ['web_search_call.action.sources'],
       max_tool_calls: 2,
