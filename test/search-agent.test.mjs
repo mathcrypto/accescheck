@@ -579,3 +579,137 @@ for (const reference of ['constructor', '__proto__', 'toString'])
     );
     assert.equal(result.state.proposal, null);
   });
+test('validated displayed result order follows the user into the next agent turn', async () => {
+  const { fixtures } = await import('./helpers/database.mjs');
+  const { controlledSearch } = await import('./helpers/search-agent.mjs');
+  const database = await createTestDatabase(
+    fixtures.slice(0, 3).map((record, index) => ({
+      ...record,
+      id: 'display-' + index,
+      specialty: fixtures[0].specialty,
+      location: null,
+    })),
+  );
+  const config = { ...env, DB: database };
+  try {
+    let result = await runSearchAgent(
+      { message: 'Sans contrainte géographique', consent: true },
+      config,
+      async (_url, options) => controlledSearch(JSON.parse(options.body)),
+    );
+    result = await runSearchAgent(
+      { action: 'confirm', consent: true, state: result.state },
+      config,
+      async (_url, options) => controlledSearch(JSON.parse(options.body)),
+    );
+    const original = result.results.results.map((record) => record.id),
+      displayed = [original[1], original[0], original[2]];
+    await runSearchAgent(
+      {
+        message: 'Explique le premier cabinet affiché',
+        displayedPracticeIds: displayed,
+        consent: true,
+        state: result.state,
+      },
+      config,
+      async (_url, options) => {
+        const context = JSON.parse(
+          JSON.parse(options.body).input.find((item) => item.role === 'developer').content,
+        ).verifiedContext;
+        assert.deepEqual(
+          context.results.practices.map((practice) => practice.id),
+          displayed,
+        );
+        return complete({ reply: 'Je reprends la première fiche affichée.', question: null });
+      },
+    );
+    await assert.rejects(
+      runSearchAgent(
+        {
+          message: 'premier',
+          displayedPracticeIds: ['invented', original[0], original[2]],
+          consent: true,
+          state: result.state,
+        },
+        config,
+        () => {
+          throw Error('No provider');
+        },
+      ),
+      /Ordre/,
+    );
+  } finally {
+    database.close();
+  }
+});
+test('a displayed-order hint cannot override accessibility priority or widen automatic review consent', async () => {
+  const { fixtures } = await import('./helpers/database.mjs');
+  const { controlledSearch } = await import('./helpers/search-agent.mjs');
+  const database = await createTestDatabase(
+    Array.from({ length: 5 }, (_, index) => ({
+      ...fixtures[0],
+      id: 'guard-' + index,
+      name: 'Cabinet ' + index,
+      evidence: {
+        ...fixtures[0].evidence,
+        hearing: {
+          value: index === 0 ? true : null,
+          status: index === 0 ? 'declared' : 'unknown',
+          date: null,
+        },
+      },
+    })),
+  );
+  const config = { ...env, DB: database };
+  try {
+    let result = await runSearchAgent(
+      { message: 'Sans contrainte géographique', consent: true },
+      config,
+      async (_url, options) =>
+        controlledSearch(JSON.parse(options.body), {
+          needs: { keys: ['hearing'], minWidth: null },
+        }),
+    );
+    result = await runSearchAgent(
+      { action: 'confirm', consent: true, state: result.state },
+      config,
+      async (_url, options) => controlledSearch(JSON.parse(options.body)),
+    );
+    const ids = result.results.results.map((practice) => practice.id);
+    await assert.rejects(
+      runSearchAgent(
+        {
+          message: 'premier',
+          displayedPracticeIds: [ids[1], ids[0], ...ids.slice(2)],
+          state: result.state,
+          consent: true,
+        },
+        config,
+        () => {
+          throw Error('No provider');
+        },
+      ),
+      /Ordre/,
+    );
+    const displayed = [ids[0], ids[4], ids[2], ids[3], ids[1]];
+    let round = 0;
+    const next = await runSearchAgent(
+      {
+        message: 'Lis les avis',
+        displayedPracticeIds: displayed,
+        state: result.state,
+        consent: true,
+        reviewConsent: true,
+      },
+      config,
+      async (_url, options) => {
+        if (round++ === 0) return call('research_public_identity', { practiceId: ids[4] });
+        assert.match(toolOutput(JSON.parse(options.body)).error, /bouton dédié/);
+        return complete({ reply: 'Utilisez le bouton de cette fiche.', question: null });
+      },
+    );
+    assert.deepEqual(next.state.autoReviewIds, ids.slice(0, 3));
+  } finally {
+    database.close();
+  }
+});

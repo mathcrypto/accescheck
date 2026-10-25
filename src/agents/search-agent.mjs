@@ -44,6 +44,7 @@ async function restore(state, secret) {
       notes: [],
       question: null,
       practiceIds: [],
+      autoReviewIds: [],
       lastResults: null,
       page: 1,
       expiresAt: Date.now() + 3600000,
@@ -61,7 +62,7 @@ async function restore(state, secret) {
     ))
   )
     throw new Error('Conversation expirée ou modifiée. Effacez-la pour recommencer.');
-  return data;
+  return structuredClone(data);
 }
 function query(proposal) {
   const value = { ...proposal };
@@ -74,14 +75,18 @@ function resultContext(results) {
     page: results.page,
     origin: results.origin,
     needs: results.needs,
-    practices: results.results.map(({ id, name, address, specialty, sourceUrl, distanceKm }) => ({
-      id,
-      name,
-      address,
-      specialty,
-      sourceUrl,
-      distanceKm,
-    })),
+    practices: results.results.map(
+      ({ id, name, address, specialty, sourceUrl, distanceKm, met, needsConfirmation }) => ({
+        id,
+        name,
+        address,
+        specialty,
+        sourceUrl,
+        distanceKm,
+        met,
+        needsConfirmation,
+      }),
+    ),
   };
 }
 function summary(proposal) {
@@ -152,6 +157,24 @@ export async function runSearchAgent(
       ],
     };
   const state = await restore(input.state, env.OPENAI_API_KEY);
+  state.autoReviewIds ??= state.practiceIds.slice(0, 3);
+  if (input.displayedPracticeIds) {
+    const rows = state.lastResults?.practices || [];
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    const priority = (row) => JSON.stringify([row.needsConfirmation, row.met, row.distanceKm]);
+    const ids = input.displayedPracticeIds;
+    if (
+      ids.length !== rows.length ||
+      new Set(ids).size !== ids.length ||
+      ids.some((id, index) => !byId.has(id) || priority(byId.get(id)) !== priority(rows[index]))
+    )
+      throw new Error('Ordre des fiches invalide. Actualisez la recherche.');
+    if (rows.length) {
+      state.lastResults.practices = ids.map((id) => byId.get(id));
+      state.practiceIds = ids;
+    }
+  }
+
   if (input.action === 'page') {
     if (!state.confirmed || !state.proposal)
       throw new Error('Confirmez une recherche avant de changer de page.');
@@ -255,6 +278,7 @@ export async function runSearchAgent(
         throw new Error('La largeur nécessite le critère passage large.');
       results = null;
       state.practiceIds = [];
+      state.autoReviewIds = [];
       state.lastResults = null;
       reviews.length = 0;
       state.proposal = {
@@ -281,6 +305,7 @@ export async function runSearchAgent(
       state.lastResults = resultContext(results);
       state.page = 1;
       state.practiceIds = results.results.map((practice) => practice.id);
+      state.autoReviewIds = state.practiceIds.slice(0, 3);
       return results;
     }
     if (!state.practiceIds.includes(value.practiceId))
@@ -289,7 +314,7 @@ export async function runSearchAgent(
       emit({ type: 'status', text: 'Consultation des preuves de la fiche' });
       return await store.get(value.practiceId);
     }
-    if (state.page !== 1 || !state.practiceIds.slice(0, 3).includes(value.practiceId))
+    if (state.page !== 1 || !state.autoReviewIds.includes(value.practiceId))
       throw new Error('Les avis de cette fiche nécessitent une demande depuis son bouton dédié.');
     if (input.reviewConsent !== true)
       throw new Error('Un accord distinct est nécessaire pour consulter les avis.');

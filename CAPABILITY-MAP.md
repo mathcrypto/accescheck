@@ -1,6 +1,6 @@
 # AccèsCheck — recherche conversationnelle
 
-Statut : cadrage validé, réalisation en cours. Les cinq premiers lots sont réalisés ; le lot de synthèse reste à livrer. La priorité ajoutée est un véritable agent de recherche, avant la synthèse de réputation. Voir tasks/plan.md et tasks/todo.md pour les vérifications et l’état précis.
+Statut : cadrage validé, réalisation en cours. Les six lots sont réalisés, ainsi que le remplacement prioritaire du dialogue à règles par un agent à outils. La priorité ajoutée est un véritable agent de recherche, avant la synthèse de réputation. Voir tasks/plan.md et tasks/todo.md pour les vérifications et l’état précis.
 
 ## Besoin
 
@@ -108,3 +108,7 @@ L’accord explicite devra expliquer l’envoi du contexte de recherche au modè
 Commencer avec un agent principal capable. Un modèle rapide « système 1 » est une option à comparer en coût, latence et conservation du contexte ; il ne tranche pas seul une géographie ambiguë.
 
 Précision validée : retirer du parcours principal le dialogue imposé et l’extraction par regex. Le principal choisit ses outils et les précisions. Garder les contrôles serveur de données et de provenance, le consentement, les bornes et les priorités de classement. Le mode sans IA est un annuaire dégradé explicite, sans prétendre interpréter la demande ni fonctionner en agent autonome.
+
+## Livraison des avis
+
+Voir [docs/review-reputation.md](docs/review-reputation.md) pour le seuil prudent, le dédoublonnage, les contradictions et le départage à accès/distance égaux. L’échantillon reste partiel et les données insuffisantes restent sans score. Aucun appel payant supplémentaire n’a été lancé pour valider le modèle réel.

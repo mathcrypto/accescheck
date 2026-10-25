@@ -23,6 +23,48 @@ function render(content, data) {
       'hint',
     ),
   );
+  if (data.summary) {
+    const report = data.summary;
+    content.append(
+      node('p', report.label, 'review-sentiment'),
+      node(
+        'p',
+        `${report.sampleSize} avis identifiable(s) · ${report.distinctSites} site(s). Échantillon limité, sans garantie de représentativité.`,
+        'hint',
+      ),
+    );
+    if (report.unidentifiedCount)
+      content.append(
+        node(
+          'p',
+          `${report.unidentifiedCount} extrait(s) sans référence individuelle écarté(s) du ressenti général.`,
+          'hint',
+        ),
+      );
+    const details = node('details');
+    details.append(node('summary', 'Accueil, écoute, attente et organisation'));
+    for (const topic of report.topics) {
+      details.append(node('p', `${topic.label} : ${topic.assessment}`));
+      if (topic.positive + topic.negative + topic.mixed)
+        details.append(
+          node(
+            'p',
+            `${topic.positive} favorable(s) · ${topic.negative} difficulté(s) · ${topic.mixed} partagé(s)`,
+            'hint',
+          ),
+        );
+      const examples = node('ul');
+      for (const example of topic.examples) {
+        const item = node('li', example.text + ' ');
+        item.append(
+          link('Source' + (example.publishedAt ? ' · ' + example.publishedAt : ''), example.url),
+        );
+        examples.append(item);
+      }
+      details.append(examples);
+    }
+    content.append(details);
+  }
   if (!data.sources.length)
     content.append(
       node(
@@ -69,11 +111,16 @@ function render(content, data) {
   }
   consulted.append(
     list,
-    node('p', 'Les témoignages ne prouvent ni l’accessibilité ni la qualité clinique.', 'hint'),
+    ...(
+      data.limitations || ['Les témoignages ne prouvent ni l’accessibilité ni la qualité clinique.']
+    ).map((text) => node('p', text, 'hint')),
   );
   content.append(consulted);
 }
-export function mountReviewCards(practices, { available, automatic, cache, onActivity }) {
+export function mountReviewCards(
+  practices,
+  { available, automatic, cache, onActivity, onUpdate = () => {} },
+) {
   let queue = Promise.resolve(),
     generation = 0,
     pending = 0,
@@ -141,6 +188,7 @@ export function mountReviewCards(practices, { available, automatic, cache, onAct
         cache.set(practice.id, result);
         if (cache.size > 50) cache.delete(cache.keys().next().value);
         render(content, result);
+        onUpdate();
         status.textContent = '';
         button.hidden = true;
       } catch (error) {

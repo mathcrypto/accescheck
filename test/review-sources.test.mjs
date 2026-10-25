@@ -104,3 +104,45 @@ test('provider errors, incomplete responses and malformed output do not expose s
       (error) => !error.message.includes('private-test-key'),
     );
 });
+test('the same sourced web request supplies a conservative theme synthesis and preserves contradictions', async () => {
+  const observation = (id, sentiment) => ({
+    text: 'Accueil rapporté ' + id,
+    reviewId: id,
+    publishedAt: '2026-10-20',
+    originalUrl: null,
+    themes: [{ topic: 'accueil', sentiment }],
+  });
+  let calls = 0;
+  const sources = [
+    reviewSource(fixtures[0], {
+      observations: [observation('a', 'positive'), observation('b', 'positive')],
+    }),
+    reviewSource(fixtures[0], {
+      url: 'https://avis.autre.fr/cabinet',
+      observations: [observation('c', 'negative')],
+    }),
+    reviewSource(fixtures[0], {
+      url: 'https://avis.medecin.fr/doc',
+      entityType: 'practitioner',
+      observations: [observation('d', 'positive')],
+    }),
+  ];
+  const result = await collectReviewSources(body, env, async (_url, options) => {
+    calls++;
+    assert.ok(
+      JSON.parse(options.body).text.format.schema.properties.sources.items.properties.observations
+        .items.properties.themes,
+    );
+    return reviewResponse(sources);
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.summary.status, 'available');
+  assert.equal(result.summary.sampleSize, 3);
+  assert.equal(result.summary.distinctSites, 2);
+  const topic = result.summary.topics.find((topic) => topic.id === 'accueil');
+  assert.equal(topic.assessment, 'contrasté');
+  assert.ok(topic.examples.some((example) => example.url === 'https://avis.autre.fr/cabinet'));
+  assert.ok(
+    result.sources.find((source) => source.entityType === 'practitioner').observations.length === 0,
+  );
+});

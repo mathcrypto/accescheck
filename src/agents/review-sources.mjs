@@ -1,4 +1,4 @@
-import { safeReviewUrl, reviewSite } from '../review-core.mjs';
+import { safeReviewUrl, reviewSite, summarizeReviews, reviewTopics } from '../review-core.mjs';
 export { safeReviewUrl } from '../review-core.mjs';
 import { z } from 'zod';
 import { createPracticeStore } from '../practice-store.mjs';
@@ -6,6 +6,16 @@ import { defaultModel } from './needs-agent.mjs';
 const observation = z
   .object({
     text: z.string().min(1).max(360),
+    themes: z
+      .array(
+        z
+          .object({
+            topic: z.enum(Object.keys(reviewTopics)),
+            sentiment: z.enum(['positive', 'negative', 'mixed']),
+          })
+          .strict(),
+      )
+      .max(4),
     reviewId: z.string().max(200).nullable(),
     publishedAt: z.string().max(40).nullable(),
     originalUrl: z.string().max(1500).nullable(),
@@ -80,6 +90,7 @@ const instructions = [
   'Conserve la distinction établissement / praticien. Un avis de médecin ne devient pas un avis du cabinet. Si homonyme ou adresse ambiguë, marque ambiguous=true.',
   'Chaque source doit être une page directe effectivement retournée par web_search. Reprends le nom et l’adresse tels que lus, sans les forcer pour correspondre à la demande.',
   'Observations : paraphrases courtes et anonymes d’avis individuels effectivement lus, sur accueil, écoute, attente ou organisation. Aucun nom de patient ni détail de santé. Pas de citation longue.',
+  'themes : pour chaque observation individuelle réellement lue, indique les seuls thèmes explicitement décrits (accueil, ecoute, attente, organisation) et leur tonalité positive, negative ou mixed. Une durée d’attente seule n’est pas forcément une plainte. Aucun thème déduit de la note globale. Une liste vide convient si aucun thème n’est établi.',
   'reviewId : identifiant public réellement présent, sinon null. publishedAt : date réellement connue, sinon null. originalUrl : origine réellement identifiée d’un avis repris ailleurs, sinon null.',
   'Les extraits ou agrégats seuls ne sont pas des témoignages individuels supplémentaires. La collecte est partielle ; ne prétends pas couvrir tous les patients.',
 ].join('\n');
@@ -201,6 +212,7 @@ export async function collectReviewSources(body, env = {}, transport = fetch, si
     practiceId: parsed.data.practiceId,
     checkedAt: new Date().toISOString(),
     sources,
+    summary: summarizeReviews(sources),
     consulted: [...consulted.values()],
     coverage: {
       consultedSources: consulted.size,
@@ -210,7 +222,8 @@ export async function collectReviewSources(body, env = {}, transport = fetch, si
       ).size,
     },
     limitations: [
-      'Collecte partielle des pages accessibles, jamais exhaustive.',
+      'Collecte partielle des pages accessibles, jamais exhaustive. Trois avis identifiables et deux sites permettent un ressenti limité, pas une conclusion représentative.',
+      'Seuls les doublons repérables par référence ou texte sont fusionnés ; les copies reformulées peuvent échapper au repérage.',
       'Les avis décrivent des expériences rapportées ; ils ne prouvent ni la qualité clinique ni l’accessibilité.',
       'Le nom et l’adresse doivent correspondre ; les avis du médecin ne sont pas attribués au cabinet.',
     ],
