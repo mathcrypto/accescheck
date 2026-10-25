@@ -195,6 +195,17 @@ try {
   await page.getByText('L’agent OpenAI examine votre demande', { exact: true }).waitFor();
   assert.equal(await page.locator('#agentActivity').isVisible(), true);
   assert.equal(
+    await page.locator('#agentActivity').evaluate((el) => el.parentElement.id),
+    'chatHistory',
+    'Activity appears at the next response position inside the conversation',
+  );
+  const pendingTurn = await page.locator('.bubble.user').last().boundingBox();
+  const activity = await page.locator('#agentActivity').boundingBox();
+  const composer = await page.locator('#descriptionForm').boundingBox();
+  assert.ok(activity.y >= pendingTurn.y + pendingTurn.height - 1);
+  assert.ok(activity.y + activity.height <= composer.y);
+  await page.screenshot({ path: 'output/search-agent/inline-activity.png' });
+  assert.equal(
     await page.locator('.agent-mark svg path').getAttribute('d'),
     await page.locator('.brand-mark svg path').getAttribute('d'),
   );

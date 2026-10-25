@@ -73,6 +73,11 @@
               aria-label="Conversation de recherche"
             >
               <div id="thread" class="thread" role="log" aria-label="Échanges"></div>
+              <div id="agentActivity" class="agent-activity" hidden>
+                <span class="agent-mark" aria-hidden="true"><!--AGENT_MARK--></span>
+                <span id="activityText" role="status" aria-live="polite" aria-atomic="true"></span>
+                <button id="stopSearch" class="text-button" type="button">Interrompre</button>
+              </div>
             </div>
           </details>
           <form id="descriptionForm">
@@ -98,11 +103,6 @@
               </button>
             </div>
           </form>
-          <div id="agentActivity" class="agent-activity" hidden>
-            <span class="agent-mark" aria-hidden="true"><!--AGENT_MARK--></span>
-            <span id="activityText" role="status" aria-live="polite" aria-atomic="true"></span>
-            <button id="stopSearch" class="text-button" type="button">Interrompre</button>
-          </div>
           <p id="chatStatus" class="hint" role="status"></p>
           <div class="chat-controls">
             <div class="chat-controls-start">
@@ -146,7 +146,7 @@
               <p id="resultsCriteria" class="results-criteria" hidden></p>
               <p id="resultsSummary">Vos critères d’abord. La proximité ensuite.</p>
             </div>
-            <div id="resultStatus" role="status"></div>
+            <div id="resultStatus"></div>
             <div id="results" aria-busy="false"></div>
             <div id="pagination" class="actions"></div>
             <p id="dataset" class="footnote">

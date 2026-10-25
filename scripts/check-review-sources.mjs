@@ -92,6 +92,11 @@ try {
       document.getElementById('agentActivity').hidden,
   );
   assert.equal(requests.length, 3);
+  assert.equal(
+    await page.locator('#agentActivity').evaluate((el) => el.parentElement.id),
+    'resultStatus',
+    'Review activity stays with the results while the conversation is folded',
+  );
   assert.equal(provider.length, 3);
   assert.ok(requests.every((body) => Object.keys(body).sort().join(',') === 'consent,practiceId'));
   assert.ok(
