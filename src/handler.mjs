@@ -92,6 +92,18 @@ export function createHandler({ home, consultationPage }) {
                 "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
             },
           });
+        if (
+          request.method === 'GET' &&
+          ['/assistant', '/assistant/', '/cabinets', '/cabinets/'].includes(url.pathname)
+        )
+          return new Response(null, {
+            status: 308,
+            headers: {
+              Location: '/#recherche',
+              'Cache-Control': 'no-store',
+              'Referrer-Policy': 'no-referrer',
+            },
+          });
         const origin = request.headers.get('Origin');
         if (
           (origin && origin !== url.origin) ||

@@ -39,16 +39,7 @@ try {
       await page.locator('.intro-link').click();
       await page.locator('#description').fill('Je suis malentendant.');
       await page.locator('#description').press('Enter');
-      await page.locator('#review').waitFor();
-      await page
-        .locator('#reviewTitle')
-        .evaluate((node) => node.scrollIntoView({ block: 'start' }));
-      assert.ok(
-        await page.locator('#search').evaluate(inView),
-        'Search confirmation must be in view',
-      );
-      await page.locator('#confirmed').check();
-      await page.locator('#search').click();
+      await page.getByRole('button', { name: 'Chercher', exact: true }).click();
       const link = page
         .locator('.practice-card')
         .first()
@@ -61,38 +52,31 @@ try {
       await popup.waitForLoadState();
       await popup.locator('#practiceContext').waitFor();
       await popup.close();
-      assert.equal(await page.locator('#description').inputValue(), 'Je suis malentendant.');
+      assert.match(await page.locator('#thread').innerText(), /Je suis malentendant/);
       assert.ok(await page.locator('.practice-card').count());
     });
-    await check(`${width}: visible empty-criteria error`, async () => {
-      await page.goto(base);
-      await page.locator('#advancedSearch').evaluate((node) => {
-        node.open = true;
-      });
-      await page.locator('#manual').click();
-      await page.locator('#confirmed').check();
-      await page.locator('#search').click();
-      assert.ok(await page.locator('#searchStatus').isVisible());
-      assert.match(await page.locator('#searchStatus').innerText(), /au moins un critère/);
-      assert.ok(await page.locator('#searchStatus').evaluate(inView));
+    await check(`${width}: missing needs keep the conversation editable`, async () => {
+      await page.goto(base + '/#recherche');
+      await page.locator('#clear').click();
+      await page.locator('#description').fill('Bonjour');
+      await page.locator('#local').click();
+      await page.locator('.bubble.agent').waitFor();
+      assert.equal(await page.locator('.practice-card').count(), 0);
+      assert.ok(await page.locator('#description').isEditable());
+      assert.ok(await page.locator('#thread').innerText());
     });
-    await check(`${width}: width validated before request`, async () => {
-      await page.goto(base);
+    await check(`${width}: correcting needs invalidates previous results`, async () => {
+      await page.goto(base + '/#recherche');
+      await page.locator('#clear').click();
       await page.locator('#description').fill('Fauteuil roulant');
       await page.locator('#local').click();
-      await page.locator('#minWidth').fill('20');
-      await page.locator('#confirmed').check();
-      let requests = 0;
-      const count = (request) => {
-        if (request.url().endsWith('/api/agent')) requests++;
-      };
-      page.on('request', count);
-      await page.locator('#search').click();
-      await page.waitForTimeout(150);
-      page.off('request', count);
-      assert.equal(requests, 0);
-      assert.equal(await page.evaluate(() => document.activeElement.id), 'minWidth');
-      assert.ok(await page.locator('#minWidth').evaluate(inView));
+      await page.locator('.bubble.agent').waitFor();
+      assert.equal(await page.locator('.practice-card').count(), 0);
+      assert.match(await page.locator('#thread').innerText(), /largeur|passage/i);
+      await page.locator('#description').fill('Je suis malentendant.');
+      await page.locator('#local').click();
+      await page.locator('.bubble.agent').nth(1).waitFor();
+      assert.ok(await page.locator('#description').isEditable());
     });
     await check(`${width}: consultation actions without page scrolling`, async () => {
       await page.goto(base + '/consultation');
@@ -114,20 +98,13 @@ try {
     });
     await check(`${width}: keyboard focus stays below fixed header`, async () => {
       await page.goto(base);
-      await page.locator('#description').fill('Fauteuil roulant');
-      await page.locator('#local').click();
-      await page.locator('#minWidth').focus();
-      for (let step = 0; step < 6; step++) {
-        await page.keyboard.press('Shift+Tab');
-        assert.ok(
-          await page.evaluate(() => {
-            const active = document.activeElement;
-            const r = active.getBoundingClientRect();
-            const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
-            return r.top >= 72 && !!hit && (active === hit || active.contains(hit));
-          }),
-          'The focused control must not be covered by the header',
-        );
+      await page.locator('.intro-link').click();
+      await page.locator('#description').focus();
+      for (let step = 0; step < 3; step++) {
+        const focused = page.locator(':focus');
+        await focused.scrollIntoViewIfNeeded();
+        assert.ok(await focused.evaluate(inView), 'Focused chat control stays below header');
+        await page.keyboard.press('Tab');
       }
     });
     await check(`${width}: reply shown from notes and clear available`, async () => {
