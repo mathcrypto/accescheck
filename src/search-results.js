@@ -171,7 +171,29 @@ export function practiceCard(practice, origin = null, notes = []) {
   if (booking) {
     booking.textContent = 'Doctolib ↗';
     links.append(booking);
-  } else details.append(element('p', 'hint', 'Aucun lien Doctolib dans la source.'));
+  } else {
+    // Doctolib's own search ignores practice names, so look up the profile through Google.
+    const search = new URL('https://www.google.com/search');
+    search.searchParams.set(
+      'q',
+      [practice.name, practice.address?.match(/\b\d{5}\b.*$/)?.[0] || practice.address, 'doctolib']
+        .filter(Boolean)
+        .join(' '),
+    );
+    const lookup = sourceLink('Chercher sur Doctolib ↗', search.href, ['www.google.com']);
+    lookup.setAttribute(
+      'aria-label',
+      'Chercher la fiche Doctolib de ce cabinet sur Google (nouvel onglet)',
+    );
+    links.append(lookup);
+    details.append(
+      element(
+        'p',
+        'hint',
+        'Aucun profil Doctolib dans la source : le lien cherche la fiche via Google, sans garantie.',
+      ),
+    );
+  }
   const companion = element('a', 'card-action', 'Préparer ↗');
   companion.title = 'Préparer l’échange';
   companion.href = '/consultation?practice=' + encodeURIComponent(practice.id);
