@@ -96,7 +96,9 @@ export async function interpretNeeds(body, env = {}, transport = fetch) {
         store: false,
         instructions: needsAgentInstructions,
         input: [{ role: 'user', content: [{ type: 'input_text', text: description }] }],
-        reasoning: { effort: 'low' },
+        ...((env.OPENAI_MODEL || defaultModel).startsWith('gpt-4')
+          ? {}
+          : { reasoning: { effort: 'low' } }),
         max_output_tokens: 1200,
         text: {
           format: {

@@ -103,3 +103,16 @@ test('provider failures and disabled AI are explicit and never expose provider p
     );
   }
 });
+test('configured GPT-4.1 models receive no unsupported reasoning parameter', async () => {
+  let payload;
+  await interpretNeeds(
+    { description: 'Équipement auditif', consent: true },
+    { OPENAI_API_KEY: 'test-key', OPENAI_MODEL: 'gpt-4.1-mini' },
+    async (_url, options) => {
+      payload = JSON.parse(options.body);
+      return completed();
+    },
+  );
+  assert.equal(payload.model, 'gpt-4.1-mini');
+  assert.equal(payload.reasoning, undefined);
+});
