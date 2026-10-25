@@ -57,9 +57,20 @@ function working(active, text = '') {
   document.body.classList.toggle('agent-working', active);
   $('activityText').textContent = text;
 }
+function revealTurn(bubble) {
+  const history = $('chatHistory');
+  if (getComputedStyle(history).overflowY === 'visible') {
+    bubble.scrollIntoView({ block: 'start', behavior: 'auto' });
+  } else {
+    history.scrollTop +=
+      bubble.getBoundingClientRect().top - history.getBoundingClientRect().top - 8;
+  }
+}
 function retry(input, text) {
-  const choices = actions(turn(text), [{ id: 'retry', label: 'Réessayer' }]);
+  const bubble = turn(text);
+  const choices = actions(bubble, [{ id: 'retry', label: 'Réessayer' }]);
   choices.firstElementChild.onclick = () => ask(input, lastLabel);
+  revealTurn(bubble);
 }
 
 async function ask(input, choiceLabel = '') {
@@ -155,9 +166,7 @@ async function ask(input, choiceLabel = '') {
         });
       } else actions(bubble, data.actions || []);
       $('chatStatus').textContent = '';
-      const history = $('chatHistory');
-      history.scrollTop +=
-        bubble.getBoundingClientRect().top - history.getBoundingClientRect().top - 8;
+      revealTurn(bubble);
     }
   } catch (error) {
     if (active !== controller || error.name === 'AbortError') return;
