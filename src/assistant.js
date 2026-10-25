@@ -304,7 +304,7 @@ $('clear').onclick = () => {
   reviewJob?.dispose();
   reviewJob = null;
   reviewCache.clear();
-  $('reviewConsent').checked = false;
+  $('reviewConsent').checked = reviewsAvailable;
   controller?.abort();
   controller = null;
   state = null;
@@ -342,6 +342,8 @@ fetch('/api/ai-config')
   .then((config) => {
     reviewsAvailable = config.available === true;
     $('reviewConsent').disabled = !reviewsAvailable;
+    // Only the cabinet's public identity is sent; the patient can still untick it.
+    $('reviewConsent').checked = reviewsAvailable;
     $('consent').disabled = !config.available;
     $('aiStatus').textContent = config.available
       ? 'OpenAI disponible avec votre accord.'

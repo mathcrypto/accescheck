@@ -197,7 +197,11 @@ try {
   assert.equal(observedFirst, expectedFirst);
   await page.locator('#clear').click();
   assert.equal(await page.locator('.practice-card').count(), 0);
-  assert.equal(await page.locator('#reviewConsent').isChecked(), false);
+  // Clearing restores the default: ticked whenever review search is available.
+  assert.equal(
+    await page.locator('#reviewConsent').isChecked(),
+    !(await page.locator('#reviewConsent').isDisabled()),
+  );
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(errors, []);
   console.log(
