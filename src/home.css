@@ -860,9 +860,17 @@ summary,
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
+.search-panel.has-results #descriptionForm {
+  position: sticky;
+  top: 72px;
+  z-index: 2;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  background: var(--paper);
+}
 .results-panel {
   width: 100%;
-  margin: 16px 0 24px;
+  margin: 24px 0 24px;
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: 3px;

@@ -127,7 +127,7 @@ async function ask(input, choiceLabel = '') {
         new Date(result.dataset.exportedAt).toLocaleDateString('fr-FR') +
         '. ' +
         result.counts.knownObstaclesExcluded +
-        ' obstacle(s) connu(s) exclu(s). Distances à vol d’oiseau, aucun itinéraire vérifié.';
+        ' obstacle(s) connu(s) exclu(s). Distances depuis votre adresse, aucun itinéraire vérifié.';
       $('chatStatus').textContent = '';
       $('resultsTitle').focus({ preventScroll: true });
       $('resultsSection').scrollIntoView({ block: 'start', behavior: 'smooth' });

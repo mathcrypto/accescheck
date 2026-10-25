@@ -261,7 +261,7 @@ export async function findPractices(database, input) {
     },
     limitations: [
       'Les informations d’accessibilité sont déclaratives ; elles ne garantissent pas l’accès.',
-      'Distances à vol d’oiseau ; aucun itinéraire accessible n’est vérifié.',
+      'Distances depuis l’adresse indiquée ; aucun itinéraire accessible n’est vérifié.',
       'Inscription RPPS, secteur, tarifs et Carte Vitale non vérifiés dans cette source.',
     ],
   };

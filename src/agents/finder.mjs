@@ -184,10 +184,11 @@ function matchParisLandmark(normalized) {
 }
 
 function matchParisArrondissement(normalized) {
+  const suffix = String.raw`(?:\s*(?:e(?:r|me)?|eme|th))?`;
   const match =
-    normalized.match(/\bparis\s+(\d{1,2})\s*e(?:r|me)?\b/) ||
-    normalized.match(/\bdans le\s+(\d{1,2})\s*e(?:r|me)?\b/) ||
-    normalized.match(/\b(\d{1,2})\s*e(?:r|me)?\s+arrondissement\b/);
+    normalized.match(new RegExp(String.raw`\bparis\s+(\d{1,2})${suffix}\b`)) ||
+    normalized.match(new RegExp(String.raw`\bdans le\s+(\d{1,2})${suffix}\b`)) ||
+    normalized.match(/\b(\d{1,2})\s*(?:e(?:r|me)?|eme|th)\s+arrondissement\b/);
   if (!match) return null;
   const n = Number(match[1]);
   return n >= 1 && n <= 20 ? n : null;
@@ -245,7 +246,7 @@ export function aroundLabel(state) {
     .replace(/\bnation\b/gi, 'Nation');
   const radius =
     state?.origin && state?.radiusKm
-      ? ` · rayon ${state.radiusKm} km à vol d’oiseau`
+      ? ` · ≤ ${state.radiusKm} km`
       : !state?.origin && typed
         ? ' (lieu à préciser)'
         : '';
@@ -307,10 +308,11 @@ export function targetPostcodes(placeQuery = '') {
   const plainText = plain(text);
   const explicit = text.match(/\b(\d{5})\b/);
   if (explicit) return [explicit[1]];
+  const suffix = String.raw`(?:\s*(?:e(?:r|me)?|eme|th))?`;
   const parisArr =
-    plainText.match(/\bparis\s+(\d{1,2})\s*e(?:r|me)?\b/) ||
-    plainText.match(/\b(\d{1,2})\s*e(?:r|me)?\s+arrondissement\b/) ||
-    plainText.match(/\bdans le\s+(\d{1,2})\s*e(?:r|me)?\b/);
+    plainText.match(new RegExp(String.raw`\bparis\s+(\d{1,2})${suffix}\b`)) ||
+    plainText.match(/\b(\d{1,2})\s*(?:e(?:r|me)?|eme|th)\s+arrondissement\b/) ||
+    plainText.match(new RegExp(String.raw`\bdans le\s+(\d{1,2})${suffix}\b`));
   if (parisArr) {
     const n = Number(parisArr[1]);
     if (n >= 1 && n <= 20) return [`75${String(n).padStart(3, '0')}`];
@@ -326,6 +328,15 @@ export function geocodeQueryFor(placeQuery) {
   if (PARIS_LANDMARK_SET.has(p)) return `${q} Paris`;
   // « bastille paris » is already explicit for IGN.
   if (PARIS_LANDMARKS.some((landmark) => p === `${landmark} paris`)) return q;
+  const codes = targetPostcodes(q);
+  // Pure Paris arrondissement → postcode so IGN centres there, not city-wide.
+  if (
+    codes.length === 1 &&
+    /^75\d{3}$/.test(codes[0]) &&
+    !PARIS_LANDMARKS.some((landmark) => p.includes(landmark))
+  ) {
+    return `${codes[0]} Paris`;
+  }
   if (/\bparis\b/.test(p) && !PARIS_LANDMARKS.some((landmark) => p.includes(landmark))) return q;
   return q;
 }
