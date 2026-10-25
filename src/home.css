@@ -1030,3 +1030,36 @@ summary,
 .review-content a {
   overflow-wrap: anywhere;
 }
+
+.chat-controls .ai-option {
+  margin-top: 0;
+}
+.chat-controls .text-button,
+.chat-controls summary {
+  min-height: 44px;
+}
+.chat-choices button {
+  max-width: 100%;
+}
+
+@media (max-width: 600px), (max-height: 600px) {
+  html {
+    scroll-padding-bottom: 96px;
+  }
+  .chat-history,
+  .agent-working .chat-history {
+    max-height: none;
+    overflow: visible;
+  }
+  .bubble {
+    max-width: 100%;
+    scroll-margin-top: 96px;
+  }
+  .search-panel:not(.has-results) #descriptionForm {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding-block: 8px;
+    background: var(--paper);
+  }
+}
