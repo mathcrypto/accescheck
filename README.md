@@ -85,3 +85,29 @@ The companion is a communication aid, not a clinical record or qualified interpr
 `scripts/check-companion.mjs` runs Playwright interaction tests with deterministic simulated speech recognition and synthesis: consent gates, local/remote handling, language pack errors, mic denial, interim/final captions, correction and XSS escaping, playback stopping the mic, notes review invalidation, overwrite protection, demo isolation, unsupported-browser fallback, mobile overflow, and no POST traffic. Set optional `PLAYWRIGHT_MODULE` and `CHROME_BIN` for your environment. Actual microphone transcription accuracy, French pack availability, audible playback quality, and assistive-device behavior require testing on the intended browser/device.
 
 Browser APIs: [on-device speech recognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/processLocally), [language availability](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/available_static), [speech synthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis).
+
+## Voice and video-call workflow (v0.3)
+
+The four communication tools are now visible directly below the introduction. The consultation setup offers **in-person**, **Doctolib video**, and **Zoom video**. A practice can be carried from a search result into the companion using its public record ID; private appointment URLs are entered separately and never sent to the backend.
+
+This is a **side-by-side companion**, not a native Doctolib or Zoom integration. It does not join a meeting, embed its video, log into either platform, or inject synthesized speech into another app's microphone. Users open their own meeting link and explicitly share that browser tab's audio. Share-audio instructions, a connection indicator, disconnect control, and a copy-to-clipboard action for typed replies are provided. Forwarding spoken replies requires an audio-sharing setup supported by the call platform; the patient must verify that the clinician can hear them.
+
+Shared-tab recognition is limited to desktop Chromium/Chrome/Edge 135+ with getDisplayMedia, following MDN browser compatibility data for `SpeechRecognition.start(audioTrack)`. Other browsers retain microphone/manual communication without silently substituting microphone input for a video call. Only a selected browser-tab surface with a live audio track is accepted. Entire-screen/window or audio-less selections are stopped and rejected. The browser necessarily creates a video track for the chooser; AccèsCheck does not display, process, transmit, or record its frames. No MediaRecorder is used. Native sharing controls remain available. Ending the share, disconnecting, clearing, navigating away, or recognition errors stop all tracks. Unlike in-person microphone capture, explicitly shared tab audio can continue while the call tab is in the foreground, as explained in the interface. Speech playback pauses transcription but retains an already connected tab until explicit disconnect or session clear.
+
+### French voices
+
+The default remains a French device voice, with no paid API. A sample-voice button is available next to message composition. Missing French local voices are reported rather than silently using an English voice or a remote provider.
+
+The requested ElevenLabs voice `pFZP5JQG7iQjIQuC4Bku` is configured as `ELEVENLABS_VOICE_ID`. Activating that exact voice also requires an **ELEVENLABS_API_KEY server secret** in the Site's runtime environment, followed by deployment. No API key is currently configured; the interface reports this voice as requiring activation and continues with the device voice.
+
+When enabled, `/api/speech` validates explicit user consent, text length (4,000 characters), and reading speed before forwarding text to ElevenLabs with the multilingual v2 model. The API key stays on the server; `/api/voice-config` exposes readiness and the public voice ID only. Audio responses are not cached, object URLs are revoked, and errors do not expose upstream details. Text sent to ElevenLabs is subject to that provider's processing, retention policy, quota, and account charges; zero-retention is not assumed. This optional path changes v0.2's no-POST behavior only when the user selects ElevenLabs and accepts text transfer. French pronunciation and this voice's availability require verification with the configured account. No paid API or actual patient text was used in tests.
+
+Local configuration example (Node 20.6+): copy `.env.example` to `.env`, populate the secret locally, then use `node --env-file=.env scripts/dev.mjs`. Never commit `.env`. Production secrets belong in Sites runtime settings, not the hosting manifest or source code.
+
+### Added checks
+
+`test/speech.test.mjs` covers link validation, browser gating, requested voice selection, secret redaction, same-origin enforcement, consent and length validation, unavailable configuration, provider failures, and audio responses through a stubbed provider.
+
+`scripts/check-call-workflow.mjs` tests the actual UI with simulated capture/speech services: call links, no microphone fallback for video mode, exact shared audio-track routing, missing audio, rejected screen surfaces, cleanup, background sharing, end-share, opt-in ElevenLabs text transfer, device fallback, selected-practice handoff, mobile layout, and no transmission of private meeting URLs. Live Doctolib/Zoom audio, actual OS capture permissions, clinical transcription accuracy, and ElevenLabs audio quality remain device/account acceptance checks.
+
+References: [MDN track recognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/start), [MDN display capture](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia), [ElevenLabs API](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).

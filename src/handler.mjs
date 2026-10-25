@@ -18,21 +18,24 @@ function runTool(name,args) {
  validateInput(args); return briefing(p,parseNeeds(args.needs,args.width));
 }
 export default {
- async fetch(request) {
+ async fetch(request,env={}) {
   const url=new URL(request.url);
-  if(request.method==='GET' && ['/','/consultation','/consultation/'].includes(url.pathname))return new Response(url.pathname==='/'?html:consultationHtml,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}});
+  if(request.method==='GET' && ['/','/consultation','/consultation/'].includes(url.pathname))return new Response(url.pathname==='/'?html:consultationHtml,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}});
+  if(request.method==='GET' && url.pathname==='/api/voice-config')return json(speechConfig(env));
+  if(request.method==='GET' && url.pathname==='/api/practice'){const id=url.searchParams.get('id');const p=practices.find(p=>p.id===id&&p.mode==='real');return p?json({name:p.name,address:p.address,doctolibUrl:safeDoctolib(p.doctolibUrl)}):json({error:'Établissement introuvable.'},404);}
   if(request.method==='GET' && url.pathname==='/api/catalog')return json({districts:[...new Set(practices.filter(p=>p.mode==='real').map(p=>p.postalCode))].sort(),specialties:[...new Set(practices.filter(p=>p.mode==='real').map(p=>p.specialty))].sort(),count:practices.filter(p=>p.mode==='real').length,datasetDate:'2026-10-24'});
-  if(request.method==='GET' && url.pathname==='/health')return json({ok:true,version:'0.2.0'});
+  if(request.method==='GET' && url.pathname==='/health')return json({ok:true,version:'0.3.0'});
   if(request.method!=='POST')return json({error:'Route introuvable.'},404);
   const origin=request.headers.get('Origin'); if(origin && origin!==url.origin)return json({error:'Origine non autorisée.'},403);
   if(Number(request.headers.get('content-length'))>12000)return json({error:'Requête trop volumineuse.'},413);
   let body;try{const raw=await request.text();if(raw.length>12000)return json({error:'Requête trop volumineuse.'},413);body=JSON.parse(raw);}catch{return json({error:'JSON invalide.'},400);}
+  if(url.pathname==='/api/speech')return generateSpeech(body,env);
   if(url.pathname==='/mcp'){
    if(!body || body.jsonrpc!=='2.0' || typeof body.method!=='string' || Array.isArray(body))return json({jsonrpc:'2.0',id:null,error:{code:-32600,message:'Invalid Request'}},400);
    const id=body.id??null; let result;
    if(body.method.startsWith('notifications/'))return new Response(null,{status:202});
    if(body.method==='server/discover')result={supportedVersions:['2026-07-28'],capabilities:{tools:{}}};
-   else if(body.method==='initialize')result={protocolVersion:'2025-03-26',capabilities:{tools:{}},serverInfo:{name:'accescheck',version:'0.2.0'}};
+   else if(body.method==='initialize')result={protocolVersion:'2025-03-26',capabilities:{tools:{}},serverInfo:{name:'accescheck',version:'0.3.0'}};
    else if(body.method==='ping')result={};
    else if(body.method==='tools/list')result={tools};
    else if(body.method==='tools/call'){try{result={content:[{type:'text',text:JSON.stringify(runTool(body.params?.name,body.params?.arguments))}]};}catch(e){result={isError:true,content:[{type:'text',text:e.message}]};}}

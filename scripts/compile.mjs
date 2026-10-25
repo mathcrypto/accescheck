@@ -5,6 +5,7 @@ const html=await readFile('src/index.html','utf8');
 const companionCore=(await readFile('src/companion-core.mjs','utf8')).replace(/^export /gm,'');
 const companionJs=await readFile('src/companion.js','utf8');
 const companion=(await readFile('src/consultation.html','utf8')).replace('/*COMPANION_SCRIPT*/',companionCore+'\n'+companionJs);
+const speech=(await readFile('src/speech.mjs','utf8')).replace(/^export /gm,'');
 const handler=await readFile('src/handler.mjs','utf8');
 await mkdir('worker',{recursive:true});
-await writeFile('worker/index.js',core+'\nconst practices='+data+';\nconst html='+JSON.stringify(html)+';\nconst consultationHtml='+JSON.stringify(companion)+';\n'+handler);
+await writeFile('worker/index.js',core+'\nconst practices='+data+';\nconst html='+JSON.stringify(html)+';\nconst consultationHtml='+JSON.stringify(companion)+';\n'+speech+'\n'+handler);
