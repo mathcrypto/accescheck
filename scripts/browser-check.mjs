@@ -35,8 +35,7 @@ try {
         'Sans contrainte géographique. Je ne suis pas en fauteuil, mais j’ai besoin d’un équipement auditif.',
       );
     await page.locator('#local').click();
-    await page.getByRole('button', { name: 'Sans préférence', exact: true }).click();
-    await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
+    await page.getByRole('button', { name: 'Consulter l’annuaire public', exact: true }).click();
     await page.locator('.practice-card').first().waitFor();
     assert.equal(
       await page.locator('#resultsSection #results .practice-card').count(),
@@ -86,7 +85,7 @@ try {
     await page.close();
   }
   console.log(
-    'Homepage search passed: AccèsCheck design, local agent review, retained results, consultation handoff, reset and four responsive widths. No paid API or real audio used.',
+    'Homepage search passed: AccèsCheck design, explicit local directory, retained results, consultation handoff, reset and four responsive widths. No paid API or real audio used.',
   );
 } finally {
   await browser.close();

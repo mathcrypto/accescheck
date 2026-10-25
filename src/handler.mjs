@@ -1,10 +1,9 @@
 import { practiceTools, runPracticeTool, practiceSummary } from './practice-tools.mjs';
 import { createPracticeStore, DataUnavailable } from './practice-store.mjs';
 import { speechConfig, generateSpeech } from './speech.mjs';
-import { finderConfig, geocodeQueryFor, runFinder } from './agents/finder.mjs';
+import { searchConfig, runSearchAgent } from './agents/search-agent.mjs';
 import { collectReviewSources } from './agents/review-sources.mjs';
 import { chatResponse } from './agents/chat-response.mjs';
-import { runDialogue } from './agents/dialogue.mjs';
 import { findPractices, geocode } from './discovery.mjs';
 
 const headers = {
@@ -118,7 +117,7 @@ export function createHandler({ home, consultationPage }) {
         if (request.method === 'GET' && url.pathname === '/api/voice-config')
           return json(speechConfig(env));
         if (request.method === 'GET' && url.pathname === '/api/ai-config')
-          return json(finderConfig(env));
+          return json(searchConfig(env));
         if (request.method === 'GET' && url.pathname === '/api/practice') {
           const practice = await practiceSummary(env.DB, url.searchParams.get('id'));
           return practice ? json(practice) : json({ error: 'Établissement introuvable.' }, 404);
@@ -130,16 +129,17 @@ export function createHandler({ home, consultationPage }) {
         if (request.method === 'GET' && url.pathname === '/health')
           return json({ ok: true, version: '0.5.0' });
         if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
-        const body = await readJson(request, 12000);
+        const body = await readJson(request, url.pathname === '/api/chat' ? 64000 : 12000);
         if (url.pathname === '/api/locations')
-          return json({ locations: await geocode(geocodeQueryFor(body.query)) });
+          return json({ locations: await geocode(body.query) });
         if (url.pathname === '/api/reviews')
           return json(await collectReviewSources(body, env, fetch, request.signal));
         if (url.pathname === '/api/chat')
           return request.headers.get('accept')?.includes('application/x-ndjson')
             ? chatResponse(body, env, request.signal)
-            : json(await runDialogue(body, env));
-        if (url.pathname === '/api/agent') return json(await runFinder(body, env));
+            : json(await runSearchAgent(body, env, fetch, { signal: request.signal }));
+        if (url.pathname === '/api/agent')
+          return json({ error: 'Utilisez le chat /api/chat avec consentement explicite.' }, 410);
         if (url.pathname === '/api/discover') return json(await findPractices(env.DB, body));
         if (url.pathname === '/api/speech') return generateSpeech(body, env);
         if (url.pathname === '/mcp') {
