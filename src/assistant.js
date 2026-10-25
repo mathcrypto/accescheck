@@ -41,7 +41,7 @@ async function post(path, body, signal) {
   if (!response.ok) throw new Error(data.error || 'Service indisponible. Réessayez.');
   return data;
 }
-async function ask(input) {
+async function ask(input, choiceLabel = '') {
   controller?.abort();
   const active = (controller = new AbortController());
   clearResults();
@@ -49,7 +49,7 @@ async function ask(input) {
   $('chatStatus').textContent =
     input.action === 'confirm' ? 'Recherche des cabinets…' : 'Lecture de votre message…';
   $('thread').setAttribute('aria-busy', 'true');
-  if (input.message) turn(input.message, 'user');
+  if (input.message || choiceLabel) turn(input.message || choiceLabel, 'user');
   try {
     const data = await post(
       '/api/chat',
@@ -73,7 +73,7 @@ async function ask(input) {
             $('description').focus();
             return;
           }
-          ask({ answer: { field: data.question.id, value } });
+          ask({ answer: { field: data.question.id, value } }, data.question.options[index].label);
         };
       });
     } else actions(bubble, data.actions || []);
@@ -81,7 +81,7 @@ async function ask(input) {
       const result = data.results;
       $('resultsSection').hidden = false;
       $('results').replaceChildren(
-        ...result.results.map((practice) => practiceCard(practice, result.origin)),
+        ...result.results.map((practice) => practiceCard(practice, result.origin, state.notes)),
       );
       const page = result.page;
       const pages = [];
@@ -95,9 +95,21 @@ async function ask(input) {
       );
       $('resultsSummary').textContent =
         result.total +
-        ' fiche(s). Accessibilité, puis proximité. Les inconnus restent à confirmer.';
+        ' fiche(s) · page ' +
+        result.page +
+        '. Accessibilité, puis proximité, puis réputation si renseignée. Les inconnus restent à confirmer.';
+      $('dataset').textContent =
+        'Accès Libre · export du ' +
+        new Date(result.dataset.exportedAt).toLocaleDateString('fr-FR') +
+        '. ' +
+        result.counts.knownObstaclesExcluded +
+        ' obstacle(s) connu(s) exclu(s). Distances à vol d’oiseau, aucun itinéraire vérifié.';
     }
     $('chatStatus').textContent = '';
+    const history = $('chatHistory');
+    const anchor = data.results ? $('resultsSection') : bubble;
+    history.scrollTop +=
+      anchor.getBoundingClientRect().top - history.getBoundingClientRect().top - 8;
   } catch (error) {
     if (active !== controller || error.name === 'AbortError') return;
     $('chatStatus').textContent = error.message;

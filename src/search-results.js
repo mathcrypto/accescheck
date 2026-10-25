@@ -36,17 +36,27 @@ function stateLabel(field) {
     }[evidenceState(field)] || 'Inconnu'
   );
 }
-export function practiceCard(practice, origin = null) {
+export function practiceCard(practice, origin = null, notes = []) {
   const article = element('article', 'practice-card');
+  article.dataset.practice = practice.id;
+  article.setAttribute('aria-label', practice.name);
   const header = element('div', 'card-header');
   const identity = element('div');
-  identity.append(element('h3', '', practice.name), element('p', 'specialty', practice.specialty));
+  identity.append(
+    element('h3', '', practice.name),
+    element('p', 'specialty', practice.specialty),
+    element('p', 'hint', 'Cabinet ou établissement · identité individuelle non vérifiée'),
+  );
   header.append(
     identity,
     element(
       'span',
       'status ' + (practice.needsConfirmation ? 'pending' : 'declared'),
-      practice.needsConfirmation ? 'À confirmer' : 'Déclarations correspondantes',
+      !practice.checks?.length
+        ? 'Accès non évalué'
+        : practice.needsConfirmation || notes.length
+          ? 'À confirmer'
+          : 'Critères documentés',
     ),
   );
   article.append(header, element('p', 'address', practice.address));
@@ -65,17 +75,41 @@ export function practiceCard(practice, origin = null) {
   for (const check of practice.checks || []) {
     const label = criteria[check.key].label + ' : ' + factText({ value: check.value }, check.key);
     const trust = {
-      declared: 'Déclaré',
       unknown: 'Inconnu',
+      declared: 'Déclaré',
       stale: 'Ancien',
       contradictory: 'Contradictoire',
       photo: 'Appuyé par une photo',
       patient: 'Confirmé par des patients',
     }[check.state];
     facts.append(
-      element('li', '', label + ' · ' + trust + (check.fit === 'unknown' ? ' · À confirmer' : '')),
+      element(
+        'li',
+        check.fit,
+        label +
+          ' · ' +
+          trust +
+          (check.fit === 'unknown' ? ' · À confirmer' : '') +
+          ' · ' +
+          (check.source || 'Accès Libre') +
+          (check.date
+            ? ' · ' + new Date(check.date).toLocaleDateString('fr-FR')
+            : ' · date non renseignée'),
+      ),
     );
   }
+  for (const question of notes)
+    facts.append(
+      element('li', 'unknown', question + ' : non documenté · à confirmer auprès du cabinet'),
+    );
+  if (!practice.checks?.length && !notes.length)
+    facts.append(
+      element(
+        'li',
+        'unknown',
+        'Aucun besoin d’accès comparé. Consultez les informations déclarées avant votre visite.',
+      ),
+    );
   article.append(facts);
   const details = element('details');
   details.append(element('summary', '', 'Tous les faits et leur provenance'));
@@ -93,7 +127,7 @@ export function practiceCard(practice, origin = null) {
       '',
       'Source : ' +
         (practice.source || 'Accès Libre') +
-        '. Les dates de vérification individuelles ne sont pas disponibles dans cet export. Une déclaration n’est pas une garantie d’accès.',
+        '. Les dates absentes restent non renseignées. Une déclaration n’est pas une garantie d’accès.',
     ),
     element(
       'p',

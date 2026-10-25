@@ -56,3 +56,9 @@ Revue indépendante approuvée après régressions ajoutées : combiner les beso
 Playwright : IGN contrôlé, erreur de largeur, unités, questions inconnues, correction et consentement ; 45 régressions consultation/chat passent. Aucun appel payant utilisé.
 
 Référence ajoutée par l’utilisateur : https://github.com/RomaGab/2026-mistral-llm-x-law-hackathon-in-paris-2 ; reprendre la hiérarchie du champ, les étapes visibles et le signe animé dans les lots résultats/activité, avec les composants AccèsCheck.
+
+## Revue — practice-results
+
+Revue indépendante approuvée : accès avant distance même si un code postal est préféré, établissements identifiés comme tels, provenance/date/inconnus et besoins non documentés visibles.
+Liste intégrée dans un historique défilant avec saisie disponible ; réponses QCM visibles comme messages et anciens choix retirés du parcours clavier.
+Mutation inversant l’ordre de l’accessibilité détectée.

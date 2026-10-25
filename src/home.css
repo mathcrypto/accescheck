@@ -788,3 +788,72 @@ summary,
 .chat-choices button {
   min-height: 44px;
 }
+
+/* Reference: the supplied intake workspace keeps a quiet central writing area. */
+.chat-history {
+  max-height: clamp(120px, calc(100svh - 360px), 640px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 4px;
+  margin-bottom: 16px;
+  scroll-padding: 8px;
+}
+.chat-history:has(.thread:empty):has(#resultsSection[hidden]) {
+  display: none;
+}
+.chat-history:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.chat-history .results-area {
+  width: 100%;
+  padding: 0;
+  margin: 20px 0 0;
+}
+.chat-history .results-heading {
+  padding-bottom: 12px;
+}
+.chat-history h2 {
+  font-size: 16px;
+  font-weight: 400;
+}
+.chat-history .practice-card {
+  padding: 20px 0;
+}
+.chat-history .practice-card h3 {
+  font-size: 15px;
+  font-weight: 400;
+}
+.chat-history .facts {
+  font-size: 12px;
+}
+.chat-history .card-header {
+  gap: 12px;
+}
+.chat-history .status {
+  white-space: normal;
+}
+.chat-choices:has(button:disabled) {
+  display: none;
+}
+.search-panel:has(.thread:not(:empty)) {
+  width: min(760px, 100%);
+}
+@media (max-height: 700px) {
+  .chat-history {
+    max-height: clamp(120px, calc(100svh - 360px), 640px);
+  }
+  .search-stage:has(.thread:not(:empty)) {
+    padding-top: 96px;
+    padding-bottom: 32px;
+  }
+}
+
+.search-stage:has(.thread:not(:empty)) {
+  padding-top: 104px;
+  padding-bottom: 24px;
+}
+#chatStatus:empty {
+  display: none;
+}

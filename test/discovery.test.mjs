@@ -120,3 +120,40 @@ test('HTTP discovery rejects unconfirmed searches and does not need or call AI',
     db.close();
   }
 });
+test('a postcode preference cannot outrank documented access, and public records identify establishments', async () => {
+  const records = fixtures.map((record, index) => ({
+    ...record,
+    address: index === 1 ? '1 Rue Test 75015 Paris' : '1 Rue Test 75011 Paris',
+    location: { latitude: origin.latitude + index * 0.001, longitude: origin.longitude },
+    evidence: {
+      ...record.evidence,
+      hearing: { value: index === 1 ? null : true, status: 'declared', date: null },
+    },
+  }));
+  const db = await createTestDatabase(records);
+  try {
+    const result = await findPractices(db, {
+      confirmed: true,
+      needs: { keys: ['hearing'], minWidth: null },
+      origin,
+      preferPostcodes: ['75015'],
+    });
+    assert.equal(result.results.at(-1).id, records[1].id);
+    assert.ok(result.results.every((practice) => practice.entityType === 'establishment'));
+  } finally {
+    db.close();
+  }
+});
+test('search without access constraints does not claim accessibility matches', async () => {
+  const db = await createTestDatabase();
+  try {
+    const result = await findPractices(db, {
+      confirmed: true,
+      needs: { keys: [], minWidth: null },
+    });
+    assert.equal(result.counts.declaredMatches, 0);
+    assert.ok(result.results.every((practice) => practice.needsConfirmation));
+  } finally {
+    db.close();
+  }
+});

@@ -32,11 +32,40 @@ try {
     await page
       .locator('#description')
       .fill(
-        'Généraliste sans contrainte géographique. Je ne suis pas en fauteuil, mais j’ai besoin d’un équipement auditif.',
+        'Sans contrainte géographique. Je ne suis pas en fauteuil, mais j’ai besoin d’un équipement auditif.',
       );
     await page.locator('#local').click();
+    await page.getByRole('button', { name: 'Sans préférence', exact: true }).click();
     await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
     await page.locator('.practice-card').first().waitFor();
+    assert.equal(
+      await page.locator('#chatHistory #results .practice-card').count(),
+      await page.locator('.practice-card').count(),
+    );
+    assert.equal(await page.locator('#description').isEditable(), true);
+    assert.ok(
+      await page
+        .locator('#description')
+        .evaluate((input) => input.getBoundingClientRect().bottom <= innerHeight),
+      'Composer remains visible beside integrated results',
+    );
+    const firstId = await page.locator('.practice-card').first().getAttribute('data-practice');
+    await page.getByRole('button', { name: 'Résultats suivants →', exact: true }).click();
+    await page.waitForFunction(
+      () => document.querySelector('#thread').getAttribute('aria-busy') === 'false',
+    );
+    assert.notEqual(
+      await page.locator('.practice-card').first().getAttribute('data-practice'),
+      firstId,
+    );
+    await page.getByRole('button', { name: '← Précédent', exact: true }).click();
+    await page.waitForFunction(
+      () => document.querySelector('#thread').getAttribute('aria-busy') === 'false',
+    );
+    assert.equal(
+      await page.locator('.practice-card').first().getAttribute('data-practice'),
+      firstId,
+    );
     const popupPromise = page.waitForEvent('popup');
     await page
       .locator('.practice-card')
