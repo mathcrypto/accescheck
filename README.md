@@ -32,11 +32,11 @@ Give each active worktree its own preview port and local database; the canonical
 
 ## Search and accessibility evidence
 
-Practice data is imported from the official Accès Libre export into SQLite locally (and a verified read-only snapshot on Vercel). Sync with `npm run data:sync`. The current medical export covers **France** (about **19 750** practices; see [data/source.json](data/source.json) and [Vercel deployment](docs/vercel.md)). Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0. Places use the IGN address API for France. Contact actions prefer a verified [Doctolib](https://www.doctolib.fr/) profile from Accès Libre when present, otherwise the cabinet website/contact page or Accès Libre fiche. The app does not scrape reviews or rank by reputation.
+Practice data is imported from the official Accès Libre export into SQLite locally (and a verified read-only snapshot on Vercel). Sync with `npm run data:sync`. The current medical export covers **France** (about **19 750** practices; see [data/source.json](data/source.json) and [Vercel deployment](docs/vercel.md)). Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0. Places use the IGN address API for France. Contact actions prefer a verified [Doctolib](https://www.doctolib.fr/) profile from Accès Libre when present, otherwise the cabinet website/contact page or Accès Libre fiche. Optional consented web search retrieves public review sources and a limited sentiment summary; reputation only breaks ties in access and exact distance among displayed records.
 
-Homepage search sends submitted needs to `/api/agent`. Local rules are the default; optional OpenAI interpretation requires explicit consent and the patient reviews proposed criteria before searching. The model never receives cabinet records or rankings. No patient account, health profile database or application request logging is created. Infrastructure may retain operational logs independently of the application.
+Homepage search uses `/api/chat` and a bounded OpenAI Responses tool loop. With explicit consent, the agent receives the complete request and conversation context, chooses tools and asks useful contextual questions. The server validates IGN geography, evidence, the reviewed query and user confirmation. Without consent or a provider, an explicitly selected public directory interprets none of the submitted text. No patient account, health profile database or application request logging is created. Context remains in tab memory; infrastructure may retain operational logs independently of the application.
 
-Common French/English needs become criteria the user can review. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles are excluded from the finder list; unknowns stay visible. There is no universal accessibility score or live availability lookup. Distances use imported coordinates and remain straight-line estimates.
+The agent proposes criteria that the user can review. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles are excluded from the finder list; unknowns stay visible. There is no universal accessibility score or live availability lookup. Distances use imported coordinates and remain straight-line estimates.
 
 The export omits individual confirmation dates. Populated fields are declared, not photo-verified or patient-confirmed. Missing information stays unknown, and contradictory entrance declarations are flagged. Door width describes the entrance; the documented internal route stops at reception. Transfer suitability, the consultation room, and the rest of the route remain questions for the practice.
 
@@ -61,9 +61,9 @@ The patient interface currently uses device voices only. The backend retains `/a
 
 ## Finder agent
 
-The proposed next iteration is defined in [CAPABILITY-MAP.md](CAPABILITY-MAP.md): a single chat, contextual multiple-choice questions, visible agent activity and sourced review reputation. Its proposed features are not yet implemented.
+The six capabilities in [CAPABILITY-MAP.md](CAPABILITY-MAP.md) are implemented: one chat, contextual QCM/free/unknown responses, explained results, actual streamed activity, public review sources and conservative sentiment summaries. The original fixed dialogue has been replaced by an agent-controlled tool loop; `/api/agent` returns 410.
 
-`src/agents/finder.mjs` powers homepage search: place and specialty extraction, 5 km default radius, Accès Libre ranking. The AccèsCheck UI always asks for explicit criterion review before searching (`reviewOnly`). Optional OpenAI extraction requires consent. Search and ranking stay deterministic on Accès Libre data.
+See [search agent](docs/search-agent.md) for model configuration, signed context, tool contracts, consent and per-request budgets, and [review reputation](docs/review-reputation.md) for sample limits, deduplication and tie-breaking. `OPENAI_SEARCH_MODEL` defaults to `gpt-6.1-sol` with medium reasoning. `OPENAI_REVIEW_MODEL` controls the public-identity web request independently. Evaluations use controlled provider replies; real-model understanding, latency, cost and source extraction quality have not been re-evaluated with paid calls.
 
 ## MCP and consultation tools
 
@@ -95,7 +95,9 @@ Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a 
 - `src/core.mjs`: need parsing, evidence rules, ranking, and briefing.
 - `src/ui.css`, `src/header.html`: shared visual tokens, header and navigation across patient pages.
 - `src/index.html`, `src/home.js`, `src/home.css`, `src/assistant.js`: AccèsCheck homepage and search UI.
-- `src/agents/finder.mjs`: finder agent used by homepage search via `/api/agent`.
+- `src/agents/search-agent.mjs`, `search-contract.mjs`: Responses tool loop and validated search contract via `/api/chat`.
+- `src/geography.mjs`, `src/discovery.mjs`: structured IGN provenance and Accès Libre access/distance policy.
+- `src/agents/review-sources.mjs`, `src/review-core.mjs`: sourced review retrieval, conservative synthesis and reputation tie-breaking.
 - `src/consultation.html`, `src/consultation.css`, `src/companion.js`: consultation interface and browser speech/capture lifecycle.
 - `src/handler.mjs`, `src/speech.mjs`: HTTP/MCP routes and optional voice API.
 - `prototype/`: fictional call and local in-memory MCP bridge.
@@ -113,4 +115,4 @@ Read [AGENTS.md](AGENTS.md) for code and verification rules, and [DESIGN.MD](DES
 
 Public app: **https://accescheck.vercel.app**. A push to `main` triggers formatting, lint, Node tests, Python importer tests, build and artifact validation. After those checks pass, GitHub Actions builds and deploys to Vercel, then verifies the public homepage, consultation and database-backed search. Pull requests and pushes to other branches run checks without publishing. See [CI/CD](docs/ci-cd.md) and [Vercel data snapshot](docs/vercel.md).
 
-The public Function receives only the read-only practices database. The optional OpenAI communication agent remains on the local consultation server; use `npm run dev:companion`, the server-side `.env` key and explicit fictional text-transfer consent. Spoken proposals still require manual approval.
+The public Function receives the read-only practices database and allowlisted server-side OpenAI configuration. Search and public-review calls require their respective user consent. The optional OpenAI communication agent remains on the local consultation server; use `npm run dev:companion`, the server-side `.env` key and explicit fictional text-transfer consent. Spoken proposals still require manual approval.

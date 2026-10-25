@@ -1,0 +1,13 @@
+# Avis publics et ressenti
+
+Le même appel web relève les observations individuelles et leur tonalité sur l’accueil, l’écoute, l’attente et l’organisation. Il ne déduit pas ces thèmes d’une note globale. Le serveur synthétise seulement les observations rattachées à l’établissement par son nom et son adresse ; il écarte celles du médecin, les homonymes et les sources dont l’identité reste incertaine.
+
+Le résumé compte les avis identifiables par un identifiant public ou une origine effectivement consultée. Il fusionne les références communes et les textes identiques, y compris les groupes reliés par une publication ultérieure. Les contradictions et leurs liens restent visibles. Les copies reformulées sans référence commune peuvent échapper au repérage : l’interface indique cette limite. Les extraits sans référence individuelle ne suffisent pas au ressenti général.
+
+Un seuil de trois avis identifiables sur au moins deux sites permet d’afficher « Retours consultés plutôt favorables », « Retours consultés partagés » ou « Difficultés dans les retours consultés ». Sinon : « Avis insuffisants pour un ressenti général ». Ce seuil est un garde-fou produit, pas une preuve statistique de représentativité. Le détail donne les volumes par thème, les paraphrases anonymes, leurs sources et les dates connues. Les notes et volumes des plateformes restent séparés.
+
+Pour le départage, chaque avis contribue au plus une fois : +1 pour les thèmes favorables, −1 pour les difficultés, 0 quand ses thèmes sont partagés ou contradictoires. La moyenne sert uniquement entre les fiches affichées ayant exactement les mêmes priorités d’accessibilité et la même distance. Les positions sans ressenti exploitable restent fixes ; leur absence d’avis ne les pénalise pas. Les fiches des autres pages ne sont pas présumées évaluées. L’enrichissement est partiel et ne constitue pas un classement global de réputation du répertoire.
+
+Le navigateur transmet au tour suivant les identifiants dans l’ordre affiché. Le serveur vérifie leur appartenance aux résultats signés et l’égalité des priorités à chaque position avant d’actualiser le contexte de l’agent. Ainsi « le premier cabinet » désigne celui que voit le patient. Cet ordre ne modifie pas les trois identifiants autorisés pour l’enrichissement automatique.
+
+Aucune couche de modèle ni dépendance ajoutée. Les plafonds de recherche web, l’accord distinct et le périmètre public des données restent ceux de [l’agent](search-agent.md). Les tests utilisent des réponses contrôlées ; aucun appel payant supplémentaire n’a validé la qualité réelle de l’extraction des avis. Les témoignages ne prouvent ni compétence clinique ni accessibilité.

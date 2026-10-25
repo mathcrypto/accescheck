@@ -111,3 +111,11 @@ Le mode sans IA devient un annuaire dégradé explicitement choisi, sans fausse 
 Modèle principal proposé : `gpt-6.1-sol`, effort medium, configurable par `OPENAI_SEARCH_MODEL` sans changement métier. Documentation officielle consultée : function-calling, model-selection et page modèle. Ce choix répond aux capacités nécessaires ; les simulations ne prouvent pas le coût/la latence réels. Aucun modèle rapide ajouté sans comparaison autorisée. Les plafonds sont par requête ; le budget du compte reste externe.
 
 Vérification search-agent : boucle réelle exécutée avec fournisseur contrôlé, IGN réel pour Lyon 3e et Marseille 8e dans Chromium à 320/390/768/1440 px ; revue indépendante et régressions des corrections de consentement, identité, références héritées et cohérence résultats/récapitulatif. Les contrôles du modèle réel restent non exécutés conformément à la règle sans appels payants supplémentaires.
+
+### Lot `review-sentiment`
+
+Ajouter les quatre thèmes aux observations structurées du même appel web, sans deuxième appel de modèle. Synthèse serveur des seules observations rattachées au cabinet : doublons identifiables fusionnés, contradictions conservées, exemples anonymes avec sources/dates. Seuil prudent d’affichage du ressenti : trois avis identifiables sur au moins deux sites ; sinon données insuffisantes. Ce seuil n’atteste aucune représentativité. Les notes par plateforme restent séparées.
+
+Départage par réputation uniquement entre les fiches affichées dont l’accessibilité et la distance exacte sont égales, et uniquement aux positions déjà occupées par des fiches ayant un ressenti disponible. Les fiches sans données gardent leur position et aucune meilleure réputation ne compense l’accès ou la distance. L’enrichissement partiel ne prétend pas comparer la réputation de tous les cabinets du répertoire.
+
+Vérifier : avis du médecin exclus, doublons/copies, contradictions entre sites, avis anonymes sans référence, données insuffisantes, absence neutre, ordre accès/distance inchangé, UI sûre et mobile. Aucun appel payant supplémentaire dans les tests.
