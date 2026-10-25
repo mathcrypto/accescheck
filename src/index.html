@@ -63,7 +63,33 @@
           <h2 class="search-intro" id="chatTitle">
             De quoi avez-vous besoin pour votre rendez-vous ?
           </h2>
-          <div id="thread" class="thread" role="log" aria-label="Conversation de recherche"></div>
+          <div
+            id="chatHistory"
+            class="chat-history"
+            tabindex="0"
+            role="region"
+            aria-label="Historique et résultats de la recherche"
+          >
+            <div id="thread" class="thread" role="log" aria-label="Conversation de recherche"></div>
+            <section
+              id="resultsSection"
+              class="results-area flow-protected"
+              aria-labelledby="resultsTitle"
+              hidden
+            >
+              <div class="results-heading">
+                <h2 id="resultsTitle" tabindex="-1">Les informations pour votre visite</h2>
+                <p id="resultsSummary">Vos critères d’abord. La proximité ensuite.</p>
+              </div>
+              <div id="resultStatus" role="status"></div>
+              <div id="results" aria-busy="false"></div>
+              <div id="pagination" class="actions"></div>
+              <p id="dataset" class="footnote">
+                Sources : Accès Libre pour les cabinets ; IGN pour les adresses. Les faits déclarés
+                restent visibles avec leur provenance.
+              </p>
+            </section>
+          </div>
           <form id="descriptionForm">
             <label class="sr-only" for="description">Votre message</label>
             <div class="search-bar">
@@ -105,24 +131,6 @@
             </details>
           </div>
         </div>
-      </section>
-      <section
-        id="resultsSection"
-        class="results-area flow-protected"
-        aria-labelledby="resultsTitle"
-        hidden
-      >
-        <div class="results-heading">
-          <h2 id="resultsTitle" tabindex="-1">Les informations pour votre visite</h2>
-          <p id="resultsSummary">Vos critères d’abord. La proximité ensuite.</p>
-        </div>
-        <div id="resultStatus" role="status"></div>
-        <div id="results" aria-busy="false"></div>
-        <div id="pagination" class="actions"></div>
-        <p id="dataset" class="footnote">
-          Sources : Accès Libre pour les cabinets ; IGN pour les adresses. Les faits déclarés
-          restent visibles avec leur provenance.
-        </p>
       </section>
     </main>
     <footer class="footer flow-protected">

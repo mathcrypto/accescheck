@@ -222,7 +222,9 @@ export async function findPractices(database, input) {
         distanceKm: distance,
         distanceKind: 'straight_line',
         location: point,
-        needsConfirmation: assessed.unknown > 0 || (radius !== null && distance === null),
+        entityType: 'establishment',
+        needsConfirmation:
+          !needs.keys.length || assessed.unknown > 0 || (radius !== null && distance === null),
         administrative: {
           registration: null,
           sector: null,
@@ -233,14 +235,8 @@ export async function findPractices(database, input) {
       },
     ];
   });
-  const preferPostcodes = Array.isArray(input.preferPostcodes)
-    ? input.preferPostcodes.filter((code) => /^\d{5}$/.test(String(code)))
-    : [];
-  const inPreferred = (practice) =>
-    preferPostcodes.some((code) => String(practice.address || '').includes(code));
   candidates.sort(
     (a, b) =>
-      Number(inPreferred(b)) - Number(inPreferred(a)) ||
       Number(a.needsConfirmation) - Number(b.needsConfirmation) ||
       b.met - a.met ||
       (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity) ||
