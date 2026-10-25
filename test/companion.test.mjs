@@ -47,7 +47,9 @@ test('denied mic and unavailable services have actionable fallbacks', () => {
 });
 test('companion has no persistent storage or audio recording code', () => {
   const code = readFileSync('src/companion.js', 'utf8');
+  const speech = readFileSync('src/page-speech.js', 'utf8');
   assert.doesNotMatch(code, /localStorage|sessionStorage|indexedDB|MediaRecorder/);
+  assert.doesNotMatch(speech, /localStorage|sessionStorage|indexedDB|MediaRecorder/);
   assert.match(code, /processLocally\s*=\s*true/);
-  assert.match(code, /localService\s*===\s*true/);
+  assert.match(speech, /speakEdge|\/api\/speech/);
 });

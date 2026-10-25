@@ -19,7 +19,6 @@ try {
     window.__availability = 'available';
     window.__started = 0;
     window.__spoken = [];
-    window.__cancelled = 0;
     class MockRecognition {
       constructor() {
         this.processLocally = false;
@@ -45,31 +44,16 @@ try {
       value: MockRecognition,
       configurable: true,
     });
-    Object.defineProperty(window, 'speechSynthesis', {
-      configurable: true,
-      value: {
-        getVoices: () => [
-          { name: 'Français local test', lang: 'fr-FR', localService: true },
-          { name: 'Remote', lang: 'fr-FR', localService: false },
-        ],
-        addEventListener() {},
-        cancel() {
-          window.__cancelled++;
-        },
-        speak(u) {
-          window.__spoken.push(u.text);
-          window.__utterance = u;
-        },
-      },
-    });
-    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
-      configurable: true,
-      value: class {
-        constructor(text) {
-          this.text = text;
-        }
-      },
-    });
+    const realFetch = window.fetch.bind(window);
+    window.fetch = async (input, init = {}) => {
+      const url = String(input);
+      if (url.includes('/api/speech') && init.body) {
+        try {
+          window.__spoken.push(JSON.parse(init.body).text || '');
+        } catch {}
+      }
+      return realFetch(input, init);
+    };
     window.__emit = (text, final = true) => {
       const result = [{ transcript: text }];
       result.isFinal = final;
@@ -77,6 +61,22 @@ try {
     };
   });
   await page.goto(base + '/consultation');
+  assert.equal(await page.locator('#visionMode').isChecked(), false);
+  await page.locator('#visionMode').check();
+  assert.ok(await page.evaluate(() => document.body.classList.contains('vision')));
+  assert.match(await page.locator('#status').textContent(), /Texte agrandi/);
+  await page.locator('#visionMode').uncheck();
+  assert.equal(await page.evaluate(() => document.body.classList.contains('vision')), false);
+  assert.equal(await page.locator('#readPage').isDisabled(), false);
+  await page.locator('#readPage').click();
+  await page.waitForFunction(() => (window.__spoken.at(-1) || '').length > 0);
+  assert.match(
+    await page.evaluate(() => window.__spoken.at(-1) || ''),
+    /AccèsCheck|échange|Page|Affichage|répondre|question/,
+  );
+  assert.match(await page.locator('#readPage').textContent(), /Arrêter/);
+  await page.locator('#readPage').click();
+  assert.match(await page.locator('#readPage').textContent(), /Lire la page/);
   assert.equal(await page.evaluate(() => window.__started), 0);
   assert.equal(await page.locator('#speakReply').isDisabled(), false);
   assert.equal(await page.locator('#voice').count(), 0);
@@ -94,18 +94,22 @@ try {
   await page.evaluate(() => window.__emit('Parole provisoire', false));
   assert.equal(await page.locator('#interim').textContent(), 'Parole provisoire');
   await page.locator('#reply').fill('Je voudrais une explication.');
+  const spokenBeforeReply = await page.evaluate(() => window.__spoken.length);
   await page.locator('#speakReply').click();
   assert.equal(await page.locator('.message.patient').count(), 1);
   assert.match(await page.locator('.message.patient .who').textContent(), /Vous · écrit/);
   assert.equal(await page.evaluate(() => window.__recognition.aborted), true);
   assert.equal(await page.locator('#interim').textContent(), '');
+  await page.waitForFunction((n) => window.__spoken.length > n, spokenBeforeReply);
   assert.equal(await page.evaluate(() => window.__spoken.at(-1)), 'Je voudrais une explication.');
   await page.locator('#notesTab').click();
   await page.locator('#draftNotes').click();
   assert.match(await page.locator('#notes').inputValue(), /Prenez le temps/);
   assert.equal(await page.locator('#readNotes').isDisabled(), true);
   await page.locator('#reviewed').check();
+  const spokenBeforeNotes = await page.evaluate(() => window.__spoken.length);
   await page.locator('#readNotes').click();
+  await page.waitForFunction((n) => window.__spoken.length > n, spokenBeforeNotes);
   assert.match(await page.evaluate(() => window.__spoken.at(-1)), /BROUILLON/);
   await page.locator('#notes').fill('Notes corrigées avec le soignant.');
   assert.equal(await page.locator('#reviewed').isChecked(), false);
@@ -160,7 +164,11 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   await page.screenshot({ path: '/tmp/accescheck-consultation-mobile.png', fullPage: true });
-  assert.deepEqual(requests, []);
+  assert.deepEqual(
+    requests.filter((url) => !url.includes('/api/speech')),
+    [],
+  );
+  assert.ok(requests.some((url) => url.includes('/api/speech')));
   assert.deepEqual(errors, []);
   const fallback = await browser.newPage();
   await fallback.addInitScript(() => {
@@ -180,7 +188,7 @@ try {
   await fallback.locator('#addDoctor').click();
   assert.equal(await fallback.locator('.message').count(), 2);
   console.log(
-    'Companion checks passed: consent, local/remote selection, captions, interim text, correction/XSS, speech stopping mic, notes review, overwrite protection, errors, pack install, clear, demo isolation, unsupported-browser fallback, mobile, no POST traffic. Speech and mic events simulated; actual recognition accuracy and sound not assessed.',
+    'Companion checks passed: consent, local/remote selection, captions, interim text, correction/XSS, Edge TTS, notes review, overwrite protection, errors, pack install, clear, demo isolation, unsupported-browser fallback, mobile, no non-speech POST traffic. Mic events simulated; recognition accuracy not assessed.',
   );
 } finally {
   await browser.close();

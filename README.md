@@ -48,16 +48,16 @@ Validated HTTPS Doctolib links from Accès Libre open externally when present. T
 - **Doctolib or Zoom video:** the user opens their own call, selects its browser tab, and explicitly shares tab audio. Connecting the audio then starts captions if the recognition mode and consent checks pass. Video mode never substitutes the microphone for missing tab audio.
 - **Recognition:** local French processing is the default and requires browser support and a compatible language pack. The optional browser service requires explicit acknowledgment that its provider may receive audio. Silence can restart recognition within the same authorized session; pause, consent withdrawal, or leaving an in-person page stops it. There is no silent switch to remote recognition.
 - **Audio:** desktop Chrome/Edge 135+ is required for the tab-audio recognition path. Screen/window selections and audio-less shares are rejected. The temporary video track is stopped after selection; frames are not displayed or analyzed. A local audio monitor preserves listening to the shared call.
-- **Replies:** users can display text, copy it for the call's chat, or play it with a French voice marked local by the device. Speech pauses captions. The doctor hears that voice only if the device is nearby or the user has arranged outgoing audio sharing; the app does not inject speech into Doctolib or Zoom's microphone.
+- **Replies:** users can display text, copy it for the call's chat, or play it with Microsoft Edge neural TTS (`/api/speech`). Speech pauses captions. The doctor hears that voice only if the device is nearby or the user has arranged outgoing audio sharing; the app does not inject speech into Doctolib or Zoom's microphone.
 - **Notes:** drafts copy messages verbatim. They do not generate a clinical summary. Edits and new messages invalidate review acknowledgment; spoken notes require review.
 
 Captured speech has no reliable speaker identification. Corrections should be confirmed with the person who spoke. This is not an interpreter, a clinical record, or environmental audio description. Real-call compatibility, transcription accuracy, and assistive-device behavior require acceptance testing.
 
 On the patient pages, conversation text stays in page memory until clear or page close. No audio is recorded, and no transcript or notes are sent to the app backend. The browser provider may process audio when the user selects remote recognition. Copying notes uses the system clipboard only on request. The fictional MCP developer workflow below explicitly shares labeled example text with the local bridge and the connected AI host.
 
-### Retained optional voice API
+### Page reading voice
 
-The patient interface currently uses device voices only. The backend retains `/api/voice-config` and `/api/speech` for optional ElevenLabs use; these endpoints are not wired into the current composer. They require a server-side `ELEVENLABS_API_KEY`, explicit text-transfer consent, and a valid voice configuration. `.env.example` includes the requested public voice ID. Never commit real credentials. Provider processing and account charges apply if the API is enabled; tests use a stubbed provider.
+Homepage and consultation “Lire” actions use Microsoft Edge neural TTS only (`/api/speech`, default `fr-FR-DeniseNeural`). Clicking Lire is the consent to send the visible text for synthesis. No device `speechSynthesis` fallback and no ElevenLabs path. Optional `EDGE_TTS_VOICE` overrides the voice id. Tests stub the synthesizer.
 
 ## Finder agent
 

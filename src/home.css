@@ -806,6 +806,19 @@ summary,
   margin-top: 16px;
   justify-content: space-between;
 }
+.chat-controls-start {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+}
+.chat-controls .vision-toggle,
+.chat-controls .speech-consent {
+  margin: 0;
+  align-items: center;
+  font-size: 14px;
+  color: var(--ink);
+}
 .chat-controls details {
   max-width: 100%;
 }
@@ -1015,6 +1028,93 @@ summary,
 }
 .chat-choices button {
   max-width: 100%;
+}
+
+body.home.vision {
+  --muted: #222;
+  --line: #171717;
+  --surface: #ececec;
+}
+body.home.vision .search-intro,
+body.home.vision .intro-copy h1 {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+}
+body.home.vision .intro-copy p,
+body.home.vision .intro-description p {
+  font-size: 18px;
+  color: var(--ink);
+}
+body.home.vision .bubble {
+  max-width: 100%;
+  padding: 14px 18px;
+  font-size: 18px;
+  border-width: 2px;
+}
+body.home.vision .bubble .who {
+  font-size: 15px;
+  color: var(--ink);
+}
+body.home.vision .bubble .say {
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+body.home.vision .bubble.agent {
+  border-left-width: 4px;
+}
+body.home.vision .chat-choices button,
+body.home.vision .secondary,
+body.home.vision .primary,
+body.home.vision .search-arrow {
+  min-height: 52px;
+  font-size: 17px;
+  font-weight: 500;
+}
+body.home.vision .chat-choices button,
+body.home.vision .secondary {
+  border-width: 2px;
+  border-color: var(--ink);
+}
+body.home.vision .search-bar {
+  min-height: 84px;
+  border-width: 2px;
+  border-color: var(--ink);
+  padding: 12px 12px 12px 22px;
+}
+body.home.vision #description {
+  font-size: 20px;
+}
+body.home.vision .results-panel {
+  border-width: 2px;
+}
+body.home.vision .results-panel h2,
+body.home.vision .practice-card h3 {
+  font-size: 22px;
+  font-weight: 500;
+}
+body.home.vision .practice-card {
+  padding: 24px;
+  border-bottom-width: 2px;
+}
+body.home.vision .practice-card .address,
+body.home.vision .practice-card .distance,
+body.home.vision .practice-card .facts,
+body.home.vision .results-criteria,
+body.home.vision #resultsSummary,
+body.home.vision #dataset,
+body.home.vision .hint,
+body.home.vision .footnote {
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.6;
+}
+body.home.vision .text-button,
+body.home.vision .vision-toggle,
+body.home.vision .ai-option > summary {
+  font-size: 16px;
+  min-height: 44px;
 }
 
 @media (max-width: 600px), (max-height: 600px) {

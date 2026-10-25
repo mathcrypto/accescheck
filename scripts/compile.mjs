@@ -62,7 +62,9 @@ await build({
   bundle: true,
   outfile: 'worker/index.js',
   format: 'esm',
-  platform: 'browser',
+  platform: 'node',
   target: 'es2022',
   minify: false,
+  // Edge TTS uses Node WebSocket APIs; keep it outside the worker bundle.
+  external: ['node-edge-tts'],
 });
