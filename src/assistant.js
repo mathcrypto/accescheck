@@ -78,18 +78,18 @@ function question(bubble, question) {
 }
 
 function working(active, text = '') {
-  $('agentActivity').hidden = !active;
+  const activity = $('agentActivity');
+  activity.hidden = !active;
   document.body.classList.toggle('agent-working', active);
   $('activityText').textContent = text;
+  if (active) {
+    const inResults = $('searchPanel').classList.contains('has-results');
+    $(inResults ? 'resultStatus' : 'chatHistory').append(activity);
+    if (!inResults) revealTurn(activity);
+  }
 }
 function revealTurn(bubble) {
-  const history = $('chatHistory');
-  if (getComputedStyle(history).overflowY === 'visible') {
-    bubble.scrollIntoView({ block: 'start', behavior: 'auto' });
-  } else {
-    history.scrollTop +=
-      bubble.getBoundingClientRect().top - history.getBoundingClientRect().top - 8;
-  }
+  bubble.scrollIntoView({ block: 'start', behavior: 'auto' });
 }
 function retry(input, text) {
   const bubble = turn(text);
@@ -108,12 +108,12 @@ async function ask(input, choiceLabel = '') {
   clearResults();
   document.querySelectorAll('.chat-choices button').forEach((button) => (button.disabled = true));
   $('chatStatus').textContent = '';
-  working(true, 'Envoi de la demande');
   let streamed = null;
   let practices = null;
   let automaticReviews = false;
   $('thread').setAttribute('aria-busy', 'true');
   if (input.message || choiceLabel) turn(input.message || choiceLabel, 'user');
+  working(true, 'Envoi de la demande');
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
