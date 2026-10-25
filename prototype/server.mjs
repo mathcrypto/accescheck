@@ -18,6 +18,7 @@ const workerEnv = {
   DATA_IMPORT_TOKEN: process.env.DATA_IMPORT_TOKEN,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || process.env.openai_api_key,
   OPENAI_MODEL: process.env.OPENAI_MODEL || process.env.openai_model,
+  OPENAI_REVIEW_MODEL: process.env.OPENAI_REVIEW_MODEL,
 };
 const agent = createOpenAIAgent({ bridge });
 const live = direct ? await createLiveReload() : null;
