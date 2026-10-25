@@ -10,6 +10,7 @@ test(
   { timeout: 15000 },
   async () => {
     let visits = 0;
+    let configurationChecks = 0;
     const server = createServer((request, response) => {
       const json = (value) => {
         response.setHeader('Content-Type', 'application/json');
@@ -21,6 +22,10 @@ test(
         );
       if (request.url === '/consultation')
         return response.end('<button id="startCaptions"></button>');
+      if (request.url === '/api/ai-config') {
+        configurationChecks++;
+        return json({ available: visits >= 3 });
+      }
       if (request.url === '/api/catalog') return json({ count: 510 });
       if (request.url === '/api/discover')
         return json({ results: [{ id: 'test-only' }], dataset: { checksum: 'test-checksum' } });
@@ -32,11 +37,13 @@ test(
       const script = fileURLToPath(
         new URL('../scripts/check-public-deployment.mjs', import.meta.url),
       );
-      const result = await promisify(execFile)(process.execPath, [
-        script,
-        'http://127.0.0.1:' + server.address().port,
-      ]);
-      assert.equal(visits, 2);
+      const result = await promisify(execFile)(
+        process.execPath,
+        [script, 'http://127.0.0.1:' + server.address().port],
+        { env: { ...process.env, REQUIRE_SEARCH_AGENT: 'true' } },
+      );
+      assert.equal(visits, 3);
+      assert.equal(configurationChecks, 2);
       assert.match(result.stdout, /Public deployment verified/);
     } finally {
       await new Promise((resolve) => server.close(resolve));

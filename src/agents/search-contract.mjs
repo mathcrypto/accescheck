@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { criterionKeys } from '../discovery.mjs';
-export const searchModel = 'gpt-6.1-sol';
 export const chatInputSchema = z
   .object({
     message: z.string().trim().min(1).max(2000).optional(),

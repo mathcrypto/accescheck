@@ -16,7 +16,7 @@ L’enrichissement automatique reste limité aux trois premières fiches de la p
 
 ## Modèle et bornes
 
-`OPENAI_SEARCH_MODEL` remplace le modèle principal sans modifier la logique métier. Valeur initiale : `gpt-6.1-sol`, effort `medium`, compatible Responses, fonctions et sorties structurées. La documentation le destine aux tâches complexes ; le modèle rapide optionnel n’est pas ajouté sans comparaison. [Fiche modèle](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [sélection de modèle](https://developers.openai.com/api/docs/guides/model-selection).
+Choix utilisateur : `gpt-5.4-mini` pour l’API AccèsCheck, avec effort `medium` pour l’agent principal. Priorité : `OPENAI_SEARCH_MODEL` si explicitement renseigné, puis `OPENAI_MODEL`, puis la valeur par défaut commune `gpt-5.4-mini`. Les exemples reprennent ce choix pour les avis aussi. La configuration de la session Codex reste indépendante. Aucun modèle rapide supplémentaire ni retour automatique à Sol. [Fiche modèle](https://developers.openai.com/api/docs/models/gpt-5.4-mini), [sélection de modèle](https://developers.openai.com/api/docs/guides/model-selection).
 
 Par tour : au plus 7 réponses du modèle, 8 exécutions d’outils, 8 000 tokens de sortie (raisonnement compris), 160 000 octets cumulés de requêtes au modèle et 55 secondes. Chaque réponse est plafonnée à 2 400 tokens et le contexte courant à 120 000 caractères. Au plus un appel à l’outil d’avis, lui-même borné à 35 secondes, 3 500 tokens de sortie et deux appels web, dans le délai global. La pagination d’une recherche confirmée n’appelle pas de modèle. Aucun nouvel essai fournisseur automatique.
 
