@@ -82,6 +82,7 @@ Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a 
 ## Source layout and deployment
 
 - `src/core.mjs`: need parsing, evidence rules, ranking, and briefing.
+- `src/ui.css`, `src/header.html`: shared visual tokens, header and navigation across patient pages.
 - `src/index.html`, `src/home.js`, `src/assistant.*`: AccèsCheck homepage and accompanied search.
 - `src/finder.html`, `src/finder.js`, `src/agents/finder.mjs`: `/cabinets` finder chat over Accès Libre.
 - `src/consultation.html`, `src/consultation.css`, `src/companion.js`: consultation interface and browser speech/capture lifecycle.

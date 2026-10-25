@@ -15,26 +15,7 @@
   </head>
   <body>
     <a class="skip" href="#main">Aller à la conversation</a>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="AccèsCheck, accueil"
-        ><span class="brand-mark" aria-hidden="true"
-          ><svg viewBox="0 0 64 64" fill="none">
-            <path
-              d="M32 8v48M11.2 20l41.6 24M11.2 44l41.6-24"
-              stroke="#bd292e"
-              stroke-width="9"
-            /></svg></span
-        ><span>AccèsCheck</span></a
-      >
-      <details class="menu">
-        <summary>Menu</summary>
-        <nav aria-label="Navigation principale">
-          <a href="/">Accueil</a><a href="/#recherche">Décrire mes besoins</a
-          ><a href="/assistant">Ma recherche accompagnée</a><a href="/cabinets">Tous les cabinets</a
-          ><a href="/consultation" aria-current="page">Pendant la visite</a>
-        </nav>
-      </details>
-    </header>
+    <!--SITE_HEADER-->
     <main id="main" tabindex="-1">
       <div class="intro">
         <div>
@@ -138,9 +119,6 @@
                     Démarrez les sous-titres après l’accord des personnes présentes, ou écrivez
                     votre réponse.
                   </p>
-                  <button class="subtle" id="loadDemo">
-                    Voir un exemple fictif, sans microphone
-                  </button>
                 </div>
                 <div
                   id="transcript"
@@ -232,6 +210,7 @@
         <button class="secondary" id="closeSettings">Fermer</button>
       </div>
       <p id="settingsStatus" class="status dialog-status" role="status" hidden></p>
+      <button class="subtle" id="loadDemo">Voir un exemple fictif, sans microphone</button>
       <section class="connection-hub" aria-labelledby="connectionTitle">
         <div class="hub-heading">
           <div>

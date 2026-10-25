@@ -396,8 +396,7 @@ $('findLocation').onclick = async () => {
       $('locationChoices').append(button);
     }
     if (!result.locations.length)
-      $('locationChoices').textContent =
-        'Aucun lieu trouvé à Paris. Précisez l’adresse ou le quartier.';
+      $('locationChoices').textContent = 'Aucun lieu trouvé. Précisez l’adresse ou le quartier.';
   } catch (error) {
     if (error.name !== 'AbortError') $('locationChoices').textContent = error.message;
   } finally {

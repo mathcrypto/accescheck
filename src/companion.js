@@ -659,6 +659,7 @@ $('loadDemo').onclick = () => {
     'Exemple fictif affiché. Aucun microphone activé. Effacez la session avant un échange réel.',
   );
   showLatestMessage();
+  $('settingsDialog').close();
 };
 $('clearSession').onclick = () => {
   pauseCaptions(false);

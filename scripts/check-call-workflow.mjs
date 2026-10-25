@@ -175,10 +175,12 @@ try {
   assert.deepEqual(errors, []);
   await page.locator('#clearSession').click();
   await page.goto(base + '/cabinets');
-  await page.waitForSelector('.card');
-  await page.locator('.detail').first().click();
+  await page.locator('#message').fill('Je suis malentendant.');
+  await page.locator('#send').click();
+  await page.locator('.card').first().waitFor();
   const href = await page
-    .getByRole('link', { name: 'Compagnon de ce rendez-vous' })
+    .getByRole('link', { name: /Préparer la visite/ })
+    .first()
     .getAttribute('href');
   assert.ok(href.startsWith('/consultation?practice='));
   await page.goto(base + href);

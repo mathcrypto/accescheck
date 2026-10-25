@@ -10,10 +10,7 @@ const cases = [
   ['Je suis sourd', ['hearing']],
   ['Je ne suis pas en fauteuil, mais je suis malentendant.', ['hearing']],
   ['Je n’utilise pas de fauteuil et je suis sourd.', ['hearing']],
-  [
-    'Je ne suis pas sourd, je me déplace en fauteuil.',
-    ['stepFree', 'route', 'width'],
-  ],
+  ['Je ne suis pas sourd, je me déplace en fauteuil.', ['stepFree', 'route', 'width']],
   ['I am not using a wheelchair, I am hard of hearing.', ['hearing']],
   ['Je ne peux pas me déplacer sans fauteuil.', ['stepFree', 'route', 'width']],
   ['hard of hearing', ['hearing']],

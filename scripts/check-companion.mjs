@@ -147,6 +147,7 @@ try {
   assert.equal(await page.locator('.message').count(), 0);
   assert.equal(await page.locator('#notes').inputValue(), '');
   assert.equal(await page.locator('#consent').isChecked(), false);
+  await page.locator('#openSettings').click();
   await page.locator('#loadDemo').click();
   assert.equal(await page.locator('.message').count(), 3);
   assert.match(await page.locator('#demoLabel').textContent(), /FICTIF/);

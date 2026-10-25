@@ -16,31 +16,7 @@
   <body class="home">
     <a class="skip" href="#recherche">Aller à la recherche</a>
     <div class="ambient" aria-hidden="true"><canvas id="asciiFlow"></canvas></div>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="AccèsCheck, accueil">
-        <span class="brand-mark" aria-hidden="true"
-          ><svg viewBox="0 0 64 64" fill="none">
-            <path
-              d="M32 8v48M11.2 20l41.6 24M11.2 44l41.6-24"
-              stroke="#bd292e"
-              stroke-width="9"
-            /></svg
-        ></span>
-        <span>AccèsCheck</span>
-      </a>
-      <details class="menu">
-        <summary>Menu</summary>
-        <nav aria-label="Navigation principale">
-          <a href="#recherche">Décrire mes besoins</a>
-          <a href="/assistant">Ma recherche accompagnée</a>
-          <a href="/cabinets">Tous les cabinets</a>
-          <a href="/consultation">Pendant la visite</a>
-          <button type="button" id="pauseMotion" class="motion-control" aria-pressed="false">
-            Mettre les animations en pause
-          </button>
-        </nav>
-      </details>
-    </header>
+    <!--SITE_HEADER-->
     <main id="main">
       <section class="intro" aria-labelledby="introTitle">
         <figure class="intro-photo">
@@ -167,7 +143,7 @@
               </div>
               <div class="field">
                 <label for="location"
-                  >Mon point de départ à Paris <span class="optional">facultatif</span></label
+                  >Mon point de départ <span class="optional">facultatif</span></label
                 >
                 <div class="location-row">
                   <input
@@ -257,7 +233,7 @@
       </section>
     </main>
     <footer class="footer flow-protected">
-      <span>Cabinets médicaux à Paris</span><a href="/cabinets">Sources et fiches publiques</a>
+      <span>Cabinets médicaux</span><a href="/cabinets">Sources et fiches publiques</a>
     </footer>
     <script>
       /*PAGE_SCRIPT*/

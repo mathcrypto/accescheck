@@ -64,7 +64,8 @@ export function validateInput(input) {
 function denied(text, pattern) {
   const matches = [...text.matchAll(new RegExp(pattern.source, 'g'))];
   // shortcut: direct denials only; complex negation still needs the user's review.
-  const denial = /\b(?:pas|plus|jamais|aucune?|not|no)\s+(?:(?:en|de|un|une|le|la|besoin|in|using|a|an)\s+|d['’])*$/;
+  const denial =
+    /\b(?:pas|plus|jamais|aucune?|not|no)\s+(?:(?:en|de|un|une|le|la|besoin|in|using|a|an)\s+|d['’])*$/;
   return matches.length > 0 && matches.every((match) => denial.test(text.slice(0, match.index)));
 }
 export function parseNeeds(text, width) {

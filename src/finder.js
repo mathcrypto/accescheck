@@ -233,7 +233,7 @@ function renderResults(payload) {
       );
     }
     links.push(
-      `<a href="/consultation?practice=${encodeURIComponent(practice.id)}">Préparer la visite</a>`,
+      `<a href="/consultation?practice=${encodeURIComponent(practice.id)}" target="_blank" rel="noopener noreferrer" aria-label="Préparer la visite (nouvel onglet, votre recherche reste ouverte)">Préparer la visite ↗</a>`,
     );
 
     card.innerHTML = `<div class="card-top">

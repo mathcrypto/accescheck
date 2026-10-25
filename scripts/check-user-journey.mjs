@@ -139,7 +139,15 @@ try {
       assert.ok(await page.locator('#conversationPanel').isVisible());
       const message = page.locator('#transcript .message').last();
       assert.match(await message.innerText(), /Message fictif à afficher/);
-      assert.ok(await message.evaluate(inView));
+      assert.ok(await message.locator('p').evaluate(inView));
+      assert.ok(
+        await message.locator('p').evaluate((text) => {
+          const r = text.getBoundingClientRect();
+          const pane = document.getElementById('captionScroll').getBoundingClientRect();
+          return r.top >= pane.top && r.bottom <= pane.bottom;
+        }),
+        'The reply text must be visible inside the conversation pane',
+      );
       await page.locator('#clearSession').click();
     });
     await check(`${width}: focus restored after correction`, async () => {

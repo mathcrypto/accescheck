@@ -6,6 +6,8 @@ Help someone compare declared access information before a medical appointment, t
 
 ## Visual language
 
+`src/ui.css` holds shared tokens and header styles. `src/header.html` supplies the same mark and navigation to the four patient pages. Page styles define their own layout; keep the shared elements in these common sources.
+
 The main reference is Minimal Mind: restrained typography, few controls and deliberate whitespace. Legora and Mistral inform the quiet, central writing interface. Apply this language to the homepage, results and consultation rather than introducing a separate dashboard style.
 
 | Element    | Rule                                                                                                                                                                                                      |
