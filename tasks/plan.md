@@ -90,3 +90,14 @@ Après le point sûr du lot review-sources, implémenter `feature/search-agent` 
 - Le mode local sans accord/fournisseur est étiqueté dégradé. Une extraction rapide éventuelle ne remplace pas la décision géographique de l’agent et nécessite une comparaison coût/latence/qualité.
 
 Sources à vérifier au démarrage : https://developers.openai.com/api/docs/guides/function-calling et https://developers.openai.com/api/docs/guides/model-selection .
+
+## Tranche préalable — fix/structured-geography
+
+L’IGN réel confirme Lyon 3e (69383/69003), Paris 14e (75114/75014) et Marseille 8e (13208/13008). Nouveau module géographique réutilisable par les outils : contexte structuré, codes et identifiants conservés, homonymes filtrés, doublons éliminés, aucune transformation d’un arrondissement en ville entière. Les résultats de cabinets hors code postal d’arrondissement sont exclus même s’ils sont proches.
+Les tests hérités supposaient Bastille→Paris et « dans le 14e »→Paris : remplacés par des assertions d’absence de cette supposition, selon la nouvelle demande. La base locale parisienne de 510 fiches a été synchronisée avec l’importateur officiel : 19 750 fiches nationales, contrôles checksum/lecture réussis.
+Revue indépendante approuvée après ajout des régressions code postal seul / code commune sans nom de ville. 145 tests Node et 4 tests Python passent. Mutation du garde de contexte administratif détectée.
+
+## Précision utilisateur — retirer les décisions déterministes
+
+Le prochain lot supprime du parcours principal l’arbre de questions, l’extraction par regex et les hypothèses de lieu. Le principal décide réellement des appels, reformulations et précisions. Les validateurs de données/provenance, consentements, bornes et ordre accessibilité→proximité→réputation restent des garde-fous serveur.
+Le mode sans IA devient un annuaire dégradé explicitement choisi, sans fausse conversation autonome ni interprétation silencieuse. Adapter les tests de l’ancien arbre aux capacités du nouvel agent, sans perdre la couverture des besoins, des corrections, des sources et des annulations.

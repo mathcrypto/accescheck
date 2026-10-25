@@ -109,17 +109,26 @@ before(() => {
   globalThis.fetch = async (url) => {
     assert.equal(new URL(url).hostname, 'data.geopf.fr', 'Finder must only call IGN');
     const query = new URL(url).searchParams.get('q') || '';
-    const place = places.find(([pattern]) => pattern.test(query));
+    const place = /paris/i.test(query) ? places.find(([pattern]) => pattern.test(query)) : null;
+    const municipality = new URL(url).searchParams.get('type') === 'municipality';
+    const scoped = /\d{1,2}(?:e|eme)\b/.test(query);
+    const municipalityLabel = scoped
+      ? `Paris ${Number(place?.[2].slice(-2))}e Arrondissement`
+      : 'Paris';
     const features = place
       ? [
           {
             geometry: { coordinates: [place[3], place[4]] },
             properties: {
-              label: place[1],
-              name: place[1],
+              label: municipality
+                ? `Paris ${Number(place[2].slice(-2))}e Arrondissement`
+                : place[1],
+              name: municipality ? municipalityLabel : place[1],
               city: 'Paris',
               postcode: place[2],
-              type: 'street',
+              citycode: municipality && !scoped ? '75056' : '751' + place[2].slice(-2),
+              id: 'test-' + place[2] + (municipality ? '-city' : '-place'),
+              type: municipality ? 'municipality' : 'street',
             },
           },
         ]
@@ -177,10 +186,11 @@ test('finder matches short specialty forms and autour-de places', async () => {
     assert.equal(matchSpecialty('dentiste', catalog.specialties), 'Dentiste, chirurgien dentiste');
     assert.match(extractPlaceQuery('autour de Bastille'), /bastille/i);
     assert.match(extractPlaceQuery('près de République'), /republique/i);
-    assert.equal(extractPlaceQuery('dans le 11e'), 'Paris 11e');
-    assert.equal(extractPlaceQuery('dentiste paris 11'), 'Paris 11e');
-    assert.equal(extractPlaceQuery('paris 11th'), 'Paris 11e');
-    assert.equal(extractPlaceQuery('paris 11eme'), 'Paris 11e');
+    assert.equal(extractPlaceQuery('dans le 11e'), '');
+    assert.equal(extractPlaceQuery('Un dentiste à Lyon 3 km'), 'lyon');
+    assert.equal(extractPlaceQuery('Paris 11 km'), 'paris');
+    for (const query of ['dentiste paris 11', 'paris 11th', 'paris 11eme'])
+      assert.equal(extractPlaceQuery(query), 'paris 11e');
     assert.match(extractPlaceQuery('malentendant grenoble generaliste'), /grenoble/i);
     assert.match(extractPlaceQuery('à Lyon'), /lyon/i);
     assert.equal(extractPlaceQuery('38000'), '38000');
@@ -220,10 +230,11 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
   assert.deepEqual(targetPostcodes('Paris 15e'), ['75015']);
   assert.deepEqual(targetPostcodes('paris 11'), ['75011']);
   assert.deepEqual(targetPostcodes('paris 11th'), ['75011']);
+  assert.deepEqual(targetPostcodes('Paris 11 km'), []);
   assert.deepEqual(targetPostcodes('bastille'), []);
-  assert.equal(geocodeQueryFor('bastille'), 'bastille Paris');
+  assert.equal(geocodeQueryFor('bastille'), 'bastille');
   assert.equal(geocodeQueryFor('Bastille Paris'), 'Bastille Paris');
-  assert.equal(geocodeQueryFor('Paris 11e'), '75011 Paris');
+  assert.equal(geocodeQueryFor('Paris 11e'), 'Paris 11e');
   assert.equal(geocodeQueryFor('denfert paris 14e'), 'denfert paris 14e');
   const db = await createTestDatabase(finderRecords);
   try {
@@ -245,7 +256,7 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
   }
 });
 
-test('Bastille alone resolves in Paris with a 5 km radius', async () => {
+test('Bastille alone keeps an unresolved location instead of assuming Paris', async () => {
   const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
@@ -256,10 +267,10 @@ test('Bastille alone resolves in Paris with a 5 km radius', async () => {
       { DB: db },
     );
     assert.match(result.state.placeQuery, /bastille/i);
-    assert.match(result.state.origin?.label || '', /bastille/i);
-    assert.match(result.state.origin?.label || '', /paris/i);
-    assert.doesNotMatch(result.state.origin?.label || '', /saint-thual/i);
-    assert.equal(result.state.radiusKm, 5);
+    assert.equal(result.state.origin, null);
+    assert.equal(result.state.radiusKm, null);
+    assert.ok(result.results);
+    assert.equal(geocodeQueryFor('Bastille'), 'Bastille');
   } finally {
     db.close();
   }
