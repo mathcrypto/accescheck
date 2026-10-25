@@ -1,6 +1,6 @@
-import test from 'node:test';
+import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { openSqlite } from '../storage/sqlite.mjs';
+import { createTestDatabase, fixtures } from './helpers/database.mjs';
 import {
   extractPlaceQuery,
   geocodeQueryFor,
@@ -9,8 +9,128 @@ import {
   targetPostcodes,
 } from '../src/agents/finder.mjs';
 
+// The finder tests must not depend on a synced local database or on the live IGN
+// geocoder, so they use in-memory practices and a canned address response.
+const [template] = fixtures;
+function practice(id, name, specialty, postalCode, street, location, evidence = {}) {
+  return {
+    ...template,
+    id,
+    name,
+    specialty,
+    postalCode,
+    address: `${street} ${postalCode} Paris`,
+    sourceUrl: `https://acceslibre.beta.gouv.fr/app/75-paris/a/test/erp/${id}/`,
+    location,
+    evidence: {
+      ...template.evidence,
+      ...Object.fromEntries(
+        Object.entries(evidence).map(([key, value]) => [
+          key,
+          { value, status: 'declared', date: null, source: 'Accès Libre · déclaration publique' },
+        ]),
+      ),
+    },
+  };
+}
+const generalist = 'Médecin généraliste';
+const finderRecords = [
+  ...fixtures,
+  practice(
+    't-bastille-1',
+    'Cabinet Bastille',
+    generalist,
+    '75011',
+    '5 Rue de la Roquette',
+    {
+      latitude: 48.8545,
+      longitude: 2.369,
+    },
+    { stepFree: true, route: true, width: 95, hearing: true, signage: true },
+  ),
+  practice(
+    't-bastille-2',
+    'Cabinet Faidherbe',
+    generalist,
+    '75011',
+    '12 Rue Faidherbe',
+    {
+      latitude: 48.8509,
+      longitude: 2.3841,
+    },
+    { stepFree: true, route: null, width: null, hearing: false },
+  ),
+  practice(
+    't-denfert-1',
+    'Cabinet Denfert',
+    generalist,
+    '75014',
+    '3 Avenue du Général Leclerc',
+    {
+      latitude: 48.8335,
+      longitude: 2.3315,
+    },
+    { stepFree: true, route: true, width: 92, hearing: true },
+  ),
+  practice(
+    't-paris15-1',
+    'Cabinet Convention',
+    generalist,
+    '75015',
+    '40 Rue de la Convention',
+    {
+      latitude: 48.8418,
+      longitude: 2.2965,
+    },
+    { stepFree: true, route: true, width: 90, hearing: true },
+  ),
+  practice(
+    't-dentist-1',
+    'Cabinet dentaire Bastille',
+    'Dentiste, chirurgien dentiste',
+    '75011',
+    '8 Rue de Charonne',
+    {
+      latitude: 48.8527,
+      longitude: 2.3735,
+    },
+    { stepFree: true },
+  ),
+];
+
+const places = [
+  [/denfert/i, 'Place Denfert-Rochereau 75014 Paris', '75014', 2.3326, 48.8338],
+  [/bastille/i, 'Place de la Bastille 75011 Paris', '75011', 2.3692, 48.8531],
+  [/15e/i, 'Paris 15e Arrondissement 75015 Paris', '75015', 2.2999, 48.8421],
+];
+const realFetch = globalThis.fetch;
+before(() => {
+  globalThis.fetch = async (url) => {
+    const query = new URL(url).searchParams.get('q') || '';
+    const place = places.find(([pattern]) => pattern.test(query));
+    const features = place
+      ? [
+          {
+            geometry: { coordinates: [place[3], place[4]] },
+            properties: {
+              label: place[1],
+              name: place[1],
+              city: 'Paris',
+              postcode: place[2],
+              type: 'street',
+            },
+          },
+        ]
+      : [];
+    return new Response(JSON.stringify({ features }));
+  };
+});
+after(() => {
+  globalThis.fetch = realFetch;
+});
+
 test('finder uses local rules and returns Accès Libre practices without OpenAI', async () => {
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
       { message: 'Je me déplace avec une canne blanche.', consent: false },
@@ -33,7 +153,7 @@ test('finder uses local rules and returns Accès Libre practices without OpenAI'
 });
 
 test('finder keeps unknown needs empty instead of inventing criteria', async () => {
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder({ message: 'Bonjour', consent: false }, { DB: db });
     assert.deepEqual(result.state.needs.keys, []);
@@ -44,7 +164,7 @@ test('finder keeps unknown needs empty instead of inventing criteria', async () 
 });
 
 test('finder matches short specialty forms and autour-de places', async () => {
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const catalog = await (
       await import('../src/practice-store.mjs')
@@ -65,7 +185,7 @@ test('finder matches short specialty forms and autour-de places', async () => {
 });
 
 test('finder searches immediately for specialty and place', async () => {
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
       {
@@ -96,7 +216,7 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
   assert.deepEqual(targetPostcodes('bastille'), []);
   assert.equal(geocodeQueryFor('bastille'), 'bastille Paris');
   assert.equal(geocodeQueryFor('Bastille Paris'), 'Bastille Paris');
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
       {
@@ -117,7 +237,7 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
 });
 
 test('Bastille alone resolves in Paris with a 5 km radius', async () => {
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
       {
@@ -138,7 +258,7 @@ test('Bastille alone resolves in Paris with a 5 km radius', async () => {
 
 test('bastille paris keeps Bastille as origin within 5 km', async () => {
   assert.equal(extractPlaceQuery('bastille paris medecin generaliste'), 'bastille paris');
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
       {
@@ -165,7 +285,7 @@ test('bastille paris keeps Bastille as origin within 5 km', async () => {
 test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
   assert.equal(extractPlaceQuery('autour de denfert paris 14eme'), 'denfert paris 14e');
   assert.deepEqual(targetPostcodes('denfert paris 14e'), ['75014']);
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
       {
@@ -189,7 +309,7 @@ test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
 });
 
 test('finder keeps prior needs when a follow-up only adds place or specialty', async () => {
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const first = await runFinder({ message: 'Je suis malentendant.', consent: false }, { DB: db });
     assert.deepEqual(first.state.needs.keys, ['hearing']);
@@ -212,7 +332,7 @@ test('finder keeps prior needs when a follow-up only adds place or specialty', a
 });
 
 test('finder fauteuil search no longer requires salle de consultation', async () => {
-  const db = openSqlite();
+  const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(
       {

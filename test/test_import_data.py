@@ -33,7 +33,9 @@ class ImportDataTests(unittest.TestCase):
             })
         source.seek(0)
         practices = import_data.import_practices(source)
-        self.assertEqual([practice["id"] for practice in practices], ["source-paris"])
+        self.assertEqual(
+            [practice["id"] for practice in practices], ["source-paris", "source-lyon"]
+        )
         self.assertEqual(practices[0]["mode"], "real")
         self.assertIsNone(practices[0]["evidence"]["width"]["value"])
 
