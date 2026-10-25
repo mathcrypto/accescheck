@@ -930,7 +930,7 @@ summary,
 .results-panel {
   width: 100%;
   margin: 24px 0 24px;
-  padding: 20px;
+  padding: 12px;
   border: 1px solid var(--line);
   border-radius: 3px;
   background: var(--surface);
@@ -965,7 +965,72 @@ summary,
   color: var(--muted);
 }
 .results-panel .practice-card {
-  padding: 20px;
+  padding: 12px;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.results-panel .card-header > div {
+  min-width: 0;
+}
+.results-panel .practice-card h3 {
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+.practice-location {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 8px 0;
+}
+.practice-location .address,
+.practice-location .distance,
+.results-panel .specialty {
+  margin: 0;
+  line-height: 1.5;
+}
+.results-panel .specialty {
+  font-size: 14px;
+}
+.results-panel .facts {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+.fact-highlights:empty {
+  display: none;
+}
+.results-panel .practice-card summary {
+  min-height: 44px;
+  padding: 10px 0;
+}
+.results-panel .card-links {
+  margin-top: 4px;
+  gap: 4px 8px;
+}
+.results-panel .card-links a {
+  padding: 6px 8px;
+}
+.results-panel .review-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+.results-panel .review-info h4,
+.results-panel .review-info > .hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.results-panel .review-info .text-button {
+  min-height: 44px;
+}
+.results-panel .review-content {
+  flex-basis: 100%;
+}
+.results-panel .review-content:empty {
+  display: none;
 }
 .results-panel .practice-card h3 {
   font-size: 17px;
