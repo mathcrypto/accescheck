@@ -1,8 +1,8 @@
-import { runDialogue } from './dialogue.mjs';
-import { dialogueInput } from './dialogue-state.mjs';
+import { runSearchAgent } from './search-agent.mjs';
+import { chatInput } from './search-contract.mjs';
 
 export function chatResponse(body, env, requestSignal) {
-  dialogueInput(body);
+  chatInput(body);
   const abort = new AbortController();
   const signal = requestSignal ? AbortSignal.any([requestSignal, abort.signal]) : abort.signal;
   const encoder = new TextEncoder();
@@ -13,7 +13,7 @@ export function chatResponse(body, env, requestSignal) {
         if (!signal.aborted) controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'));
       };
       try {
-        const value = await runDialogue(body, env, fetch, { signal, emit });
+        const value = await runSearchAgent(body, env, fetch, { signal, emit });
         signal.throwIfAborted();
         if (value.summary && !value.question)
           emit({ type: 'reply', delta: value.summary + '\n\n' });
