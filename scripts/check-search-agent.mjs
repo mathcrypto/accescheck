@@ -54,7 +54,14 @@ globalThis.fetch = async (url, options) => {
       );
       signalProviderStart();
     });
-  return controlledSearch(body, { needs: { keys: ['stepFree'], minWidth: null } });
+  return controlledSearch(body, {
+    needs: { keys: ['stepFree'], minWidth: null },
+    notes: [
+      'Utilisateur en fauteuil roulant.',
+      'Besoin d’une entrée sans marche.',
+      'Largeur de passage nécessaire inconnue ; à confirmer si documentée.',
+    ],
+  });
 };
 const server = createServer(async (req, res) => {
   const chunks = [];
@@ -146,6 +153,12 @@ try {
     await page.keyboard.press('Enter');
     assert.equal(await provenance.getAttribute('open'), '');
     assert.match(await provenance.innerText(), /date non renseignée/);
+    assert.match(await provenance.locator('summary').innerText(), /besoins à confirmer/);
+    assert.match(await provenance.innerText(), /Largeur de passage nécessaire inconnue/);
+    assert.doesNotMatch(
+      await firstCard.locator('.fact-highlights').innerText(),
+      /Utilisateur en fauteuil/,
+    );
     await page.keyboard.press('Enter');
     assert.ok(
       (await page.locator('.practice-card .address').allTextContents()).every((text) =>

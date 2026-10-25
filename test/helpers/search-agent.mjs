@@ -32,7 +32,11 @@ export const modelCall = (name, args) =>
   });
 export function controlledSearch(
   body,
-  { needs = { keys: [], minWidth: null }, specialty = null } = {},
+  {
+    needs = { keys: [], minWidth: null },
+    specialty = null,
+    notes = needs.keys.includes('consultation') ? ['Transfert à confirmer auprès du cabinet.'] : [],
+  } = {},
 ) {
   const context = JSON.parse(
     body.input.findLast((item) => item.role === 'developer').content,
@@ -101,7 +105,7 @@ export function controlledSearch(
     specialty: specialty || (location ? 'Dentiste, chirurgien dentiste' : null),
     needs,
     radiusKm: location && latest !== 'Je ne sais pas' ? 3 : null,
-    notes: needs.keys.includes('consultation') ? ['Transfert à confirmer auprès du cabinet.'] : [],
+    notes,
   });
 }
 export function controlledGeography(url) {

@@ -804,14 +804,17 @@ summary,
 .bubble.agent .say {
   white-space: normal;
 }
-.bubble.agent .say > p {
+.bubble.agent .say > p,
+#resultsSummary > p {
   margin: 0 0 16px;
   white-space: pre-wrap;
 }
-.bubble.agent .say > :last-child {
+.bubble.agent .say > :last-child,
+#resultsSummary > :last-child {
   margin-bottom: 0;
 }
 .bubble.agent .say h3,
+#resultsSummary h3,
 .chat-recap h3 {
   margin: 0 0 12px;
   font-size: 16px;
