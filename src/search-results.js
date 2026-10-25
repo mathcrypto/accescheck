@@ -44,8 +44,7 @@ export function practiceCard(practice, origin = null, notes = []) {
   const identity = element('div');
   identity.append(
     element('h3', '', practice.name),
-    element('p', 'specialty', practice.specialty),
-    element('p', 'hint', 'Cabinet ou établissement · identité individuelle non vérifiée'),
+    element('p', 'specialty', practice.specialty + ' · Cabinet ou établissement'),
   );
   header.append(
     identity,
@@ -59,8 +58,9 @@ export function practiceCard(practice, origin = null, notes = []) {
           : 'Critères documentés',
     ),
   );
-  article.append(header, element('p', 'address', practice.address));
-  article.append(
+  const location = element('div', 'practice-location');
+  location.append(element('p', 'address', practice.address));
+  location.append(
     element(
       'p',
       'distance',
@@ -71,7 +71,9 @@ export function practiceCard(practice, origin = null, notes = []) {
             (origin?.approximate ? ' · depuis le centre du lieu choisi' : ''),
     ),
   );
+  article.append(header, location);
   const facts = element('ul', 'facts');
+  const highlights = element('ul', 'facts fact-highlights');
   for (const check of practice.checks || []) {
     const label = criteria[check.key].label + ' : ' + factText({ value: check.value }, check.key);
     const trust = {
@@ -82,6 +84,13 @@ export function practiceCard(practice, origin = null, notes = []) {
       photo: 'Appuyé par une photo',
       patient: 'Confirmé par des patients',
     }[check.state];
+    highlights.append(
+      element(
+        'li',
+        check.fit,
+        label + ' · ' + trust + (check.fit === 'unknown' ? ' · À confirmer' : ''),
+      ),
+    );
     facts.append(
       element(
         'li',
@@ -98,10 +107,11 @@ export function practiceCard(practice, origin = null, notes = []) {
       ),
     );
   }
-  for (const question of notes)
-    facts.append(
-      element('li', 'unknown', question + ' : non documenté · à confirmer auprès du cabinet'),
-    );
+  for (const question of notes) {
+    const text = question + ' : non documenté · à confirmer auprès du cabinet';
+    facts.append(element('li', 'unknown', text));
+    highlights.append(element('li', 'unknown', text));
+  }
   if (!practice.checks?.length && !notes.length)
     facts.append(
       element(
@@ -110,9 +120,13 @@ export function practiceCard(practice, origin = null, notes = []) {
         'Aucun besoin d’accès comparé. Consultez les informations déclarées avant votre visite.',
       ),
     );
-  article.append(facts);
+  article.append(highlights);
   const details = element('details');
-  details.append(element('summary', '', 'Tous les faits et leur provenance'));
+  details.append(
+    element('summary', '', 'Détails et provenance'),
+    element('p', 'hint', 'Identité individuelle non vérifiée.'),
+    facts,
+  );
   const allFacts = element('dl');
   for (const [key, field] of Object.entries(practice.evidence || {})) {
     allFacts.append(
@@ -138,14 +152,20 @@ export function practiceCard(practice, origin = null, notes = []) {
   article.append(details);
   const links = element('div', 'card-links');
   const source = sourceLink('Fiche Accès Libre ↗', practice.sourceUrl, ['acceslibre.beta.gouv.fr']);
-  if (source) links.append(source);
+  if (source) {
+    source.textContent = 'Accès Libre ↗';
+    links.append(source);
+  }
   const booking = sourceLink('Fiche Doctolib ↗', practice.doctolibUrl, [
     'doctolib.fr',
     'www.doctolib.fr',
   ]);
-  if (booking) links.append(booking);
-  else links.append(element('span', 'hint', 'Aucun lien Doctolib dans la source.'));
-  const companion = element('a', 'card-action', 'Préparer l’échange ↗');
+  if (booking) {
+    booking.textContent = 'Doctolib ↗';
+    links.append(booking);
+  } else details.append(element('p', 'hint', 'Aucun lien Doctolib dans la source.'));
+  const companion = element('a', 'card-action', 'Préparer ↗');
+  companion.title = 'Préparer l’échange';
   companion.href = '/consultation?practice=' + encodeURIComponent(practice.id);
   companion.target = '_blank';
   companion.rel = 'noopener noreferrer';

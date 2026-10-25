@@ -10,7 +10,10 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const records = Array.from({ length: 15 }, (_, index) => ({
   ...fixtures[1],
   id: 'lyon-agent-' + index,
-  name: 'Cabinet test ' + String(index).padStart(2, '0'),
+  name:
+    'Cabinet test ' +
+    String(index).padStart(2, '0') +
+    (index === 14 ? ' · ' + 'CentreDentaire'.repeat(6) : ''),
   address: `${index + 1} Rue Test 69003 Lyon`,
   postalCode: '69003',
   location: { latitude: 45.751578 + index * 0.0001, longitude: 4.869577 },
@@ -51,7 +54,7 @@ globalThis.fetch = async (url, options) => {
       );
       signalProviderStart();
     });
-  return controlledSearch(body);
+  return controlledSearch(body, { needs: { keys: ['stepFree'], minWidth: null } });
 };
 const server = createServer(async (req, res) => {
   const chunks = [];
@@ -109,7 +112,7 @@ try {
     }
     await page.goto(base + '/#recherche');
     const before = provider.length;
-    await send('Un dentiste à Lyon 3e');
+    await send('Un dentiste à Lyon 3e avec entrée sans marche');
     assert.equal(provider.length, before, 'No provider work before consent');
     assert.equal(await page.locator('.bubble.agent[data-question]').count(), 0);
     await page.getByRole('button', { name: 'Accepter et poursuivre', exact: true }).click();
@@ -128,6 +131,22 @@ try {
     await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
     await idle();
     assert.equal(await page.locator('.practice-card').count(), 12);
+    const firstCard = page.locator('.practice-card').first();
+    const cardSize = await firstCard.boundingBox();
+    await firstCard.screenshot({ path: 'output/search-agent/card-' + width + '.png' });
+    assert.ok(
+      cardSize.height <= (width < 600 ? 480 : 320),
+      'Compact card at ' + width + 'px is too tall: ' + Math.round(cardSize.height) + 'px',
+    );
+    for (const action of await firstCard.locator('a, button, summary').all()) {
+      if (await action.isVisible()) assert.ok((await action.boundingBox()).height >= 44);
+    }
+    const provenance = firstCard.locator('details').first();
+    await provenance.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await provenance.getAttribute('open'), '');
+    assert.match(await provenance.innerText(), /date non renseignée/);
+    await page.keyboard.press('Enter');
     assert.ok(
       (await page.locator('.practice-card .address').allTextContents()).every((text) =>
         text.includes('69003'),
@@ -149,6 +168,11 @@ try {
     await idle();
     assert.equal(provider.length, prior, 'No paid pagination');
     assert.equal(await page.locator('.practice-card').count(), 3);
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
+      false,
+      'Long practice names wrap within compact cards',
+    );
     const popup = page.waitForEvent('popup');
     await page
       .locator('.practice-card')
@@ -180,7 +204,7 @@ try {
     await page.getByRole('button', { name: 'Saisir ma réponse', exact: true }).click();
     assert.equal(await page.evaluate(() => document.activeElement.id), 'description');
     await page.locator('#clear').click();
-    await send('Un dentiste à Lyon 3e');
+    await send('Un dentiste à Lyon 3e avec entrée sans marche');
     await page.getByRole('button', { name: 'Consulter l’annuaire public', exact: true }).click();
     await idle();
     assert.match(await page.locator('#resultsSummary').innerText(), /dégradé/);
