@@ -31,9 +31,11 @@ try {
     assert.equal(design.overflow, false);
     await page
       .locator('#description')
-      .fill('Je ne suis pas en fauteuil, mais je suis malentendant.');
+      .fill(
+        'Généraliste sans contrainte géographique. Je ne suis pas en fauteuil, mais j’ai besoin d’un équipement auditif.',
+      );
     await page.locator('#local').click();
-    await page.getByRole('button', { name: 'Chercher', exact: true }).click();
+    await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
     await page.locator('.practice-card').first().waitFor();
     const popupPromise = page.waitForEvent('popup');
     await page
