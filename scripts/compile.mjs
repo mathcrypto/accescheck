@@ -25,7 +25,10 @@ async function page(templatePath, entryPoint, stylePath) {
   );
 }
 const pages = {
-  home: await readFile('src/index.html', 'utf8'),
+  home: (await page('src/index.html', 'src/home.js', 'src/home.css')).replace(
+    '/*HOSPITAL_IMAGE*/',
+    (await readFile('src/assets/hospital.jpg')).toString('base64'),
+  ),
   searchPage: await page('src/search.html', 'src/search.js'),
   consultationPage: await page('src/consultation.html', 'src/companion.js'),
   assistantPage: await page('src/assistant.html', 'src/assistant.js', 'src/assistant.css'),

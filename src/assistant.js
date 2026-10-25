@@ -47,6 +47,8 @@ function status(id, text, error = false) {
 }
 function invalidate() {
   controller?.abort();
+  const resultsSection = $('resultsSection');
+  if (resultsSection) resultsSection.hidden = true;
   $('confirmed').checked = false;
   confirmedInput = null;
   $('results').replaceChildren();
@@ -58,6 +60,8 @@ function invalidate() {
 function review(value) {
   proposal = value;
   invalidate();
+  const advanced = $('advancedSearch');
+  if (advanced) advanced.open = true;
   $('review').hidden = false;
   $('proposalSource').textContent = value.parser;
   $('criteria')
@@ -255,6 +259,8 @@ async function search(page = 1) {
         }
       : confirmedInput;
   if (!request) return;
+  const resultsSection = $('resultsSection');
+  if (resultsSection) resultsSection.hidden = false;
   controller?.abort();
   controller = new AbortController();
   confirmedInput = request;
@@ -293,6 +299,7 @@ async function search(page = 1) {
     if (page > 1) addPage('← Précédent', page - 1);
     if (page * result.pageSize < result.total) addPage('Résultats suivants →', page + 1);
     $('resultsTitle').focus();
+    if (resultsSection) $('resultsTitle').scrollIntoView({ block: 'start' });
   } catch (error) {
     if (error.name !== 'AbortError') {
       $('results').replaceChildren();
@@ -305,7 +312,9 @@ async function search(page = 1) {
 }
 $('descriptionForm').onsubmit = (event) => {
   event.preventDefault();
-  translate();
+  translate(
+    $('descriptionForm').dataset.localDefault === 'true' && event.submitter?.id !== 'translate',
+  );
 };
 $('local').onclick = () => translate(true);
 $('manual').onclick = () => {
@@ -407,6 +416,8 @@ $('clear').onclick = () => {
   $('search').disabled = true;
   invalidate();
   status('proposalStatus', 'Votre description et votre recherche ont été effacées.');
+  const advanced = $('advancedSearch');
+  if (advanced) advanced.open = false;
   $('description').focus();
 };
 (async () => {
