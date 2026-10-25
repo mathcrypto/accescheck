@@ -69,3 +69,24 @@ Revue indépendante approuvée après déplacement des statuts fournisseurs au d
 Flux NDJSON avec statuts réels, fragments de réponse disponibles et résultat final, sans délai de frappe artificiel.
 Décodage UTF-8, absence de résultat final, erreur, annulation réseau et reprise testés ; mutation du contrôle de résultat final détectée.
 Playwright mobile : marque SVG partagée, pulsation, réduction de mouvement, saisie visible, arrêt réel d’IGN et reprise.
+
+## Revue — review-sources
+
+Revue indépendante approuvée : entrée publique fermée, provenance d’URLs, rattachement conservateur, périmètres séparés, erreurs/annulation et cache temporaire borné.
+Trois premières fiches uniquement sur la première page après accord ; suivantes sur action explicite.
+Un appel réel borné a révélé reasoning.effort incompatible avec la configuration gpt-4.1-mini : correction isolée sur fix/model-reasoning-config, revue et fusionnées. Après correction, une vérification réelle a retrouvé 2 sources dont 1 rattachable, pour 12 pages consultées. Ces appels ont précédé la nouvelle instruction de ne plus lancer de tests payants.
+Les modifications distantes f89adfe (typographie et résultats séparés du fil) sont préservées.
+
+## Priorité ajoutée — vrai agent de recherche
+
+Après le point sûr du lot review-sources, implémenter `feature/search-agent` avant review-sentiment. Le dialogue actuel est déterministe, avec extraction OpenAI ponctuelle : il ne constitue pas l’agent autonome demandé.
+
+- Un modèle principal capable de raisonner pilote une vraie boucle Responses function_call/function_call_output. Modèle configurable séparément ; aucun modèle rapide supplémentaire par défaut.
+- Outils fermés : IGN structuré avec commune/code commune/arrondissement/code postal ; Accès Libre sur critères/rayon confirmés ; preuves/sources d’une fiche ; avis web sur identité publique seulement. Arguments et résultats sont validés côté serveur.
+- Préserver les contraintes explicites, corriger le lieu sans conserver des résultats obsolètes, refuser homonymes hors contexte. Aucun quartier arbitraire présumé parisien.
+- Consentement avant envoi de la conversation de recherche, aucun stockage de santé/URL/journal, aucun couplage avec le pont fictif de consultation.
+- Budget fini par requête (appels modèle/outils, tokens, délai), événements visibles et annulation propagée. Pas d’appels payants de test supplémentaires automatiques.
+- Régressions : Lyon 3e/69003/69383, Paris 14e, Marseille 8e, communes ambiguës, correction, mauvais résultats géographiques et sources contradictoires. Playwright sur la demande complète de Lyon ; fournisseur contrôlé pour les parcours agent.
+- Le mode local sans accord/fournisseur est étiqueté dégradé. Une extraction rapide éventuelle ne remplace pas la décision géographique de l’agent et nécessite une comparaison coût/latence/qualité.
+
+Sources à vérifier au démarrage : https://developers.openai.com/api/docs/guides/function-calling et https://developers.openai.com/api/docs/guides/model-selection .

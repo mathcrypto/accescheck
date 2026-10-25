@@ -1,6 +1,6 @@
 # AccèsCheck — recherche conversationnelle
 
-Statut : proposition de cadrage à relire. Ce document définit le besoin et les lots ; il ne décrit pas des fonctionnalités déjà livrées. Les spécifications détaillées suivront les frontières retenues ici.
+Statut : cadrage validé, réalisation en cours. Les cinq premiers lots sont réalisés ; le lot de synthèse reste à livrer. La priorité ajoutée est un véritable agent de recherche, avant la synthèse de réputation. Voir tasks/plan.md et tasks/todo.md pour les vérifications et l’état précis.
 
 ## Besoin
 
@@ -94,3 +94,15 @@ Avant l’implémentation des avis : préciser les sources accessibles, le modè
 - Fixer les sources d’avis effectivement utilisables, le budget et le seuil permettant une synthèse représentative. Le seul fait d’obtenir quelques extraits ne suffit pas à prétendre décrire tous les patients.
 
 Le périmètre ne comprend pas de prise de rendez-vous automatique, de diagnostic, de classement de compétence médicale, ni de collecte exhaustive garantie. La réalisation et ses tests viendront après ce cadrage.
+
+## Évolution prioritaire validée — agent de recherche
+
+La demande complète et le contexte de conversation doivent pouvoir guider une vraie boucle d’appels d’outils Responses, avec un modèle principal de raisonnement configurable. Le modèle choisit l’ordre, reformule une requête, croise les sources et demande une précision uniquement si nécessaire. Le serveur valide arguments, preuves, identité et géographie.
+
+Outils : géocodage IGN structuré (commune, code commune, arrondissement/code postal, adresse/repère), recherche Accès Libre après confirmation, preuves d’une fiche et recherche web sourcée sur identité publique. Conserver les métadonnées permettant de rejeter les homonymes hors de la commune demandée. Une contrainte comme Lyon 3e ne peut devenir Lyon entier ou Paris. Ne pas remplacer cette compréhension par une liste de quartiers ou des heuristiques parisiennes.
+
+Identifiant ajouté : `search-agent`, branche `feature/search-agent`, après review-sources et prioritaire avant review-sentiment. L’agent est borné en appels, tokens et temps, interruptible, avec actions réelles visibles. Les évaluations utilisent des réponses contrôlées ; aucun appel payant supplémentaire automatique. Le mode local reste disponible et explicitement dégradé.
+
+L’accord explicite devra expliquer l’envoi du contexte de recherche au modèle. Les données restent hors stockage navigateur, URL, journaux et pont de consultation. La recherche d’avis ne reçoit toujours que l’identité publique.
+
+Commencer avec un agent principal capable. Un modèle rapide « système 1 » est une option à comparer en coût, latence et conservation du contexte ; il ne tranche pas seul une géographie ambiguë.
