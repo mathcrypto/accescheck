@@ -158,6 +158,7 @@ async function ask(input, choiceLabel = '') {
       automaticReviews = result.page === 1 && $('reviewConsent').checked;
       setResultsMode(true, data.summary || '');
       $('resultsSection').hidden = false;
+      $('results').dataset.page = result.page;
       practices = rankByReputation(practices, reviewCache);
       $('results').replaceChildren(
         ...practices.map((practice) => practiceCard(practice, result.origin, state?.notes || [])),

@@ -25,8 +25,16 @@ function render(content, data) {
   );
   if (data.summary) {
     const report = data.summary;
+    const tone =
+      report.status !== 'available'
+        ? 'none'
+        : report.score > 0
+          ? 'good'
+          : report.score < 0
+            ? 'bad'
+            : 'mixed';
+    content.prepend(node('p', report.label, 'review-sentiment ' + tone));
     content.append(
-      node('p', report.label, 'review-sentiment'),
       node(
         'p',
         `${report.sampleSize} avis identifiable(s) · ${report.distinctSites} site(s). Échantillon limité, sans garantie de représentativité.`,
@@ -116,6 +124,15 @@ function render(content, data) {
     ).map((text) => node('p', text, 'hint')),
   );
   content.append(consulted);
+  // Only the sentiment stays visible; coverage and sources fold away to keep cards compact.
+  if (!data.summary)
+    content.prepend(node('p', 'Réputation non renseignée', 'review-sentiment none'));
+  const more = node('details', '', 'review-more');
+  more.append(
+    node('summary', 'Détail des avis et sources'),
+    ...[...content.children].filter((child) => !child.classList.contains('review-sentiment')),
+  );
+  content.append(more);
 }
 export function mountReviewCards(
   practices,
@@ -161,7 +178,8 @@ export function mountReviewCards(
     button.type = 'button';
     button.disabled = !available;
     section.append(heading, status, content, button);
-    card.append(section);
+    // Reputation sits above details so it is visible without opening the card.
+    card.querySelector('details').before(section);
     const entry = { button, status, loading: false };
     entries.push(entry);
     const cached = cache.get(practice.id);
