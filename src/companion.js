@@ -34,6 +34,12 @@ let sharedStream = null,
 const status = (text, error = false) => {
   $('status').textContent = text;
   $('status').classList.toggle('error', error);
+  const feedback = document.querySelector('dialog[open] .dialog-status');
+  if (feedback) {
+    feedback.textContent = text;
+    feedback.hidden = !text;
+    feedback.classList.toggle('error', error);
+  }
 };
 function micState(text, active = false) {
   if (sharedStream && text === 'Microphone coupé') text = 'Son d’onglet connecté · en pause';
@@ -198,6 +204,8 @@ function render() {
   $('demoLabel').textContent = demoActive ? 'EXEMPLE FICTIF · Aucune voix réelle captée.' : '';
   for (const m of messages) {
     const article = document.createElement('div');
+    article.id = 'message-' + m.id;
+    article.tabIndex = -1;
     article.className = 'message' + (m.speaker === 'patient' ? ' patient' : '');
     const meta = document.createElement('div');
     meta.className = 'meta';
@@ -206,11 +214,13 @@ function render() {
       speakerLabel(m.speaker) + (m.corrected ? ' · corrigé' : '') + (m.demo ? ' · fictif' : '');
     const edit = document.createElement('button');
     edit.className = 'edit';
+    edit.dataset.messageId = m.id;
     edit.textContent = 'Corriger';
     edit.setAttribute('aria-label', 'Corriger : ' + m.text.slice(0, 45));
     edit.onclick = () => {
       editingId = m.id;
       $('editText').value = m.text;
+      $('editDialog').querySelector('.dialog-status').hidden = true;
       $('editDialog').showModal();
       $('editText').focus();
     };
@@ -238,6 +248,62 @@ function append(text, speaker, demo = false) {
 function checkDemo() {
   if (demoActive) throw new Error('Effacez l’exemple fictif avant de commencer un échange réel.');
 }
+function showLatestMessage() {
+  tab('conversation');
+  const message = $('transcript').lastElementChild;
+  if (!message) return;
+  message.focus({ preventScroll: true });
+  $('captionScroll').scrollTop = $('captionScroll').scrollHeight;
+}
+function hasUnsavedWork() {
+  return (
+    messages.length > 0 ||
+    ['reply', 'manualDoctor', 'notes', 'callUrl'].some((id) => $(id).value.trim())
+  );
+}
+let destination = null;
+$('openSettings').onclick = () => {
+  $('settingsDialog').showModal();
+  status($('status').textContent, $('status').classList.contains('error'));
+};
+$('closeSettings').onclick = () => $('settingsDialog').close();
+$('cancelManual').onclick = () => $('manualDialog').close();
+$('cancelLeave').onclick = () => {
+  destination = null;
+  $('leaveDialog').close();
+};
+$('confirmLeave').onclick = () => {
+  const href = destination;
+  destination = null;
+  $('clearSession').click();
+  if (href) location.assign(href);
+};
+document.addEventListener('click', (event) => {
+  const link = event.target.closest('a[href]');
+  if (
+    !link ||
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.shiftKey ||
+    event.altKey ||
+    link.target === '_blank' ||
+    link.hasAttribute('download') ||
+    !hasUnsavedWork()
+  )
+    return;
+  const url = new URL(link.href);
+  if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+  event.preventDefault();
+  destination = url.href;
+  $('leaveDialog').showModal();
+});
+window.addEventListener('beforeunload', (event) => {
+  if (!hasUnsavedWork()) return;
+  event.preventDefault();
+  event.returnValue = '';
+});
 function refreshVoices() {
   voices = synth
     ? synth.getVoices().filter((v) => v.localService === true && /^fr(?:-|_|$)/i.test(v.lang))
@@ -347,6 +413,8 @@ async function startCaptions() {
           $('installLanguage').hidden =
             !['downloadable', 'downloading'].includes(available) ||
             typeof Recognition.install !== 'function';
+          $('moreOptions').open = true;
+          if (!$('settingsDialog').open) $('settingsDialog').showModal();
           throw new Error(
             available === 'unavailable'
               ? 'Aucun pack français local compatible. Aucun envoi vers un service distant.'
@@ -533,6 +601,7 @@ $('showReply').onclick = () => {
     checkDemo();
     append($('reply').value, 'patient');
     $('reply').value = '';
+    showLatestMessage();
     status('Message affiché. Aucun son n’a été joué.');
   } catch (e) {
     status(e.message, true);
@@ -544,6 +613,7 @@ $('speakReply').onclick = async () => {
     const text = validateMessage($('reply').value);
     if (!voices.length) throw new Error('Aucune voix française locale disponible.');
     append(text, 'patient');
+    showLatestMessage();
     if (await speak(text)) $('reply').value = '';
   } catch (e) {
     status(e.message, true);
@@ -558,16 +628,17 @@ document.querySelectorAll('[data-phrase]').forEach(
     }),
 );
 $('manualToggle').onclick = () => {
-  const open = $('manualForm').hidden;
-  $('manualForm').hidden = !open;
-  $('manualToggle').setAttribute('aria-expanded', String(open));
-  if (open) $('manualDoctor').focus();
+  $('manualDialog').querySelector('.dialog-status').hidden = true;
+  $('manualDialog').showModal();
+  $('manualDoctor').focus();
 };
 $('addDoctor').onclick = () => {
   try {
     checkDemo();
     append($('manualDoctor').value, 'doctor');
     $('manualDoctor').value = '';
+    $('manualDialog').close();
+    showLatestMessage();
     status('Phrase du soignant ajoutée manuellement.');
   } catch (e) {
     status(e.message, true);
@@ -587,6 +658,7 @@ $('loadDemo').onclick = () => {
   status(
     'Exemple fictif affiché. Aucun microphone activé. Effacez la session avant un échange réel.',
   );
+  showLatestMessage();
 };
 $('clearSession').onclick = () => {
   pauseCaptions(false);
@@ -605,6 +677,8 @@ $('clearSession').onclick = () => {
   $('notesWarning').textContent = '';
   $('editDialog').close();
   $('replaceDialog').close();
+  $('manualDialog').close();
+  $('leaveDialog').close();
   captionHint();
   render();
   status(
@@ -624,6 +698,7 @@ $('saveEdit').onclick = () => {
     }
     $('editText').value = '';
     $('editDialog').close();
+    $('transcript').querySelector(`[data-message-id="${editingId}"]`)?.focus();
     status('Phrase corrigée. Vérifiez le sens avec la personne qui l’a prononcée.');
   } catch (e) {
     status(e.message, true);
@@ -910,9 +985,11 @@ window.accescompanionSession = Object.freeze({
   },
   loadExample: () => $('loadDemo').click(),
   prepareReadingMode(mode) {
+    $('settingsDialog').close();
     tab('conversation');
     document.body.classList.toggle('vision', mode === 'vision');
-    const target = mode === 'speak' ? 'reply' : mode === 'vision' ? 'readGuide' : 'startCaptions';
+    const target =
+      mode === 'speak' ? 'reply' : mode === 'vision' ? 'captionScroll' : 'startCaptions';
     $(target).focus();
   },
   applyDraft(text) {
@@ -921,6 +998,7 @@ window.accescompanionSession = Object.freeze({
       throw new Error('Brouillon invalide.');
     }
     tab('notes');
+    $('settingsDialog').close();
     $('notes').value = text;
     $('notes').dispatchEvent(new Event('input'));
     return true;
@@ -931,7 +1009,11 @@ window.accescompanionSession = Object.freeze({
     }
     const value = validateMessage(text);
     const played = await speak(value);
-    if (played) append(value, 'patient', true);
+    if (played) {
+      append(value, 'patient', true);
+      $('settingsDialog').close();
+      showLatestMessage();
+    }
     return played;
   },
   clear: () => $('clearSession').click(),

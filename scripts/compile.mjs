@@ -31,7 +31,7 @@ const pages = {
     (await readFile('src/assets/hospital.jpg')).toString('base64'),
   ),
   searchPage: finder,
-  consultationPage: await page('src/consultation.html', 'src/companion.js'),
+  consultationPage: await page('src/consultation.html', 'src/companion.js', 'src/consultation.css'),
   assistantPage: await page('src/assistant.html', 'src/assistant.js', 'src/assistant.css'),
 };
 await mkdir('worker', { recursive: true });

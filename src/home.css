@@ -289,7 +289,8 @@ main,
 .search-stage:focus {
   outline: none;
 }
-.search-stage:has(.advanced[open]) {
+.search-stage:has(.advanced[open]),
+.search-stage:has(#review:not([hidden])) {
   align-content: start;
 }
 .search-panel {
@@ -530,6 +531,28 @@ legend {
 }
 #criteria .checkbox {
   margin: 8px 0;
+}
+.other-criteria {
+  grid-column: 1 / -1;
+}
+.other-criteria > summary {
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 12px;
+}
+.other-criteria[open] > summary {
+  margin-bottom: 8px;
+}
+.review .questions:empty {
+  display: none;
+}
+input,
+select,
+button,
+summary,
+[tabindex]:not(.search-stage) {
+  scroll-margin-block: 104px 24px;
 }
 .field {
   min-width: 0;

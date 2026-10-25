@@ -53,7 +53,9 @@ try {
     });
   });
   await p.goto(base + '/consultation');
+  await p.locator('#openSettings').click();
   await p.locator('#pairMcpTest').click();
+  await p.waitForFunction(() => document.getElementById('mcpTestPanel').dataset.pairingCode);
   const code = await p.locator('#mcpTestPanel').getAttribute('data-pairing-code');
   assert.ok(code);
   checks.push('Browser explicitly creates a fictional shared session');
@@ -85,6 +87,7 @@ try {
     text: 'Cette phrase peut être refusée.',
   });
   assert.equal(rejected.played, false);
+  await p.locator('#openSettings').click();
   await p.getByRole('button', { name: 'Refuser', exact: true }).click();
   assert.equal(await p.evaluate(() => window.__spoken.length), 0);
   const state = await tool('get_caption_updates', auth);
@@ -95,6 +98,7 @@ try {
     text: 'Cette proposition doit expirer après une correction.',
   });
   await p.locator(`[data-command-id="${outdated.request_id}"]`).waitFor();
+  await p.locator('#closeSettings').click();
   await p.locator('.edit').first().click();
   await p.locator('#editText').fill('Bonjour. Quelle question souhaitez-vous poser ?');
   await p.locator('#saveEdit').click();
@@ -111,6 +115,7 @@ try {
     ...auth,
     text: 'Pouvez-vous répéter plus lentement, s’il vous plaît ?',
   });
+  await p.locator('#openSettings').click();
   await p.waitForSelector('#mcpPending button');
   assert.equal(await p.evaluate(() => window.__spoken.length), 0);
   await p.getByRole('button', { name: 'Approuver et lire cette réponse', exact: true }).click();

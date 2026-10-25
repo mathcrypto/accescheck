@@ -297,6 +297,18 @@ input[type='checkbox'] {
   border-top: 1px solid var(--line);
   font-size: 14px;
 }
+.other-criteria > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 10px 0;
+}
+input,
+select,
+button,
+summary,
+[tabindex] {
+  scroll-margin-block: 104px 24px;
+}
 fieldset {
   margin: 20px 0;
   padding: 12px 16px;

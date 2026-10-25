@@ -56,17 +56,23 @@ function invalidate() {
   $('resultsSummary').textContent =
     'Vérifiez puis confirmez vos critères pour lancer une recherche.';
   status('resultStatus', '');
+  status('searchStatus', '');
+}
+function updateWidth() {
+  const selected = !!$('criteria').querySelector('input[value="width"]:checked');
+  $('widthField').hidden = !selected;
+  $('minWidth').disabled = !selected;
 }
 function review(value) {
   proposal = value;
   invalidate();
-  const advanced = $('advancedSearch');
-  if (advanced) advanced.open = true;
   $('review').hidden = false;
+  $('searchForm').hidden = false;
   $('proposalSource').textContent = value.parser;
-  $('criteria')
-    .querySelectorAll('label')
-    .forEach((node) => node.remove());
+  $('criteria').replaceChildren(element('legend', '', 'Mes critères indispensables'));
+  const others = element('details', 'other-criteria');
+  others.append(element('summary', '', 'Ajouter ou modifier des critères'));
+  others.open = !value.keys.length;
   for (const [key, criterion] of Object.entries(criteria)) {
     const label = element('label', 'checkbox');
     const checkbox = element('input');
@@ -74,16 +80,23 @@ function review(value) {
     checkbox.value = key;
     checkbox.checked = value.keys.includes(key);
     checkbox.name = 'criterion';
-    checkbox.addEventListener('change', invalidate);
+    checkbox.setAttribute('form', 'searchForm');
+    checkbox.addEventListener('change', () => {
+      updateWidth();
+      invalidate();
+    });
     label.append(checkbox, document.createTextNode(criterion.label));
-    $('criteria').append(label);
+    (checkbox.checked ? $('criteria') : others).append(label);
   }
+  $('criteria').append(others);
   $('minWidth').value = value.minWidth ?? '';
+  updateWidth();
   $('questions').replaceChildren(...value.questions.map((question) => element('li', '', question)));
   $('search').disabled = false;
   $('searchHelp').textContent =
     'Les critères visibles seront utilisés par le classement déterministe, après votre confirmation.';
-  $('reviewTitle').focus();
+  $('reviewTitle').focus({ preventScroll: true });
+  $('reviewTitle').scrollIntoView({ block: 'start' });
 }
 async function translate(local = false) {
   if (!$('descriptionForm').reportValidity()) return;
@@ -235,8 +248,14 @@ function card(practice) {
   ]);
   if (booking) links.append(booking);
   else links.append(element('span', 'hint', 'Aucun lien Doctolib dans la source.'));
-  const companion = element('a', '', 'Préparer l’échange');
+  const companion = element('a', '', 'Préparer l’échange ↗');
   companion.href = '/consultation?practice=' + encodeURIComponent(practice.id);
+  companion.target = '_blank';
+  companion.rel = 'noopener noreferrer';
+  companion.setAttribute(
+    'aria-label',
+    'Préparer l’échange (nouvel onglet, votre recherche reste ouverte)',
+  );
   links.append(companion);
   article.append(links);
   return article;
@@ -245,9 +264,11 @@ async function search(page = 1) {
   if (!$('searchForm').reportValidity() || !proposal) return;
   const needs = selectedNeeds();
   if (!needs.keys.length) {
-    status('resultStatus', 'Sélectionnez au moins un critère avant de chercher.', true);
+    status('searchStatus', 'Sélectionnez au moins un critère avant de chercher.', true);
+    $('searchStatus').focus();
     return;
   }
+  status('searchStatus', '');
   const request =
     page === 1
       ? {
@@ -333,6 +354,7 @@ $('searchForm').onsubmit = (event) => {
 $('description').oninput = () => {
   proposal = null;
   $('review').hidden = true;
+  if ($('advancedSearch')) $('searchForm').hidden = true;
   $('search').disabled = true;
   invalidate();
   status('proposalStatus', 'La description a changé. Demandez une nouvelle proposition.');
@@ -344,7 +366,8 @@ document.querySelectorAll('[data-example]').forEach((button) => {
     $('description').focus();
   };
 });
-for (const id of ['minWidth', 'specialty', 'radius']) $(id).addEventListener('change', invalidate);
+$('minWidth').addEventListener('input', invalidate);
+for (const id of ['specialty', 'radius']) $(id).addEventListener('change', invalidate);
 $('findLocation').onclick = async () => {
   locationController?.abort();
   locationController = new AbortController();
@@ -403,11 +426,13 @@ $('clear').onclick = () => {
   $('descriptionForm').reset();
   $('searchForm').reset();
   $('review').hidden = true;
+  if ($('advancedSearch')) $('searchForm').hidden = true;
   $('criteria')
     .querySelectorAll('label')
     .forEach((node) => node.remove());
   $('questions').replaceChildren();
   $('minWidth').value = '';
+  updateWidth();
   $('proposalSource').textContent = '';
   $('locationChoices').replaceChildren();
   $('origin').textContent = '';

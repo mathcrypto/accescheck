@@ -10,910 +10,7 @@
       content="Un espace de communication pendant votre consultation : sous-titres, réponses écrites et lecture vocale."
     />
     <style>
-      :root {
-        --ink: #171717;
-        --muted: #626262;
-        --line: #e3e3e3;
-        --surface: #f6f6f6;
-        --paper: #fff;
-        --accent: #bd292e;
-        color-scheme: light;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      [hidden] {
-        display: none !important;
-      }
-      html {
-        scroll-padding-top: 104px;
-      }
-      body {
-        margin: 0;
-        background: var(--paper);
-        color: var(--ink);
-        font:
-          14px/1.6 'Helvetica Neue',
-          Helvetica,
-          Arial,
-          sans-serif;
-        -webkit-font-smoothing: antialiased;
-      }
-      button,
-      input,
-      select,
-      textarea {
-        font: inherit;
-        color: inherit;
-      }
-      button {
-        cursor: pointer;
-      }
-      button:disabled,
-      [aria-disabled='true'] {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-      a {
-        color: inherit;
-        text-underline-offset: 4px;
-      }
-      button,
-      a,
-      input,
-      textarea,
-      select,
-      summary {
-        outline-offset: 4px;
-      }
-      :focus-visible {
-        outline: 2px solid var(--accent);
-      }
-      button,
-      input,
-      select,
-      textarea,
-      a {
-        -webkit-tap-highlight-color: transparent;
-      }
-      .skip {
-        position: fixed;
-        z-index: 100;
-        top: -100px;
-        left: 24px;
-        background: white;
-        padding: 12px;
-      }
-      .skip:focus {
-        top: 16px;
-      }
-      .site-header {
-        position: fixed;
-        z-index: 20;
-        top: 20px;
-        left: 24px;
-        right: 24px;
-        display: flex;
-        align-items: start;
-        justify-content: space-between;
-        gap: 16px;
-        pointer-events: none;
-      }
-      .brand,
-      .menu {
-        pointer-events: auto;
-        background: rgb(255 255 255 / 0.56);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgb(0 0 0 / 0.05);
-        border-radius: 3px;
-      }
-      .brand {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        min-height: 48px;
-        padding: 10px 14px 10px 10px;
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: 500;
-        line-height: 1;
-        letter-spacing: -0.7px;
-        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
-        transition: background 0.2s;
-      }
-      .brand:hover {
-        background: rgb(255 255 255 / 0.88);
-      }
-      .brand-mark {
-        display: block;
-        flex-shrink: 0;
-        width: 28px;
-        height: 28px;
-      }
-      .brand-mark svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
-      .menu {
-        position: relative;
-        font-size: 13px;
-      }
-      .menu > summary {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        min-height: 48px;
-        padding: 12px 16px;
-        list-style: none;
-        cursor: pointer;
-      }
-      .menu > summary::-webkit-details-marker {
-        display: none;
-      }
-      .menu > summary::after {
-        content: '+';
-        font-size: 18px;
-        line-height: 1;
-      }
-      .menu[open] > summary::after {
-        content: '−';
-      }
-      .menu nav {
-        position: absolute;
-        right: -1px;
-        top: calc(100% + 8px);
-        width: 216px;
-        padding: 8px;
-        border: 1px solid var(--line);
-        border-radius: 3px;
-        background: white;
-      }
-      .menu nav a {
-        display: flex;
-        align-items: center;
-        min-height: 44px;
-        padding: 10px 12px;
-        text-decoration: none;
-        font-size: 13px;
-      }
-      .menu nav a:hover {
-        background: var(--surface);
-      }
-      .menu nav a[aria-current='page'] {
-        text-decoration: underline;
-      }
-      main {
-        max-width: 1240px;
-        margin: auto;
-        padding: 128px 32px 48px;
-      }
-      main:focus {
-        outline: none;
-      }
-      h1,
-      h2,
-      h3 {
-        color: var(--ink);
-        font-weight: 400;
-      }
-      h1 {
-        margin: 0 0 12px;
-        font-size: 32px;
-        line-height: 1.2;
-        letter-spacing: -0.8px;
-      }
-      h2 {
-        margin: 0 0 12px;
-        font-size: 18px;
-        line-height: 1.4;
-        letter-spacing: -0.3px;
-      }
-      h3 {
-        margin: 0 0 12px;
-        font-size: 21px;
-        line-height: 1.4;
-        letter-spacing: -0.3px;
-      }
-      p {
-        overflow-wrap: anywhere;
-      }
-      .intro {
-        display: flex;
-        align-items: start;
-        justify-content: space-between;
-        gap: 24px;
-        margin-bottom: 28px;
-      }
-      .intro p {
-        margin: 0;
-        max-width: 640px;
-        font-size: 13px;
-        color: var(--muted);
-      }
-      .guide {
-        flex-shrink: 0;
-        min-height: 44px;
-        padding: 10px 0;
-        border: 0;
-        background: none;
-        font-size: 12px;
-        text-decoration: underline;
-        text-underline-offset: 4px;
-      }
-      .eyebrow {
-        margin: 0 0 8px;
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 400;
-        letter-spacing: 0.2px;
-      }
-      .hearing,
-      .status {
-        margin: 0 0 20px;
-        padding: 12px 16px;
-        background: var(--surface);
-        font-size: 13px;
-        line-height: 1.7;
-        border-left: 2px solid var(--ink);
-      }
-      .status.error {
-        border-left-color: var(--accent);
-      }
-      .connection-hub {
-        margin: 0 0 24px;
-        padding: 24px 0;
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-      }
-      .hub-heading {
-        display: flex;
-        align-items: start;
-        justify-content: space-between;
-        gap: 24px;
-      }
-      .hub-heading h2 {
-        margin: 0;
-        font-size: 18px;
-      }
-      .connection-badge {
-        font-size: 11px;
-        color: var(--muted);
-        padding: 4px 0;
-      }
-      .connection-badge.connected {
-        color: var(--ink);
-        font-weight: 500;
-      }
-      .platforms {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-        margin: 20px 0 12px;
-        max-width: 640px;
-      }
-      .platform {
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        min-height: 44px;
-        padding: 10px 12px;
-        background: white;
-        color: var(--ink);
-        border: 1px solid var(--line);
-        border-radius: 3px;
-        font-size: 13px;
-      }
-      .platform[aria-pressed='true'] {
-        border-color: var(--ink);
-        background: var(--ink);
-        color: white;
-      }
-      .platform-mark {
-        font-size: 11px;
-        font-weight: 500;
-      }
-      .connection-hub p {
-        margin: 12px 0;
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.8;
-      }
-      .practice-context {
-        display: flex;
-        gap: 8px 16px;
-        flex-wrap: wrap;
-        align-items: baseline;
-        padding: 16px 0;
-        margin-top: 16px;
-        border-top: 1px solid var(--line);
-        font-size: 13px;
-      }
-      .practice-context span {
-        color: var(--muted);
-      }
-      .practice-context a {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-      }
-      .call-link-row {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin: 20px 0;
-      }
-      .call-link-row > div {
-        min-width: 0;
-        flex: 1;
-      }
-      .call-link-row a {
-        flex-shrink: 0;
-        text-decoration: none;
-      }
-      .call-link-row small {
-        display: block;
-        margin-top: 8px;
-        color: var(--muted);
-        font-size: 11px;
-      }
-      .call-guide {
-        margin-top: 16px;
-      }
-      .call-guide summary {
-        min-height: 44px;
-        padding: 10px 0;
-        cursor: pointer;
-        font-size: 12px;
-      }
-      .call-steps {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 24px;
-        padding: 20px 0 20px 20px;
-        margin: 16px 0;
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-      }
-      .call-steps li {
-        padding-left: 4px;
-        font-size: 12px;
-      }
-      .call-steps b {
-        font-weight: 500;
-      }
-      .call-steps span {
-        display: block;
-        margin-top: 8px;
-        color: var(--muted);
-      }
-      .tabs {
-        display: flex;
-        gap: 24px;
-        border-bottom: 1px solid var(--line);
-        margin-bottom: 24px;
-      }
-      .tabs button {
-        min-height: 48px;
-        padding: 12px 0;
-        background: none;
-        border: 0;
-        border-bottom: 2px solid transparent;
-        color: var(--muted);
-        font-size: 13px;
-      }
-      .tabs button[aria-selected='true'] {
-        color: var(--ink);
-        border-bottom-color: var(--ink);
-      }
-      .layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 340px;
-        gap: 40px;
-        align-items: start;
-      }
-      .layout > div,
-      .layout > aside {
-        min-width: 0;
-      }
-      .layout > aside {
-        position: sticky;
-        top: 104px;
-      }
-      .conversation {
-        border-top: 1px solid var(--ink);
-        border-bottom: 1px solid var(--line);
-      }
-      .toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px 16px;
-        padding: 20px 0 16px;
-      }
-      .toolbar h2 {
-        margin: 0;
-        font-size: 16px;
-      }
-      .mic-status {
-        display: inline-flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-        color: var(--muted);
-        font-size: 11px;
-      }
-      .indicator {
-        flex-shrink: 0;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #888;
-      }
-      .recording .indicator {
-        background: var(--accent);
-      }
-      .recording {
-        color: var(--ink);
-      }
-      #audioMeter {
-        width: 64px;
-        height: 10px;
-      }
-      .caption-controls {
-        padding: 0 0 20px;
-      }
-      .caption-actions,
-      .row {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px 12px;
-      }
-      .caption-actions .danger {
-        margin-left: auto;
-      }
-      .check-label {
-        display: flex;
-        align-items: start;
-        gap: 10px;
-        min-height: 44px;
-        margin: 12px 0;
-        font-size: 12px;
-        line-height: 1.8;
-        cursor: pointer;
-      }
-      .check-label input {
-        flex-shrink: 0;
-        width: 16px;
-        height: 16px;
-        accent-color: var(--ink);
-        margin: 3px 0 0;
-      }
-      .agreement {
-        margin-top: 0;
-      }
-      .captions-wrap {
-        height: 320px;
-        overflow: auto;
-        padding: 20px;
-        background: var(--surface);
-        scroll-behavior: smooth;
-      }
-      .empty {
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 16px;
-      }
-      .empty svg {
-        width: 64px;
-        height: 48px;
-        margin-bottom: 12px;
-      }
-      .empty p {
-        max-width: 360px;
-        margin: 0 0 12px;
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.8;
-      }
-      .primary,
-      .secondary {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 44px;
-        padding: 10px 16px;
-        border: 1px solid var(--ink);
-        border-radius: 3px;
-        font-size: 13px;
-        font-weight: 400;
-        text-decoration: none;
-      }
-      .primary {
-        background: var(--ink);
-        color: white;
-      }
-      .secondary {
-        background: white;
-        color: var(--ink);
-      }
-      .primary:hover:not(:disabled) {
-        background: #333;
-      }
-      .secondary:hover:not(:disabled) {
-        background: var(--surface);
-      }
-      .subtle,
-      .message .edit {
-        min-height: 44px;
-        border: 0;
-        padding: 8px 0;
-        background: none;
-        color: var(--ink);
-        font-size: 12px;
-        text-decoration: underline;
-        text-underline-offset: 4px;
-      }
-      .message {
-        padding: 16px 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .message.patient {
-        padding-left: 16px;
-        border-left: 2px solid var(--ink);
-      }
-      .message .meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 4px;
-        color: var(--muted);
-        font-size: 11px;
-      }
-      .message p,
-      .interim {
-        margin: 0;
-        font-size: 21px;
-        line-height: 1.6;
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-      }
-      .interim {
-        padding-top: 16px;
-        color: var(--muted);
-      }
-      .panel {
-        padding: 24px 0;
-        margin-bottom: 20px;
-        border-top: 1px solid var(--line);
-      }
-      .composer {
-        border-top-color: var(--ink);
-      }
-      .panel h2 {
-        font-size: 18px;
-      }
-      .panel p,
-      .notes-panel p,
-      dialog p {
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.8;
-        margin: 0 0 16px;
-      }
-      label,
-      legend {
-        font-size: 12px;
-      }
-      textarea,
-      select,
-      input[type='url'] {
-        width: 100%;
-        min-width: 0;
-        min-height: 44px;
-        padding: 12px;
-        border: 1px solid #888;
-        border-radius: 3px;
-        background: white;
-        font-size: 14px;
-        line-height: 1.6;
-      }
-      textarea {
-        min-height: 112px;
-        resize: vertical;
-      }
-      textarea:focus,
-      select:focus,
-      input[type='url']:focus {
-        border-color: var(--ink);
-      }
-      .panel label,
-      .call-link-row label {
-        display: block;
-        margin-bottom: 8px;
-      }
-      .panel .check-label {
-        display: flex;
-      }
-      .panel select {
-        margin-bottom: 12px;
-      }
-      .voice-inline {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0 16px;
-        margin-bottom: 16px;
-        font-size: 11px;
-        color: var(--muted);
-      }
-      .quick {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0 16px;
-        margin: 8px 0 16px;
-      }
-      .quick button {
-        min-height: 44px;
-        padding: 8px 0;
-        border: 0;
-        background: none;
-        text-align: left;
-        font-size: 12px;
-        text-decoration: underline;
-        text-underline-offset: 4px;
-      }
-      .composer-controls {
-        display: flex;
-        gap: 8px;
-      }
-      .composer-controls button {
-        flex: 1;
-      }
-      #manualToggle {
-        margin-top: 16px;
-        text-align: left;
-      }
-      #addDoctor {
-        margin-top: 12px;
-      }
-      #moreOptions {
-        border-top: 1px solid var(--line);
-        padding: 12px 0;
-      }
-      #moreOptions > summary {
-        min-height: 44px;
-        padding: 10px 0;
-        cursor: pointer;
-        font-size: 12px;
-      }
-      #moreOptions .panel {
-        margin-bottom: 0;
-        border: 0;
-        padding: 16px 0 0;
-      }
-      .settings fieldset {
-        padding: 0;
-        border: 0;
-        margin: 0;
-      }
-      #browserSpeechOffer {
-        margin-bottom: 20px;
-        padding: 16px 0;
-        border-bottom: 1px solid var(--line);
-      }
-      #browserSpeechNote {
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.8;
-      }
-      .notice {
-        margin: 16px 0;
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.8;
-      }
-      .notice strong {
-        color: var(--ink);
-        font-weight: 500;
-      }
-      .notes-panel {
-        border-top: 1px solid var(--ink);
-        padding-top: 24px;
-      }
-      .notes-panel h2 {
-        font-size: 20px;
-      }
-      #notes {
-        min-height: 300px;
-        margin: 8px 0 12px;
-        font-size: 16px;
-        line-height: 1.8;
-      }
-      #notesWarning {
-        color: var(--ink);
-      }
-      .demo-label {
-        display: inline-block;
-        padding: 6px 0;
-        border-bottom: 1px solid var(--ink);
-        color: var(--muted);
-        font-size: 11px;
-      }
-      .demo-label:empty {
-        display: none;
-      }
-      .callbox {
-        padding: 20px;
-        margin: 20px 0;
-        background: var(--surface);
-        border-left: 2px solid var(--ink);
-      }
-      .footer {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px 32px;
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid var(--line);
-        color: var(--muted);
-        font-size: 11px;
-      }
-      .vision .message p,
-      .vision .interim {
-        font-size: 30px;
-      }
-      .vision .panel p,
-      .vision .notice,
-      .vision label,
-      .vision .check-label span,
-      .vision .intro p,
-      .vision button,
-      .vision select {
-        font-size: 16px;
-      }
-      .vision .message .meta {
-        font-size: 13px;
-      }
-      dialog {
-        width: min(640px, calc(100% - 32px));
-        max-height: calc(100svh - 48px);
-        overflow: auto;
-        padding: 28px;
-        border: 1px solid var(--line);
-        border-radius: 3px;
-        background: white;
-        color: var(--ink);
-      }
-      dialog::backdrop {
-        background: rgb(0 0 0 / 0.3);
-        backdrop-filter: blur(3px);
-      }
-      dialog textarea {
-        min-height: 160px;
-        margin: 8px 0 20px;
-      }
-      dialog h2 {
-        font-size: 24px;
-      }
-      @media (max-width: 1000px) {
-        .layout {
-          grid-template-columns: minmax(0, 1fr) 300px;
-          gap: 28px;
-        }
-      }
-      @media (max-width: 800px) {
-        main {
-          padding: 112px 24px 40px;
-        }
-        .layout {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 32px;
-        }
-        .layout > aside {
-          position: static;
-        }
-        .hub-heading {
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-        .intro {
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-        .intro h1 {
-          font-size: 28px;
-        }
-        .call-steps {
-          grid-template-columns: 1fr;
-          gap: 20px;
-        }
-      }
-      @media (max-width: 600px) {
-        .site-header {
-          top: 16px;
-          left: 16px;
-          right: 16px;
-          gap: 8px;
-        }
-        .brand {
-          gap: 6px;
-          padding-right: 10px;
-          font-size: 16px;
-        }
-        .brand-mark {
-          width: 24px;
-          height: 24px;
-        }
-        .menu > summary {
-          padding: 12px;
-          gap: 12px;
-        }
-        main {
-          padding-left: 20px;
-          padding-right: 20px;
-        }
-        .platform {
-          font-size: 12px;
-          padding: 8px;
-        }
-        .platform-mark {
-          display: none;
-        }
-        .caption-actions .danger {
-          margin-left: 0;
-        }
-        .call-link-row {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 12px;
-        }
-        .call-link-row > div {
-          width: 100%;
-        }
-        .captions-wrap {
-          height: 320px;
-          padding: 16px;
-        }
-        .empty {
-          padding: 8px 0;
-        }
-        .message p,
-        .interim {
-          font-size: 20px;
-        }
-        textarea,
-        select,
-        input[type='url'] {
-          font-size: 16px;
-        }
-        .footer {
-          flex-direction: column;
-          gap: 12px;
-        }
-        dialog {
-          padding: 20px;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-          scroll-behavior: auto !important;
-          transition: none !important;
-          animation: none !important;
-        }
-      }
+      /*PAGE_STYLE*/
     </style>
   </head>
   <body>
@@ -942,13 +39,199 @@
       <div class="intro">
         <div>
           <h1>L’échange</h1>
-          <p>Lisez ce qui se dit, écrivez votre réponse, puis vérifiez que le médecin l’entend.</p>
+          <div id="status" class="status" role="status">Microphone coupé. Vous pouvez écrire.</div>
+          <div id="browserSpeechOffer" hidden>
+            <button class="primary" id="useBrowserSpeech" type="button">
+              Écrire avec le service vocal du navigateur
+            </button>
+            <p id="browserSpeechNote">
+              Ce bouton accepte que le service vocal du navigateur puisse envoyer l’audio à son
+              fournisseur. AccèsCheck ne reçoit pas cet audio.
+            </p>
+          </div>
         </div>
-        <button class="guide" id="readGuide">Écouter les repères</button>
+        <button class="secondary" id="openSettings" aria-haspopup="dialog">Réglages</button>
       </div>
-      <p id="hearingStatus" class="hearing" role="status">
-        Le médecin n’entend pas encore votre réponse.
-      </p>
+
+      <div id="practiceContext" class="practice-context" hidden>
+        <strong id="practiceName"></strong><span id="practiceAddress"></span
+        ><a id="practiceDoctolib" target="_blank" rel="noopener noreferrer" hidden
+          >Fiche Doctolib ↗</a
+        >
+      </div>
+
+      <div class="workspace-toolbar">
+        <div class="tabs" role="tablist" aria-label="Espace de consultation">
+          <button
+            id="conversationTab"
+            role="tab"
+            aria-selected="true"
+            aria-controls="conversationPanel"
+          >
+            Conversation</button
+          ><button
+            id="notesTab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="notesPanel"
+            tabindex="-1"
+          >
+            Mon récapitulatif
+          </button>
+        </div>
+        <button class="subtle danger" id="clearSession">Effacer la session</button>
+      </div>
+      <div class="layout">
+        <div>
+          <section id="conversationPanel" role="tabpanel" aria-labelledby="conversationTab">
+            <div class="conversation">
+              <div class="toolbar">
+                <h2>Sous-titres à vérifier</h2>
+                <span class="mic-status" id="micState"
+                  ><span class="indicator" aria-hidden="true"></span
+                  ><span id="micText">Microphone coupé</span
+                  ><meter
+                    id="audioMeter"
+                    min="0"
+                    max="100"
+                    value="0"
+                    hidden
+                    aria-label="Niveau du son reçu de l’onglet"
+                  ></meter
+                ></span>
+              </div>
+              <div class="caption-controls">
+                <label class="check-label agreement"
+                  ><input type="checkbox" id="consent" /><span
+                    >Les personnes présentes acceptent les sous-titres.</span
+                  ></label
+                >
+                <div class="caption-actions">
+                  <button class="primary" id="startCaptions" aria-label="Démarrer les sous-titres">
+                    Démarrer</button
+                  ><button
+                    class="secondary"
+                    id="pauseCaptions"
+                    aria-label="Mettre les sous-titres en pause"
+                    disabled
+                  >
+                    Pause
+                  </button>
+                </div>
+              </div>
+              <div
+                class="captions-wrap"
+                id="captionScroll"
+                tabindex="0"
+                role="region"
+                aria-label="Échange, à vérifier avec le soignant"
+              >
+                <div class="empty" id="empty">
+                  <svg viewBox="0 0 120 90" fill="none" aria-hidden="true">
+                    <circle cx="61" cy="42" r="37" fill="#eee" />
+                    <path d="M22 21h65v37H54L39 72V58H22Z" stroke="#777" stroke-width="2" />
+                    <path d="M42 34h28M42 44h17" stroke="#777" stroke-width="2" />
+                    <path d="M73 58h25V40M78 69h12l10 9v-9" stroke="#777" stroke-width="2" />
+                  </svg>
+                  <h3>Ce qui se dit</h3>
+                  <p>
+                    Démarrez les sous-titres après l’accord des personnes présentes, ou écrivez
+                    votre réponse.
+                  </p>
+                  <button class="subtle" id="loadDemo">
+                    Voir un exemple fictif, sans microphone
+                  </button>
+                </div>
+                <div
+                  id="transcript"
+                  role="log"
+                  aria-label="Conversation transcrite, à vérifier"
+                  aria-live="polite"
+                  aria-relevant="additions text"
+                ></div>
+                <div id="interim" class="interim" aria-hidden="true"></div>
+              </div>
+            </div>
+
+            <span class="demo-label" id="demoLabel"></span>
+          </section>
+          <section
+            id="notesPanel"
+            class="notes-panel"
+            role="tabpanel"
+            aria-labelledby="notesTab"
+            hidden
+          >
+            <div class="eyebrow">À RELIRE ENSEMBLE</div>
+            <h2>Mon récapitulatif de la visite</h2>
+            <p>
+              Rédigez vos notes ou recopiez les phrases de l’échange. Le brouillon reprend les
+              messages mot pour mot : il ne produit pas de synthèse médicale par IA.
+            </p>
+            <button class="secondary" id="draftNotes">Créer un brouillon depuis l’échange</button>
+            <p id="notesWarning" role="status"></p>
+            <label for="notes">Mes notes, à vérifier avec le soignant</label
+            ><textarea
+              id="notes"
+              maxlength="24000"
+              placeholder="Ce que nous avons discuté…\nLes consignes confirmées par le soignant…\nMes questions restantes…"
+            ></textarea
+            ><label class="check-label"
+              ><input type="checkbox" id="reviewed" /><span
+                >J’ai relu ces notes et fait confirmer les éléments importants par le
+                soignant.</span
+              ></label
+            >
+            <div class="row">
+              <button class="primary" id="readNotes" disabled>Écouter mon récapitulatif</button
+              ><button class="secondary" id="copyNotes">Copier mes notes</button>
+            </div>
+            <p class="notice">
+              Ces notes ne remplacent pas le compte rendu ou l’ordonnance du soignant. Le texte
+              reste dans cette page jusqu’à son effacement ou sa fermeture.
+            </p>
+          </section>
+        </div>
+        <aside aria-label="Mes outils de communication">
+          <section class="panel composer">
+            <h2>Votre réponse</h2>
+
+            <label class="sr-only" for="reply">Mon message</label
+            ><textarea
+              id="reply"
+              maxlength="4000"
+              placeholder="Écrivez votre réponse ici…"
+            ></textarea>
+
+            <div class="composer-controls">
+              <button class="secondary" id="showReply">Afficher</button
+              ><button class="primary" id="speakReply">Lire ma réponse</button>
+            </div>
+            <div class="composer-extras">
+              <details class="quick-options">
+                <summary>Phrases utiles</summary>
+                <div class="quick" aria-label="Phrases à préparer">
+                  <button data-phrase="Pouvez-vous répéter, s’il vous plaît ?">
+                    Répétez, s’il vous plaît</button
+                  ><button data-phrase="J’ai une question.">J’ai une question</button
+                  ><button data-phrase="Pouvez-vous parler plus lentement ?">Plus lentement</button
+                  ><button data-phrase="J’ai besoin d’une pause.">Une pause</button>
+                </div>
+              </details>
+              <button class="subtle" id="manualToggle" aria-haspopup="dialog">
+                Saisir les paroles du soignant
+              </button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+    <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+      <div class="dialog-heading">
+        <h2 id="settingsTitle">Réglages de l’échange</h2>
+        <button class="secondary" id="closeSettings">Fermer</button>
+      </div>
+      <p id="settingsStatus" class="status dialog-status" role="status" hidden></p>
       <section class="connection-hub" aria-labelledby="connectionTitle">
         <div class="hub-heading">
           <div>
@@ -957,12 +240,7 @@
           </div>
           <span class="connection-badge" id="connectionBadge">Microphone de cet appareil</span>
         </div>
-        <div id="practiceContext" class="practice-context" hidden>
-          <strong id="practiceName"></strong><span id="practiceAddress"></span
-          ><a id="practiceDoctolib" target="_blank" rel="noopener noreferrer" hidden
-            >Fiche Doctolib ↗</a
-          >
-        </div>
+
         <div class="platforms" role="group" aria-label="Lieu de la consultation">
           <button class="platform" data-platform="office" aria-pressed="true">⌂ En cabinet</button
           ><button class="platform" data-platform="doctolib" aria-pressed="false">
@@ -1034,218 +312,70 @@
           </button>
         </div>
       </section>
-      <div id="status" class="status" role="status">
-        Le microphone est coupé. Vous pouvez déjà échanger par écrit.
+      <details id="moreOptions">
+        <summary>Réglages des sous-titres</summary>
+        <section class="panel settings">
+          <h2>Réglages des sous-titres</h2>
+          <label for="recognitionMode">Traitement de la parole</label
+          ><select id="recognitionMode">
+            <option value="local">Sur cet appareil uniquement</option>
+            <option value="browser">Service vocal du navigateur</option>
+          </select>
+          <p class="helper" id="recognitionHelp">
+            Aucun envoi audio via AccèsCheck. La reconnaissance locale nécessite un navigateur et un
+            pack français compatibles.
+          </p>
+          <label class="check-label" id="remoteConsentLabel" hidden
+            ><input type="checkbox" id="remoteConsent" /><span
+              >J’accepte que le service vocal du navigateur puisse envoyer l’audio à son
+              fournisseur. Les personnes présentes en sont informées.</span
+            ></label
+          ><button class="subtle" id="installLanguage" hidden>
+            Télécharger le pack de français
+          </button>
+          <p class="helper" id="supportInfo"></p>
+        </section>
+      </details>
+      <div class="voice-inline">
+        <span id="activeVoiceLabel">Voix française de cet appareil</span
+        ><button class="subtle" id="quickVoiceTest">Écouter un exemple</button>
       </div>
-      <div id="browserSpeechOffer" hidden>
-        <button class="primary" id="useBrowserSpeech" type="button">
-          Écrire avec le service vocal du navigateur
-        </button>
-        <p id="browserSpeechNote">
-          Ce bouton accepte que le service vocal du navigateur puisse envoyer l’audio à son
-          fournisseur. AccèsCheck ne reçoit pas cet audio.
-        </p>
+      <p id="hearingStatus" class="hearing" role="status">
+        Le médecin n’entend pas encore votre réponse.
+      </p>
+      <p class="notice">
+        <strong>Les sous-titres peuvent contenir des erreurs.</strong> Cliquez sur « Corriger » si
+        nécessaire. Faites confirmer les noms de médicaments, les doses et les consignes par le
+        soignant. Aucun texte n’est une interprétation médicale.
+      </p>
+      <button class="guide" id="readGuide">Écouter les repères</button>
+      <p class="notice">
+        Aucun enregistrement audio ni conversation conservés. Quitter cette page efface l’échange.
+      </p>
+    </dialog>
+    <dialog id="manualDialog" aria-labelledby="manualTitle">
+      <h2 id="manualTitle">Paroles du soignant</h2>
+      <p class="status dialog-status" role="status" hidden></p>
+      <div id="manualForm">
+        <label for="manualDoctor">Paroles du soignant, saisies manuellement</label
+        ><textarea id="manualDoctor" maxlength="4000" placeholder="Saisir une phrase…"></textarea
+        ><button class="secondary" id="addDoctor">Ajouter à l’échange</button>
       </div>
-      <div class="tabs" role="tablist" aria-label="Espace de consultation">
-        <button
-          id="conversationTab"
-          role="tab"
-          aria-selected="true"
-          aria-controls="conversationPanel"
-        >
-          Conversation</button
-        ><button
-          id="notesTab"
-          role="tab"
-          aria-selected="false"
-          aria-controls="notesPanel"
-          tabindex="-1"
-        >
-          Mon récapitulatif
-        </button>
+      <button class="subtle" id="cancelManual">Annuler</button>
+    </dialog>
+    <dialog id="leaveDialog" aria-labelledby="leaveTitle" aria-describedby="leaveHelp">
+      <h2 id="leaveTitle">Quitter l’échange ?</h2>
+      <p id="leaveHelp">
+        Vos messages et notes seront effacés. Copiez vos notes si vous souhaitez les garder.
+      </p>
+      <div class="row">
+        <button class="primary" id="cancelLeave" autofocus>Rester ici</button
+        ><button class="secondary" id="confirmLeave">Quitter et effacer</button>
       </div>
-      <div class="layout">
-        <div>
-          <section id="conversationPanel" role="tabpanel" aria-labelledby="conversationTab">
-            <div class="conversation">
-              <div class="toolbar">
-                <h2>Votre échange en direct</h2>
-                <span class="mic-status" id="micState"
-                  ><span class="indicator" aria-hidden="true"></span
-                  ><span id="micText">Microphone coupé</span
-                  ><meter
-                    id="audioMeter"
-                    min="0"
-                    max="100"
-                    value="0"
-                    hidden
-                    aria-label="Niveau du son reçu de l’onglet"
-                  ></meter
-                ></span>
-              </div>
-              <div class="caption-controls">
-                <label class="check-label agreement"
-                  ><input type="checkbox" id="consent" /><span
-                    >Les personnes présentes sont informées et d’accord pour activer les
-                    sous-titres.</span
-                  ></label
-                >
-                <div class="caption-actions">
-                  <button class="primary" id="startCaptions">Démarrer les sous-titres</button
-                  ><button class="secondary" id="pauseCaptions" disabled>Mettre en pause</button
-                  ><button class="subtle danger" id="clearSession">Effacer la session</button>
-                </div>
-              </div>
-              <div class="captions-wrap" id="captionScroll">
-                <div class="empty" id="empty">
-                  <svg viewBox="0 0 120 90" fill="none" aria-hidden="true">
-                    <circle cx="61" cy="42" r="37" fill="#eee" />
-                    <path d="M22 21h65v37H54L39 72V58H22Z" stroke="#777" stroke-width="2" />
-                    <path d="M42 34h28M42 44h17" stroke="#777" stroke-width="2" />
-                    <path d="M73 58h25V40M78 69h12l10 9v-9" stroke="#777" stroke-width="2" />
-                  </svg>
-                  <h3>Ce qui se dit</h3>
-                  <p>
-                    Démarrez les sous-titres après l’accord des personnes présentes, ou écrivez
-                    votre réponse.
-                  </p>
-                  <button class="subtle" id="loadDemo">
-                    Voir un exemple fictif, sans microphone
-                  </button>
-                </div>
-                <div
-                  id="transcript"
-                  role="log"
-                  aria-label="Conversation transcrite, à vérifier"
-                  aria-live="polite"
-                  aria-relevant="additions text"
-                ></div>
-                <div id="interim" class="interim" aria-hidden="true"></div>
-              </div>
-            </div>
-            <p class="notice">
-              <strong>Les sous-titres peuvent contenir des erreurs.</strong> Cliquez sur « Corriger
-              » si nécessaire. Faites confirmer les noms de médicaments, les doses et les consignes
-              par le soignant. Aucun texte n’est une interprétation médicale.
-            </p>
-            <span class="demo-label" id="demoLabel"></span>
-          </section>
-          <section
-            id="notesPanel"
-            class="notes-panel"
-            role="tabpanel"
-            aria-labelledby="notesTab"
-            hidden
-          >
-            <div class="eyebrow">À RELIRE ENSEMBLE</div>
-            <h2>Mon récapitulatif de la visite</h2>
-            <p>
-              Rédigez vos notes ou recopiez les phrases de l’échange. Le brouillon reprend les
-              messages mot pour mot : il ne produit pas de synthèse médicale par IA.
-            </p>
-            <button class="secondary" id="draftNotes">Créer un brouillon depuis l’échange</button>
-            <p id="notesWarning" role="status"></p>
-            <label for="notes">Mes notes, à vérifier avec le soignant</label
-            ><textarea
-              id="notes"
-              maxlength="24000"
-              placeholder="Ce que nous avons discuté…\nLes consignes confirmées par le soignant…\nMes questions restantes…"
-            ></textarea
-            ><label class="check-label"
-              ><input type="checkbox" id="reviewed" /><span
-                >J’ai relu ces notes et fait confirmer les éléments importants par le
-                soignant.</span
-              ></label
-            >
-            <div class="row">
-              <button class="primary" id="readNotes" disabled>Écouter mon récapitulatif</button
-              ><button class="secondary" id="copyNotes">Copier mes notes</button>
-            </div>
-            <p class="notice">
-              Ces notes ne remplacent pas le compte rendu ou l’ordonnance du soignant. Le texte
-              reste dans cette page jusqu’à son effacement ou sa fermeture.
-            </p>
-          </section>
-        </div>
-        <aside aria-label="Mes outils de communication">
-          <section class="panel composer">
-            <h2>Votre réponse</h2>
-            <p>
-              Écrivez ce que vous voulez dire. Affichez-le au médecin, ou faites-le lire à voix
-              haute.
-            </p>
-            <div class="voice-inline">
-              <span id="activeVoiceLabel">Voix française de cet appareil</span
-              ><button class="subtle" id="quickVoiceTest">Écouter un exemple</button>
-            </div>
-            <label for="reply">Mon message</label
-            ><textarea
-              id="reply"
-              maxlength="4000"
-              placeholder="Écrivez votre réponse ici…"
-            ></textarea>
-            <div class="quick" aria-label="Phrases à préparer">
-              <button data-phrase="Pouvez-vous répéter, s’il vous plaît ?">
-                Répétez, s’il vous plaît</button
-              ><button data-phrase="J’ai une question.">J’ai une question</button
-              ><button data-phrase="Pouvez-vous parler plus lentement ?">Plus lentement</button
-              ><button data-phrase="J’ai besoin d’une pause.">Une pause</button>
-            </div>
-            <div class="composer-controls">
-              <button class="secondary" id="showReply">Afficher</button
-              ><button class="primary" id="speakReply">Lire ma réponse</button>
-            </div>
-            <button
-              class="subtle"
-              id="manualToggle"
-              aria-expanded="false"
-              aria-controls="manualForm"
-            >
-              Saisir aussi les paroles du soignant
-            </button>
-            <div id="manualForm" hidden>
-              <label for="manualDoctor">Paroles du soignant, saisies manuellement</label
-              ><textarea
-                id="manualDoctor"
-                maxlength="4000"
-                placeholder="Saisir une phrase…"
-              ></textarea
-              ><button class="secondary" id="addDoctor">Ajouter à l’échange</button>
-            </div>
-          </section>
-          <details id="moreOptions">
-            <summary>Réglages des sous-titres</summary>
-            <section class="panel settings">
-              <h2>Réglages des sous-titres</h2>
-              <label for="recognitionMode">Traitement de la parole</label
-              ><select id="recognitionMode">
-                <option value="local">Sur cet appareil uniquement</option>
-                <option value="browser">Service vocal du navigateur</option>
-              </select>
-              <p class="helper" id="recognitionHelp">
-                Aucun envoi audio via AccèsCheck. La reconnaissance locale nécessite un navigateur
-                et un pack français compatibles.
-              </p>
-              <label class="check-label" id="remoteConsentLabel" hidden
-                ><input type="checkbox" id="remoteConsent" /><span
-                  >J’accepte que le service vocal du navigateur puisse envoyer l’audio à son
-                  fournisseur. Les personnes présentes en sont informées.</span
-                ></label
-              ><button class="subtle" id="installLanguage" hidden>
-                Télécharger le pack de français
-              </button>
-              <p class="helper" id="supportInfo"></p>
-            </section>
-          </details>
-        </aside>
-      </div>
-      <footer class="footer">
-        <span>AccèsCheck · L’échange pendant le rendez-vous.</span
-        ><span>Aucun enregistrement audio ni conversation conservés.</span>
-      </footer>
-    </main>
+    </dialog>
     <dialog id="editDialog" aria-labelledby="editTitle">
       <h2 id="editTitle">Corriger une phrase</h2>
+      <p class="status dialog-status" role="status" hidden></p>
       <p>
         Conservez le sens de ce qui a été dit. Demandez confirmation au soignant en cas de doute.
       </p>

@@ -100,11 +100,12 @@
               sources restera « inconnu ».
             </p>
             <fieldset id="criteria"><legend>Mes critères indispensables</legend></fieldset>
-            <div class="field">
+            <div class="field" id="widthField" hidden>
               <label for="minWidth">Largeur de passage nécessaire (cm)</label
               ><input
                 type="number"
                 id="minWidth"
+                form="searchForm"
                 min="40"
                 max="200"
                 step="1"
@@ -118,6 +119,7 @@
         </section>
         <section class="results-area" aria-labelledby="resultsTitle">
           <form id="searchForm" class="panel search-settings">
+            <p id="searchStatus" class="notice" role="status" tabindex="-1" hidden></p>
             <div class="section-heading">
               <span class="step" aria-hidden="true">3</span>
               <h2>Où et auprès de qui ?</h2>
