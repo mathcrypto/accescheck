@@ -10,6 +10,7 @@ export const chatInputSchema = z
       .optional(),
     action: z.enum(['confirm', 'page', 'directory']).optional(),
     page: z.number().int().min(1).max(10000).optional(),
+    displayedPracticeIds: z.array(z.string().min(1).max(150)).max(12).optional(),
     state: z.record(z.string(), z.unknown()).nullable().optional(),
     consent: z.boolean().optional(),
     reviewConsent: z.boolean().optional(),

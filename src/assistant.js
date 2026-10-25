@@ -1,4 +1,5 @@
 import { renderMessage, renderRecap } from './chat-content.js';
+import { rankByReputation } from './review-core.mjs';
 import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
 import { practiceCard } from './search-results.js';
@@ -111,6 +112,8 @@ async function ask(input, choiceLabel = '') {
   reviewJob = null;
   controller?.abort();
   const active = (controller = new AbortController());
+  const displayedPracticeIds = [...$('results').children].map((card) => card.dataset.practice);
+  if (state?.lastResults && displayedPracticeIds.length) input = { ...input, displayedPracticeIds };
   lastInput = input;
   lastLabel = choiceLabel;
   clearResults();
@@ -155,10 +158,9 @@ async function ask(input, choiceLabel = '') {
       automaticReviews = result.page === 1 && $('reviewConsent').checked;
       setResultsMode(true, data.summary || '');
       $('resultsSection').hidden = false;
+      practices = rankByReputation(practices, reviewCache);
       $('results').replaceChildren(
-        ...result.results.map((practice) =>
-          practiceCard(practice, result.origin, state?.notes || []),
-        ),
+        ...practices.map((practice) => practiceCard(practice, result.origin, state?.notes || [])),
       );
       const page = result.page;
       const pages = [];
@@ -229,6 +231,16 @@ async function ask(input, choiceLabel = '') {
           automatic: automaticReviews,
           cache: reviewCache,
           onActivity: working,
+          onUpdate: () => {
+            const cards = new Map(
+              [...$('results').children].map((card) => [card.dataset.practice, card]),
+            );
+            const focused = document.activeElement;
+            for (const practice of rankByReputation(practices, reviewCache))
+              $('results').append(cards.get(practice.id));
+            if (focused?.isConnected && focused !== document.activeElement)
+              focused.focus({ preventScroll: true });
+          },
         });
     }
   }

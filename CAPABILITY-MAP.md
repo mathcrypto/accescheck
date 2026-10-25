@@ -1,6 +1,6 @@
 # AccèsCheck — recherche conversationnelle
 
-Statut : cadrage validé, réalisation en cours. Les cinq premiers lots sont réalisés ; le lot de synthèse reste à livrer. La priorité ajoutée est un véritable agent de recherche, avant la synthèse de réputation. Voir tasks/plan.md et tasks/todo.md pour les vérifications et l’état précis.
+Statut : six lots réalisés et agent de recherche à outils intégré. Voir tasks/plan.md, tasks/todo.md et docs/search-agent.md pour la réalisation, les vérifications et les limites des évaluations.
 
 ## Besoin
 
@@ -12,11 +12,11 @@ L’objectif est de remplacer « Ma recherche accompagnée » et les formulaires
 
 - Confirmé par l’utilisateur : classement par **accessibilité → proximité → réputation**. Une bonne réputation ne compense pas un obstacle connu sur un besoin indispensable.
 - Confirmé par l’utilisateur : l’agent OpenAI doit pouvoir rechercher des avis provenant de plusieurs sources. Aucun fournisseur unique n’est choisi.
-- Hypothèse à relire : conserver l’introduction avec la photo, puis le chat à la place du formulaire actuel. La page de consultation reste disponible après la sélection d’un cabinet.
-- Proposition : le chat s’ouvre dans la zone de recherche de l’accueil ; les anciennes routes de recherche mènent au même parcours. Le texte saisi reste en mémoire et ne transite pas dans une URL.
-- Réutiliser le finder, Accès Libre et le géocodage IGN existants. L’agent choisit sa recherche et ses questions. Le serveur applique les contraintes confirmées, valide les sources et classe les données ; le modèle ne fabrique ni cabinet ni preuve d’accessibilité.
+- Confirmé et réalisé : conserver l’introduction avec la photo, puis le chat à la place du formulaire actuel. La page de consultation reste disponible après la sélection d’un cabinet.
+- Réalisé : le chat s’ouvre dans la zone de recherche de l’accueil ; les anciennes routes de recherche mènent au même parcours. Le texte saisi reste en mémoire et ne transite pas dans une URL.
+- Réutiliser discovery, Accès Libre et le géocodage IGN existants. L’agent choisit sa recherche et ses questions. Le serveur applique les contraintes confirmées, valide les sources et classe les données ; le modèle ne fabrique ni cabinet ni preuve d’accessibilité.
 
-## Carte des fonctionnalités proposée
+## Carte des fonctionnalités livrées
 
 | Identifiant stable | Résultat attendu                                                                                                                          | Dépend de          | Branche de réalisation     |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------- |
@@ -27,7 +27,7 @@ L’objectif est de remplacer « Ma recherche accompagnée » et les formulaires
 | `review-sources`   | L’agent retrouve des avis publics de plusieurs sources et les rattache au bon praticien ou cabinet.                                       | `practice-results` | `feature/review-sources`   |
 | `review-sentiment` | Synthèse sourcée de l’expérience rapportée et indicateur de réputation quand les données le permettent.                                   | `review-sources`   | `feature/review-sentiment` |
 
-Ordre proposé : entrée unique → questions → résultats → activité visuelle → sources d’avis → synthèse. Chaque lot suit branche → tests → revue → fusion dans `main` → CI, puis nettoyage de son worktree. Les lots qui touchent le même chat seront intégrés l’un après l’autre.
+Ordre des lots initiaux : entrée unique → questions → résultats → activité visuelle → sources d’avis → synthèse. Chaque lot suit branche → tests → revue → fusion dans `main` → CI, puis nettoyage de son worktree. Les lots qui touchent le même chat seront intégrés l’un après l’autre.
 
 ## Parcours attendu
 
@@ -83,28 +83,24 @@ Les appels de réputation utiliseront l’identité publique du praticien/cabine
 
 Des connecteurs spécifiques pourront compléter la recherche web selon l’accès proposé par chaque fournisseur. Pour Google Places, l’affichage, les attributions et la conservation des données ont des règles propres, y compris des particularités pour l’EEE. Les résumés natifs d’avis ne sont pas garantis pour tous les lieux ; la documentation consultée ne liste pas la combinaison français/France. Ce fournisseur ne constitue donc pas une solution de synthèse française présumée prête à l’emploi. [Règles Places](https://developers.google.com/maps/documentation/places/web-service/policies), [disponibilité des résumés](https://developers.google.com/maps/documentation/places/web-service/review-summaries).
 
-Avant l’implémentation des avis : préciser les sources accessibles, le modèle compatible, les plafonds d’appels, le nombre de fiches enrichies et la règle de confiance. Proposition de départ à chiffrer : enrichir les trois premières fiches, puis les suivantes à la demande. Aucun achat ni appel API payant ne découle de ce cadrage.
+L’enrichissement automatique porte sur les trois premières fiches de la première page après accord distinct. Les suivantes exigent une demande sur la fiche. Le même appel fournit les observations et leurs thèmes ; aucun appel supplémentaire n’a été ajouté pour la synthèse. Les plafonds et le seuil prudent sont documentés dans [docs/review-reputation.md](docs/review-reputation.md).
 
-## Points à trancher dans les spécifications de lots
+Le périmètre ne comprend pas de prise de rendez-vous automatique, de diagnostic, de classement de compétence médicale ni de collecte exhaustive garantie. Les tests contrôlés vérifient les contrats ; ils ne prouvent pas la compréhension du modèle réel, la disponibilité des avis ni leur représentativité.
 
-- Valider les frontières et l’ordre proposés dans cette carte avant de rédiger les spécifications de chaque module.
-- Confirmer la conservation de l’introduction photo et le point d’entrée unique sur l’accueil.
-- Définir le critère d’arrêt des questions et le traitement des besoins que les sources ne documentent pas.
-- Préciser le départage par proximité avant réputation, notamment distance exacte ou tranches, sans score global opaque.
-- Fixer les sources d’avis effectivement utilisables, le budget et le seuil permettant une synthèse représentative. Le seul fait d’obtenir quelques extraits ne suffit pas à prétendre décrire tous les patients.
+## Agent de recherche livré
 
-Le périmètre ne comprend pas de prise de rendez-vous automatique, de diagnostic, de classement de compétence médicale, ni de collecte exhaustive garantie. La réalisation et ses tests viendront après ce cadrage.
-
-## Évolution prioritaire validée — agent de recherche
-
-La demande complète et le contexte de conversation doivent pouvoir guider une vraie boucle d’appels d’outils Responses, avec un modèle principal de raisonnement configurable. Le modèle choisit l’ordre, reformule une requête, croise les sources et demande une précision uniquement si nécessaire. Le serveur valide arguments, preuves, identité et géographie.
+La demande complète et le contexte de conversation guident une boucle d’appels d’outils Responses, avec un modèle principal de raisonnement configurable. Le modèle choisit l’ordre, reformule une requête, croise les sources et demande une précision uniquement si nécessaire. Le serveur valide arguments, preuves, identité et géographie.
 
 Outils : géocodage IGN structuré (commune, code commune, arrondissement/code postal, adresse/repère), recherche Accès Libre après confirmation, preuves d’une fiche et recherche web sourcée sur identité publique. Conserver les métadonnées permettant de rejeter les homonymes hors de la commune demandée. Une contrainte comme Lyon 3e ne peut devenir Lyon entier ou Paris. Ne pas remplacer cette compréhension par une liste de quartiers ou des heuristiques parisiennes.
 
 Identifiant ajouté : `search-agent`, branche `feature/search-agent`, après review-sources et prioritaire avant review-sentiment. L’agent est borné en appels, tokens et temps, interruptible, avec actions réelles visibles. Les évaluations utilisent des réponses contrôlées ; aucun appel payant supplémentaire automatique. Le mode local reste disponible et explicitement dégradé.
 
-L’accord explicite devra expliquer l’envoi du contexte de recherche au modèle. Les données restent hors stockage navigateur, URL, journaux et pont de consultation. La recherche d’avis ne reçoit toujours que l’identité publique.
+L’accord explicite explique l’envoi du contexte de recherche au modèle. Les données restent hors stockage navigateur, URL, journaux et pont de consultation. La recherche d’avis ne reçoit toujours que l’identité publique.
 
 Commencer avec un agent principal capable. Un modèle rapide « système 1 » est une option à comparer en coût, latence et conservation du contexte ; il ne tranche pas seul une géographie ambiguë.
 
 Précision validée : retirer du parcours principal le dialogue imposé et l’extraction par regex. Le principal choisit ses outils et les précisions. Garder les contrôles serveur de données et de provenance, le consentement, les bornes et les priorités de classement. Le mode sans IA est un annuaire dégradé explicite, sans prétendre interpréter la demande ni fonctionner en agent autonome.
+
+## Livraison des avis
+
+Voir [docs/review-reputation.md](docs/review-reputation.md) pour le seuil prudent, le dédoublonnage, les contradictions et le départage à accès/distance égaux. L’échantillon reste partiel et les données insuffisantes restent sans score. Aucun appel payant supplémentaire n’a été lancé pour valider le modèle réel.

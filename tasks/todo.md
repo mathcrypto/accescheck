@@ -7,5 +7,5 @@
 - [x] review-sources : recherche multi-source bornée, citations, identité, erreurs.
 - [x] structured-geography : métadonnées IGN, homonymes, arrondissement conservé et exclusion géographique.
 - [x] search-agent (priorité ajoutée) : boucle Responses, géocodage structuré et preuves géographiques, consentement/contextes, budgets/arrêt, évaluations.
-- [ ] review-sentiment : tendances attribuées, contradictions/doublons, insuffisance et classement.
-- [ ] Parcours final navigateur : 320, 390, 768, 1440 px, clavier, erreurs, annulation, consultation.
+- [x] review-sentiment : tendances attribuées, contradictions/doublons, insuffisance et classement.
+- [x] Parcours final navigateur : 320, 390, 768, 1440 px, clavier, erreurs, annulation, consultation.

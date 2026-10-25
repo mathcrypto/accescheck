@@ -199,9 +199,11 @@ try {
     'chatHistory',
     'Activity appears at the next response position inside the conversation',
   );
-  const pendingTurn = await page.locator('.bubble.user').last().boundingBox();
-  const activity = await page.locator('#agentActivity').boundingBox();
-  const composer = await page.locator('#descriptionForm').boundingBox();
+  const { pendingTurn, activity, composer } = await page.evaluate(() => ({
+    pendingTurn: document.querySelector('.bubble.user:last-child').getBoundingClientRect().toJSON(),
+    activity: document.getElementById('agentActivity').getBoundingClientRect().toJSON(),
+    composer: document.getElementById('descriptionForm').getBoundingClientRect().toJSON(),
+  }));
   assert.ok(activity.y >= pendingTurn.y + pendingTurn.height - 1);
   assert.ok(activity.y + activity.height <= composer.y);
   await page.screenshot({ path: 'output/search-agent/inline-activity.png' });
