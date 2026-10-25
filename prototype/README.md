@@ -10,7 +10,7 @@ node prototype/server.mjs
 
 Open http://127.0.0.1:4180/consultation. Click **Partager l’exemple et lier un agent**. Only the labeled fictional conversation is shared. This prototype refuses real messages. It never starts a microphone or joins a call.
 
-MCP endpoint: http://127.0.0.1:4180/mcp. Supports initialization, discovery, and tools/list/tools/call; it adds these five tools to the original three:
+MCP endpoint: http://127.0.0.1:4180/mcp. Supports initialization, discovery, and tools/list/tools/call; it adds these six tools to the original three:
 
 1. `prepare_consultation({pairing_code,reading_mode?})`: single-use code, valid 5 minutes. Returns session_id and agent_token. Store these in client memory, not a file.
 2. `get_caption_updates({session_id,agent_token,after?})`: fictional caption and correction events plus command statuses.
@@ -31,6 +31,10 @@ node prototype/check-end-to-end.mjs
 
 The browser test needs Playwright and Chrome. Optional environment variables: PLAYWRIGHT_MODULE and CHROME_BIN. It makes real HTTP JSON-RPC calls to the running server and checks actual UI changes; only browser speech output is mocked. It writes a sanitized report to output/mcp-test-report.json.
 
-The test covers pairing, discovery of eight tools, browser-shared fictional captions, rejected and approved replies, reviewable notes, cleanup, and token revocation. Unit tests additionally cover isolation, real-message rejection, expiry, and input limits.
+The test covers pairing, discovery of nine tools, browser-shared fictional captions, rejected and approved replies, reviewable notes, cleanup, and token revocation. Unit tests additionally cover isolation, real-message rejection, expiry, and input limits.
 
 For a production agent connection, session transport, identity, explicit patient permissions, interruption behavior, and browser pairing need a separate implementation review. No Doctolib or Zoom meeting, real health data, API key, or paid voice service is used here.
+
+## AI-client connection
+
+Use the official-SDK stdio adapter in [../mcp/README.md](../mcp/README.md) to connect Codex desktop or another MCP host. `get_consultation_context` returns the current shared fictional snapshot and cursor. `speak_patient_message` accepts an optional `expected_cursor` to reject stale drafts, deduplicates identical pending proposals at that cursor, and expires pending proposals when a shared caption is corrected. The original five tools remain compatible.

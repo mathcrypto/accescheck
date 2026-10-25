@@ -7,6 +7,15 @@
     "test": "node --test test/*.test.mjs",
     "dev": "node scripts/dev.mjs",
     "validate": "node scripts/validate-artifact.mjs",
-    "dev:companion": "node prototype/server.mjs"
+    "dev:companion": "node prototype/server.mjs",
+    "mcp": "node mcp/server.mjs",
+    "mcp:config": "node scripts/print-mcp-config.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0"
   }
 }

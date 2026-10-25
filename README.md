@@ -9,6 +9,7 @@ The project includes a Chrome extension that opens a communication panel beside 
 With Node.js 24 LTS installed:
 
 ```sh
+npm ci
 npm run build
 npm test
 npm run dev:companion
@@ -17,6 +18,10 @@ npm run dev:companion
 Open http://127.0.0.1:4180/mock-call in desktop Chrome. In `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select the repository's `extension` folder. Click AccèsCheck's toolbar icon on the mock-call tab. Activate captions, explicitly select the recognition mode and consent, then play the fictional recording. Local recognition requires a compatible French pack; browser-service recognition requires a separate audio-processing acknowledgment.
 
 See [extension setup and limits](extension/README.md) and [local consultation MCP tools](prototype/README.md). No paid voice API or API key is needed for the default device voice. Speech plays on the patient's device; it is not automatically sent into Doctolib's outgoing microphone.
+
+## AI agent connection
+
+[Connect Codex or another MCP client](mcp/README.md) to the nine local tools with `node mcp/server.mjs`. The host supplies the model. AccèsCheck provides conversation context, a communication prompt, reply approval, and notes. Correcting a caption expires pending replies; no response is spoken automatically. The hosted Site retains its three search tools.
 
 ## Development
 
@@ -27,7 +32,7 @@ See [extension setup and limits](extension/README.md) and [local consultation MC
 
 ## Run locally
 
-Requires Node.js 20+; no npm packages or API keys required.
+Requires Node.js 24 LTS. Run `npm ci` to install the MCP SDK and test client. The default app and device voice do not require API keys.
 
 ```sh
 npm run build

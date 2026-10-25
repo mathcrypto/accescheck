@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AccèsCheck — Compagnon de consultation",
   "description": "Sous-titres et communication contrôlée par le patient, à côté de Doctolib. Prototype avec appel fictif et pont MCP local.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "minimum_chrome_version": "135",
   "permissions": [
     "activeTab",

@@ -18,14 +18,14 @@ The panel can also be opened on a Doctolib desktop tab using the toolbar icon. D
 ## What works where
 
 - **On the selected Doctolib tab:** native side panel, authorized tab-audio caption path, written replies, local French speech, correction, and reviewable verbatim notes. Browser speech services and language packs vary by device.
-- **On the local fictional call:** the same controls plus the in-memory MCP pairing bridge. The five consultation MCP tools remain a local prototype, not the hosted site's tool set.
+- **On the local fictional call:** the same controls plus the in-memory MCP pairing bridge. The six consultation MCP tools remain a local prototype, not the hosted site's tool set.
 - **Not implemented:** automatic booking, reading patient records/documents, joining a consultation, injecting speech into Doctolib's outgoing microphone, environmental audio description, or LLM-generated clinical summaries.
 
 Generated replies play on the patient's device. Their delivery to the doctor depends on the platform's audio-sharing or an agreed communication setup; it must be verified with the other participant. Capturing a tab normally suppresses its audio output, so the extension reconnects that audio to the device's speakers to preserve listening. Speaking pauses transcription and does not restart it automatically.
 
 ## MCP test
 
-Keep the local server running. In the panel on the **mock-call tab**, expand **Agent de communication**, then click **Relier l’agent au test**. Use the single-use code with `prepare_consultation` at `http://127.0.0.1:4180/mcp`. See `../prototype/README.md` for the five tools and request flow. Replies always require approval in the panel before speech. Pairing, tokens, captions, and commands remain in process memory and expire; no localStorage, database, or disk transcript is used. Real Doctolib captions cannot be shared through this demo MCP path.
+Keep the local server running. In the panel on the **mock-call tab**, expand **Agent de communication**, then click **Relier l’agent au test**. Use the single-use code with `prepare_consultation` at `http://127.0.0.1:4180/mcp`. See `../prototype/README.md` for the six tools and request flow. Replies always require approval in the panel before speech. Pairing, tokens, captions, and commands remain in process memory and expire; no localStorage, database, or disk transcript is used. Real Doctolib captions cannot be shared through this demo MCP path.
 
 ## Permissions and lifecycle
 
@@ -61,3 +61,7 @@ If you saw `no-speech` with an **Arrêtés** badge, recognition had already stop
 To update an unpacked extension, replace its files with this version and click Reload on its Chrome extensions card, or load the newly extracted v0.2.0 folder. Confirm **v0.2.0** in the panel header. Refresh the mock page, invoke the toolbar icon on that tab again, select the recognition mode and consent, start captions, and then play the fictional doctor recording. The recording is 13.71 seconds long; a test that ends immediately indicates an old/empty audio asset and requires refreshing the mock page.
 
 The v0.2.0 interface uses a compact conversation panel, scrollable live captions, a typed reply composer, and separate notes. Audio processing, consent, voice choices, and tab selection are grouped in the settings dialog. The mock call has a responsive consultation layout with a real playback timer, progress, and a clearly fictional illustrated participant.
+
+## Agent connection (v0.2.1)
+
+Connect the local stdio MCP server to Codex or another AI host using [../mcp/README.md](../mcp/README.md). Corrected captions expire pending agent speech proposals; the panel removes expired proposals and rechecks them before playback. The user still approves each spoken reply. The bridge shares fictional sessions only.
