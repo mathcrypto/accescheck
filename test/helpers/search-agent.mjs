@@ -60,7 +60,11 @@ export function controlledSearch(
         ],
       });
     if (call.name === 'prepare_search')
-      return modelAnswer('Voici les critères retenus. Vous pouvez les corriger ou confirmer.');
+      return modelAnswer('Voici les critères retenus. Vous pouvez les corriger ou confirmer.', {
+        id: 'confirmation-du-modele',
+        text: 'Confirmez-vous ?',
+        options: [{ label: 'Oui', value: 'oui' }],
+      });
     return modelAnswer(
       'Voici les cabinets issus des sources publiques. Les informations absentes restent à confirmer.',
     );

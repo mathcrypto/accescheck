@@ -264,6 +264,10 @@ export async function runSearchAgent(
       });
     }
     if (name === 'prepare_search') {
+      if (state.confirmed && !results)
+        throw new Error(
+          'Cette recherche est déjà confirmée. Utilisez search_practices avec la proposition confirmée, sans la préparer à nouveau.',
+        );
       const origin =
         value.locationRef && Object.hasOwn(state.locations, value.locationRef)
           ? state.locations[value.locationRef]
@@ -423,6 +427,16 @@ export async function runSearchAgent(
     } catch {
       throw new Error('La réponse de l’agent n’a pas pu être vérifiée. Réessayez.');
     }
+    if (state.confirmed && !results)
+      throw new Error(
+        'La recherche confirmée n’a pas été exécutée par l’agent. Réessayez pour lancer cette même recherche.',
+      );
+    const awaitingConfirmation = Boolean(state.proposal && !state.confirmed);
+    if (awaitingConfirmation) {
+      answer.question = null;
+      answer.reply =
+        'Vérifiez ces critères, puis confirmez pour lancer la recherche. Vous pouvez les corriger dans votre message.';
+    }
     state.question = answer.question;
     if (answer.question) {
       answer.question.options = answer.question.options.filter(
@@ -443,10 +457,7 @@ export async function runSearchAgent(
       notice: [...warnings].join(' '),
       state: await seal(state, env.OPENAI_API_KEY),
       summary: summary(state.proposal),
-      actions:
-        state.proposal && !state.confirmed && !answer.question
-          ? [{ id: 'confirm', label: 'Confirmer et chercher' }]
-          : [],
+      actions: awaitingConfirmation ? [{ id: 'confirm', label: 'Confirmer et chercher' }] : [],
       results,
       reviews,
       mode: 'agent',

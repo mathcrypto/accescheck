@@ -22,6 +22,8 @@ let paused = false,
   release,
   aborted = 0;
 const provider = [];
+let signalProviderStart;
+const providerStarted = new Promise((resolve) => (signalProviderStart = resolve));
 globalThis.fetch = async (url, options) => {
   const hostname = new URL(url).hostname;
   if (hostname === 'data.geopf.fr')
@@ -47,6 +49,7 @@ globalThis.fetch = async (url, options) => {
         },
         { once: true },
       );
+      signalProviderStart();
     });
   return controlledSearch(body);
 };
@@ -223,6 +226,12 @@ try {
     await page.locator('.agent-mark').evaluate((mark) => getComputedStyle(mark).animationName),
     'none',
   );
+  await Promise.race([
+    providerStarted,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Controlled provider did not start')), 3000),
+    ),
+  ]);
   await page.locator('#stopSearch').click();
   await page.waitForFunction(() => document.getElementById('agentActivity').hidden);
   await page.waitForTimeout(100);
