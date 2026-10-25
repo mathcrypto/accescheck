@@ -1,10 +1,13 @@
 :root {
   --ink: #171717;
-  --muted: #626262;
+  --muted: #454545;
   --line: #e3e3e3;
   --surface: #f6f6f6;
   --paper: #fff;
   --accent: #bd292e;
+  --text: 16px;
+  --text-sm: 14px;
+  --text-xs: 13px;
   color-scheme: light;
 }
 
@@ -21,7 +24,7 @@
 body {
   color: var(--ink);
   background: var(--paper);
-  font: 14px/1.6 var(--font);
+  font: var(--text) / 1.6 var(--font);
   -webkit-font-smoothing: antialiased;
 }
 button,
@@ -109,7 +112,7 @@ h3 {
   margin: 0;
   padding: 0;
   position: relative;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 .menu > summary {
   display: flex;
@@ -152,7 +155,7 @@ h3 {
   border: 0;
   background: none;
   text-align: left;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 400;
   text-decoration: none;
 }

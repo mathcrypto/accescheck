@@ -39,7 +39,7 @@ try {
     await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
     await page.locator('.practice-card').first().waitFor();
     assert.equal(
-      await page.locator('#chatHistory #results .practice-card').count(),
+      await page.locator('#resultsSection #results .practice-card').count(),
       await page.locator('.practice-card').count(),
     );
     assert.equal(await page.locator('#description').isEditable(), true);

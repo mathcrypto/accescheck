@@ -12,7 +12,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font:
-    15px/1.6 'Helvetica Neue',
+    16px/1.6 'Helvetica Neue',
     Helvetica,
     Arial,
     sans-serif;
@@ -114,7 +114,7 @@ main,
   margin: 0;
   padding: 4px 8px;
   background: rgb(255 255 255 / 0.85);
-  font-size: 10px;
+  font-size: 12px;
 }
 .intro-copy {
   display: grid;
@@ -127,7 +127,7 @@ main,
 .eyebrow {
   margin: 0 0 12px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .intro h1 {
   max-width: 540px;
@@ -143,7 +143,7 @@ main,
 }
 .intro-description p {
   margin: 0 0 20px;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.8;
   color: var(--muted);
 }
@@ -155,7 +155,7 @@ main,
   min-height: 44px;
   border-bottom: 1px solid var(--ink);
   text-decoration: none;
-  font-size: 13px;
+  font-size: 15px;
 }
 .intro-link span {
   font-size: 20px;
@@ -225,7 +225,7 @@ main,
   outline: none;
   background: transparent;
   padding: 10px 0;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
 }
 #description::placeholder {
@@ -267,7 +267,7 @@ main,
   list-style: none;
   cursor: pointer;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   padding: 6px 0;
 }
 .advanced > summary::-webkit-details-marker {
@@ -308,7 +308,7 @@ h3 {
   overflow-wrap: anywhere;
 }
 h4 {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
 }
 .section-heading {
@@ -324,7 +324,7 @@ h4 {
 .privacy,
 small,
 .footnote {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
   color: var(--muted);
 }
@@ -337,7 +337,7 @@ small,
 .text-button {
   border: 0;
   background: none;
-  font-size: 12px;
+  font-size: 14px;
   min-height: 40px;
   padding: 8px 0;
   text-decoration: underline;
@@ -345,7 +345,7 @@ small,
 }
 .ai-option {
   margin-top: 16px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .ai-option > summary {
   min-height: 40px;
@@ -362,7 +362,7 @@ small,
   padding: 10px 16px;
   border: 1px solid var(--ink);
   border-radius: 3px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .primary {
   background: var(--ink);
@@ -376,7 +376,7 @@ small,
   display: flex;
   align-items: start;
   gap: 10px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
   margin: 16px 0;
   cursor: pointer;
@@ -395,7 +395,7 @@ input[type='checkbox'] {
   padding-top: 24px;
 }
 .review > p {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
   color: var(--muted);
 }
@@ -405,7 +405,7 @@ fieldset {
   border: 0;
 }
 legend {
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 4px;
 }
 #criteria {
@@ -426,7 +426,7 @@ legend {
   min-height: 44px;
   padding: 10px 0;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
 }
 .other-criteria[open] > summary {
   margin-bottom: 8px;
@@ -447,7 +447,7 @@ summary,
 }
 .field label {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 8px;
 }
 .field input,
@@ -459,7 +459,7 @@ summary,
   border-radius: 3px;
   padding: 10px;
   background: white;
-  font-size: 13px;
+  font-size: 15px;
 }
 .field small {
   display: block;
@@ -485,7 +485,7 @@ summary,
   width: 100%;
   padding: 12px;
   text-align: left;
-  font-size: 13px;
+  font-size: 15px;
   background: white;
   border: 1px solid var(--line);
   border-top: 0;
@@ -493,7 +493,7 @@ summary,
 }
 .origin,
 .notice {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.8;
   padding: 12px 16px;
   background: var(--surface);
@@ -502,11 +502,11 @@ summary,
 }
 .optional {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   margin-left: 4px;
 }
 .questions {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   padding-left: 20px;
   line-height: 1.8;
@@ -526,7 +526,7 @@ summary,
 }
 #resultsSummary,
 #resultStatus {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.8;
   color: var(--muted);
 }
@@ -539,8 +539,14 @@ summary,
   color: var(--ink);
 }
 .practice-card {
-  padding: 24px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 20px;
+  margin: 0 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: white;
+}
+.practice-card:last-child {
+  margin-bottom: 0;
 }
 .card-header {
   display: flex;
@@ -548,28 +554,32 @@ summary,
   align-items: start;
   gap: 20px;
 }
+.practice-card h3 {
+  color: var(--ink);
+  font-weight: 500;
+}
 .specialty,
 .address,
 .distance {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.8;
   color: var(--muted);
   margin: 8px 0;
 }
 .status {
-  font-size: 11px;
+  font-size: 13px;
   border: 1px solid #888;
   padding: 4px 8px;
   flex-shrink: 0;
 }
 .facts {
   padding-left: 20px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.9;
   margin: 20px 0;
 }
 .practice-card details {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
 }
 .practice-card summary {
@@ -595,7 +605,7 @@ summary,
   align-items: center;
   flex-wrap: wrap;
   margin-top: 20px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .card-links a {
   min-height: 44px;
@@ -638,7 +648,7 @@ summary,
   padding: 16px 24px;
   background: white;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .footer-sources {
   display: inline-flex;
@@ -680,7 +690,7 @@ summary,
     padding: 0;
   }
   .intro-description p {
-    font-size: 13px;
+    font-size: 15px;
     margin-bottom: 12px;
   }
   .search-stage {
@@ -718,7 +728,7 @@ summary,
   }
   .footer {
     padding: 16px 20px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .results-area {
     padding: 0 20px 24px;
@@ -743,33 +753,52 @@ summary,
   }
 }
 
-/* Chat: the composer stays available throughout the search. */
+/* Chat: requests and answers stay distinct; cabinet results sit outside the thread. */
 .thread {
   display: grid;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 20px;
+  margin-bottom: 8px;
 }
 .thread:empty {
   display: none;
 }
-.search-stage:has(.thread:not(:empty)) {
+.search-stage:has(.thread:not(:empty)),
+.search-stage:has(#resultsSection:not([hidden])) {
   align-content: start;
 }
 .bubble {
-  font-size: 14px;
+  max-width: 92%;
+  padding: 12px 16px;
+  font-size: 16px;
   line-height: 1.6;
   overflow-wrap: anywhere;
+  border-radius: 3px;
 }
-.bubble p {
-  margin: 0 0 12px;
+.bubble .who {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.bubble .say {
+  margin: 0;
   white-space: pre-wrap;
+  color: var(--ink);
+}
+.bubble .say + .hint,
+.bubble .say + .chat-choices {
+  margin-top: 12px;
 }
 .bubble.user {
   justify-self: end;
-  max-width: 90%;
-  padding: 12px 16px;
   background: var(--surface);
-  border-radius: 3px;
+  border: 1px solid var(--line);
+}
+.bubble.agent {
+  justify-self: start;
+  background: white;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--ink);
 }
 .chat-choices,
 .chat-controls {
@@ -789,68 +818,128 @@ summary,
   min-height: 44px;
 }
 
-/* Reference: the supplied intake workspace keeps a quiet central writing area. */
+.chat-fold {
+  margin: 0 0 8px;
+}
+.chat-fold > summary {
+  display: none;
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--muted);
+  list-style: none;
+}
+.chat-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.chat-fold > summary:not([hidden]) {
+  display: list-item;
+  list-style: disclosure-closed inside;
+}
+.chat-fold[open] > summary:not([hidden]) {
+  list-style: disclosure-open inside;
+  margin-bottom: 8px;
+}
+.search-panel.has-results .chat-fold:not([open]) .chat-history {
+  display: none;
+}
 .chat-history {
-  max-height: clamp(120px, calc(100svh - 360px), 640px);
+  max-height: clamp(120px, calc(100svh - 420px), 480px);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  padding: 4px;
-  margin-bottom: 16px;
+  padding: 4px 4px 12px;
+  margin-bottom: 8px;
   scroll-padding: 8px;
 }
-.chat-history:has(.thread:empty):has(#resultsSection[hidden]) {
+.chat-history:has(.thread:empty) {
   display: none;
 }
 .chat-history:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
-.chat-history .results-area {
+.results-panel {
   width: 100%;
-  padding: 0;
-  margin: 20px 0 0;
+  margin: 16px 0 24px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
 }
-.chat-history .results-heading {
-  padding-bottom: 12px;
+.results-kicker {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--muted);
 }
-.chat-history h2 {
-  font-size: 16px;
+.results-criteria {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--ink);
+  border-radius: 3px;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+.results-panel .results-heading {
+  padding-bottom: 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.results-panel h2 {
+  font-size: 20px;
   font-weight: 400;
+  margin: 0 0 8px;
 }
-.chat-history .practice-card {
-  padding: 20px 0;
+.results-panel #resultsSummary {
+  color: var(--muted);
 }
-.chat-history .practice-card h3 {
-  font-size: 15px;
-  font-weight: 400;
+.results-panel .practice-card {
+  padding: 20px;
 }
-.chat-history .facts {
-  font-size: 12px;
+.results-panel .practice-card h3 {
+  font-size: 17px;
+  font-weight: 500;
 }
-.chat-history .card-header {
+.results-panel #results {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 8px;
+}
+.results-panel .facts {
+  font-size: 14px;
+}
+.results-panel .card-header {
   gap: 12px;
 }
-.chat-history .status {
+.results-panel .status {
   white-space: normal;
 }
 .chat-choices:has(button:disabled) {
   display: none;
 }
-.search-panel:has(.thread:not(:empty)) {
+.search-panel:has(.thread:not(:empty)),
+.search-panel:has(#resultsSection:not([hidden])) {
   width: min(760px, 100%);
 }
 @media (max-height: 700px) {
   .chat-history {
-    max-height: clamp(120px, calc(100svh - 360px), 640px);
+    max-height: clamp(100px, calc(100svh - 400px), 360px);
   }
-  .search-stage:has(.thread:not(:empty)) {
+  .search-stage:has(.thread:not(:empty)),
+  .search-stage:has(#resultsSection:not([hidden])) {
     padding-top: 96px;
     padding-bottom: 32px;
   }
 }
 
-.search-stage:has(.thread:not(:empty)) {
+.search-stage:has(.thread:not(:empty)),
+.search-stage:has(#resultsSection:not([hidden])) {
   padding-top: 104px;
   padding-bottom: 24px;
 }
