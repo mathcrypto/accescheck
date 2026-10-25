@@ -1,7 +1,7 @@
 import { criteria } from '../core.mjs';
 import { needsAgentInstructions } from './needs-prompt.mjs';
 
-export const defaultModel = 'gpt-6-luna';
+export const defaultModel = 'gpt-5.4-mini';
 export const needsSchema = {
   type: 'object',
   additionalProperties: false,

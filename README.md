@@ -63,7 +63,7 @@ Homepage and consultation “Lire” actions use Microsoft Edge neural TTS only 
 
 The six capabilities in [CAPABILITY-MAP.md](CAPABILITY-MAP.md) are implemented: one chat, contextual QCM/free/unknown responses, explained results, actual streamed activity, public review sources and conservative sentiment summaries. The original fixed dialogue has been replaced by an agent-controlled tool loop; `/api/agent` returns 410.
 
-See [search agent](docs/search-agent.md) for model configuration, signed context, tool contracts, consent and per-request budgets, and [review reputation](docs/review-reputation.md) for sample limits, deduplication and tie-breaking. `OPENAI_SEARCH_MODEL` defaults to `gpt-6.1-sol` with medium reasoning. `OPENAI_REVIEW_MODEL` controls the public-identity web request independently. Evaluations use controlled provider replies; real-model understanding, latency, cost and source extraction quality have not been re-evaluated with paid calls.
+See [search agent](docs/search-agent.md) for model configuration, signed context, tool contracts, consent and per-request budgets, and [review reputation](docs/review-reputation.md) for sample limits, deduplication and tie-breaking. `OPENAI_SEARCH_MODEL` overrides `OPENAI_MODEL` when explicitly configured; otherwise the principal agent honors `OPENAI_MODEL`, with `gpt-5.4-mini` as the user-selected default and medium reasoning. `OPENAI_REVIEW_MODEL` controls the public-identity web request independently. Evaluations use controlled provider replies; real-model understanding, latency, cost and source extraction quality have not been re-evaluated with paid calls.
 
 ## MCP and consultation tools
 
