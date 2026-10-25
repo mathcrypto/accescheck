@@ -8,4 +8,4 @@
 - [x] structured-geography : métadonnées IGN, homonymes, arrondissement conservé et exclusion géographique.
 - [x] search-agent (priorité ajoutée) : boucle Responses, géocodage structuré et preuves géographiques, consentement/contextes, budgets/arrêt, évaluations.
 - [x] review-sentiment : tendances attribuées, contradictions/doublons, insuffisance et classement.
-- [ ] Parcours final navigateur : 320, 390, 768, 1440 px, clavier, erreurs, annulation, consultation.
+- [x] Parcours final navigateur : 320, 390, 768, 1440 px, clavier, erreurs, annulation, consultation.
