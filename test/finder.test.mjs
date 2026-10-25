@@ -101,7 +101,8 @@ const finderRecords = [
 const places = [
   [/denfert/i, 'Place Denfert-Rochereau 75014 Paris', '75014', 2.3326, 48.8338],
   [/bastille/i, 'Place de la Bastille 75011 Paris', '75011', 2.3692, 48.8531],
-  [/15e/i, 'Paris 15e Arrondissement 75015 Paris', '75015', 2.2999, 48.8421],
+  [/75015|15e/i, 'Paris 15e Arrondissement 75015 Paris', '75015', 2.2999, 48.8421],
+  [/75011|11e/i, 'Paris 11e Arrondissement 75011 Paris', '75011', 2.3795, 48.8575],
 ];
 const realFetch = globalThis.fetch;
 before(() => {
@@ -186,6 +187,8 @@ test('finder matches short specialty forms and autour-de places', async () => {
     assert.match(extractPlaceQuery('autour de Bastille'), /bastille/i);
     assert.match(extractPlaceQuery('près de République'), /republique/i);
     assert.equal(extractPlaceQuery('dans le 11e'), '');
+    for (const query of ['dentiste paris 11', 'paris 11th', 'paris 11eme'])
+      assert.equal(extractPlaceQuery(query), 'paris 11e');
     assert.match(extractPlaceQuery('malentendant grenoble generaliste'), /grenoble/i);
     assert.match(extractPlaceQuery('à Lyon'), /lyon/i);
     assert.equal(extractPlaceQuery('38000'), '38000');
@@ -223,9 +226,13 @@ test('finder searches immediately for specialty and place', async () => {
 
 test('Paris arrondissement prefers local postcode over banlieue completes', async () => {
   assert.deepEqual(targetPostcodes('Paris 15e'), ['75015']);
+  assert.deepEqual(targetPostcodes('paris 11'), ['75011']);
+  assert.deepEqual(targetPostcodes('paris 11th'), ['75011']);
   assert.deepEqual(targetPostcodes('bastille'), []);
   assert.equal(geocodeQueryFor('bastille'), 'bastille');
   assert.equal(geocodeQueryFor('Bastille Paris'), 'Bastille Paris');
+  assert.equal(geocodeQueryFor('Paris 11e'), 'Paris 11e');
+  assert.equal(geocodeQueryFor('denfert paris 14e'), 'denfert paris 14e');
   const db = await createTestDatabase(finderRecords);
   try {
     const result = await runFinder(

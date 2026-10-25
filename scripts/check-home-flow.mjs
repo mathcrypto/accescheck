@@ -122,7 +122,7 @@ try {
   assert.equal(confirmed.state.origin.label, origin.label);
   assert.equal(confirmed.state.needs.minWidth, 90);
   assert.equal(confirmed.message, undefined);
-  assert.match(await page.locator('.distance').first().innerText(), /km à vol d’oiseau/);
+  assert.match(await page.locator('.distance').first().innerText(), /km de votre adresse/);
   await send('Finalement, équipement auditif.');
   assert.equal(await page.locator('.practice-card').count(), 0);
   assert.equal(upstream.length, 0);

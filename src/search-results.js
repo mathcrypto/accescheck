@@ -67,7 +67,7 @@ export function practiceCard(practice, origin = null, notes = []) {
       practice.distanceKm === null || practice.distanceKm === undefined
         ? 'Distance non calculée'
         : practice.distanceKm.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) +
-            ' km à vol d’oiseau' +
+            ' km de votre adresse' +
             (origin?.approximate ? ' · depuis le centre du lieu choisi' : ''),
     ),
   );

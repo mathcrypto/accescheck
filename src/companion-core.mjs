@@ -1,8 +1,8 @@
 export const speakerLabel = (speaker) =>
   ({
-    patient: 'Patient · message écrit',
-    doctor: 'Soignant · saisie manuelle',
-    captured: 'Parole captée · locuteur non identifié',
+    patient: 'Vous · écrit',
+    doctor: 'Soignant · écrit',
+    captured: 'Parole',
   })[speaker] || 'Message';
 export function buildDraft(messages) {
   if (!messages.length) return '';

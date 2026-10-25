@@ -333,32 +333,76 @@ p {
 .empty h3 {
   margin-bottom: 4px;
 }
+#transcript {
+  display: grid;
+  gap: 12px;
+  padding: 4px 0 8px;
+}
 .message {
-  padding: 8px 0;
-  border-bottom: 1px solid var(--line);
+  max-width: min(92%, 36rem);
+  padding: 10px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.message.captured,
+.message.doctor {
+  justify-self: start;
+  background: var(--paper);
+  border-left: 2px solid var(--ink);
 }
 .message.patient {
-  padding-left: 12px;
-  border-left: 2px solid var(--ink);
+  justify-self: end;
+  background: var(--paper);
+  border-right: 2px solid var(--ink);
 }
 .message .meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  margin-bottom: 6px;
   font-size: 13px;
+  line-height: 1.4;
   color: var(--muted);
 }
+.message .who {
+  font-weight: 500;
+}
+.message .edit {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: 0.55;
+}
+.message:hover .edit,
+.message:focus-within .edit,
+.message .edit:hover,
+.message .edit:focus-visible {
+  opacity: 1;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .message p,
+.message .say,
 .interim {
   margin: 0;
   font-size: 21px;
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  color: var(--ink);
 }
 .interim {
   color: var(--muted);
+  font-style: italic;
+  padding: 4px 2px 8px;
 }
 .demo-label {
   font-size: 13px;
@@ -406,34 +450,46 @@ input[type='url'] {
 .composer-extras {
   grid-column: 1 / -1;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   align-items: start;
 }
-.composer-extras > .subtle,
-.quick-options > summary {
+.composer-extras > .subtle {
   min-height: 44px;
   padding: 8px 0;
   font-size: 14px;
 }
-.quick-options {
-  min-width: 0;
+.chat-suggestions {
+  flex-shrink: 0;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
 }
-.quick {
+.suggestions-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.chat-suggestions .quick {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
-  max-height: 88px;
-  overflow: auto;
+  gap: 8px;
+  justify-content: flex-end;
 }
-.quick button {
+.chat-suggestions .quick button {
   min-height: 44px;
-  border: 0;
-  background: none;
-  text-align: left;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--paper);
   font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  color: var(--ink);
+  text-align: left;
+}
+.chat-suggestions .quick button:hover,
+.chat-suggestions .quick button:focus-visible {
+  border-color: var(--ink);
+  background: var(--surface);
 }
 .notes-panel {
   flex: 1;
@@ -572,6 +628,7 @@ dialog textarea {
   color: var(--muted);
 }
 .vision .message p,
+.vision .message .say,
 .vision .interim {
   font-size: 30px;
 }
@@ -629,6 +686,7 @@ dialog textarea {
     font-size: 13px;
   }
   .message p,
+  .message .say,
   .interim {
     font-size: 18px;
   }
@@ -650,9 +708,17 @@ dialog textarea {
   .composer-extras {
     gap: 8px;
   }
-  .composer-extras > .subtle,
-  .quick-options > summary {
+  .composer-extras > .subtle {
     font-size: 13px;
+  }
+  .chat-suggestions {
+    padding: 8px 12px 12px;
+  }
+  .chat-suggestions .quick {
+    justify-content: stretch;
+  }
+  .chat-suggestions .quick button {
+    flex: 1 1 calc(50% - 8px);
   }
   .platforms {
     grid-template-columns: 1fr;

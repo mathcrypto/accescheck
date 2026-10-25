@@ -114,7 +114,7 @@ export function nextQuestion(state, specialties) {
     }
   } else if (state.origin && !done('radius')) {
     id = 'radius';
-    text = 'Quelle distance maximale à vol d’oiseau ?';
+    text = 'À quelle distance maximale de cette adresse ?';
     options = [1, 3, 5, 10].map((km) => option(km + ' km', String(km)));
     options.push(option('Sans limite', '__none__'));
   } else if (!done('access')) {
@@ -181,7 +181,7 @@ export function dialogueSummary(state) {
     state.origin
       ? state.radiusKm === null
         ? 'Rayon sans limite précise'
-        : `${state.radiusKm} km à vol d’oiseau`
+        : `≤ ${state.radiusKm} km de cette adresse`
       : '',
     access.length
       ? access.join(', ')
