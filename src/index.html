@@ -105,7 +105,13 @@
           </div>
           <p id="chatStatus" class="hint" role="status"></p>
           <div class="chat-controls">
-            <button id="clear" class="text-button" type="button">Tout effacer</button>
+            <div class="chat-controls-start">
+              <button id="clear" class="text-button" type="button">Tout effacer</button>
+              <label class="checkbox vision-toggle"
+                ><input id="visionMode" type="checkbox" /><span>Texte agrandi</span></label
+              >
+              <button id="readPage" class="text-button" type="button">Lire la page</button>
+            </div>
             <details class="ai-option">
               <summary>Assistance OpenAI</summary>
               <p id="descriptionHelp" class="privacy">

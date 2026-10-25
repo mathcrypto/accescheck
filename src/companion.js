@@ -6,17 +6,17 @@ import {
   safeCallUrl,
   supportsCallAudio,
 } from './companion-core.mjs';
+import { collectVisibleText, speakEdge, stopSpeechPlayback } from './page-speech.js';
+let readController = null;
 const $ = (id) => document.getElementById(id);
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const synth = window.speechSynthesis;
 let messages = [],
   nextId = 1,
   recognition = null,
   listening = false,
   starting = false,
   generation = 0,
-  voices = [],
-  utterance = null,
+  speaking = false,
   editingId = null,
   demoActive = false;
 let sharedStream = null,
@@ -47,7 +47,7 @@ function micState(text, active = false) {
   document.title = active ? '● Sous-titres — AccèsCheck' : 'Mon rendez-vous — AccèsCheck';
   $('micState').classList.toggle('recording', active);
   $('pauseCaptions').disabled = !active && !starting;
-  $('startCaptions').disabled = !Recognition || active || starting || !!utterance;
+  $('startCaptions').disabled = !Recognition || active || starting || speaking;
 }
 function invalidateNotes() {
   if ($('notes').value) {
@@ -143,9 +143,21 @@ function releaseSharedAudio() {
   if ($('disconnectCallAudio')) $('disconnectCallAudio').disabled = true;
   updateConnection();
 }
+let pageReading = false;
+function setPageReading(active) {
+  pageReading = active;
+  if ($('readPage')) {
+    $('readPage').textContent = active ? 'Arrêter la lecture' : 'Lire la page';
+    $('readPage').setAttribute('aria-pressed', String(active));
+  }
+  refreshSpeechControls?.();
+}
 function stopSpeech() {
-  if (synth) synth.cancel();
-  utterance = null;
+  readController?.abort();
+  readController = null;
+  stopSpeechPlayback();
+  speaking = false;
+  setPageReading(false);
   $('startCaptions').disabled = !Recognition || starting || listening;
 }
 function clearCaptionRetry() {
@@ -309,61 +321,49 @@ window.addEventListener('beforeunload', (event) => {
   event.preventDefault();
   event.returnValue = '';
 });
-function refreshVoices() {
-  voices = synth
-    ? synth.getVoices().filter((v) => v.localService === true && /^fr(?:-|_|$)/i.test(v.lang))
-    : [];
-  const ready = voices.length > 0;
-  $('speakReply').disabled = !ready;
-  $('readGuide').disabled = !ready;
-  $('quickVoiceTest').disabled = !ready;
-  $('activeVoiceLabel').textContent = ready
-    ? 'Voix française de cet appareil'
-    : 'Aucune voix française locale détectée';
-  $('readNotes').disabled = !ready || !$('reviewed').checked || !$('notes').value.trim();
+function refreshSpeechControls() {
+  $('speakReply').disabled = false;
+  $('readGuide').disabled = false;
+  $('quickVoiceTest').disabled = false;
+  if ($('readPage')) {
+    $('readPage').disabled = false;
+    $('readPage').textContent = pageReading ? 'Arrêter la lecture' : 'Lire la page';
+    $('readPage').setAttribute('aria-pressed', String(pageReading));
+  }
+  $('readNotes').disabled = !$('reviewed').checked || !$('notes').value.trim();
 }
-async function speak(text) {
-  const value = text.trim();
+async function speak(text, { announce = false } = {}) {
+  const value = String(text || '').trim();
   if (!value) {
     status('Écrivez un texte avant de le faire lire.', true);
     return false;
   }
-  const voice = voices[0];
-  if (!synth || !voice) {
-    status(
-      'Aucune voix française locale disponible. Votre texte peut être affiché à l’écran.',
-      true,
-    );
-    return false;
-  }
   pauseCaptions(false, false);
-  stopSpeech();
-  const u = new SpeechSynthesisUtterance(value);
-  u.voice = voice;
-  u.lang = voice.lang;
-  u.rate = 1;
-  utterance = u;
+  stopSpeechPlayback();
+  speaking = true;
   micState('Microphone coupé');
-  u.onend = () => {
-    if (utterance !== u) return;
-    utterance = null;
-    micState('Microphone coupé');
-  };
-  u.onerror = () => {
-    if (utterance !== u) return;
-    utterance = null;
-    micState('Microphone coupé');
-  };
   try {
-    synth.speak(u);
-    status(
-      'Lecture vocale activée. Les sous-titres sont en pause ; relancez-les ensuite si nécessaire.',
-    );
+    await speakEdge(value, {
+      onEnd: () => {
+        speaking = false;
+        setPageReading(false);
+        micState('Microphone coupé');
+      },
+      onError: () => {
+        speaking = false;
+        setPageReading(false);
+        micState('Microphone coupé');
+      },
+    });
+    if (announce)
+      status(
+        'Lecture vocale activée. Les sous-titres sont en pause ; relancez-les ensuite si nécessaire.',
+      );
     return true;
-  } catch {
-    utterance = null;
+  } catch (error) {
+    speaking = false;
     micState('Microphone coupé');
-    status('La lecture vocale est indisponible.', true);
+    status(error.message || 'La lecture vocale est indisponible.', true);
     return false;
   }
 }
@@ -616,7 +616,6 @@ $('speakReply').onclick = async () => {
   try {
     checkDemo();
     const text = validateMessage($('reply').value);
-    if (!voices.length) throw new Error('Aucune voix française locale disponible.');
     append(text, 'patient');
     showLatestMessage();
     if (await speak(text)) $('reply').value = '';
@@ -668,7 +667,10 @@ $('loadDemo').onclick = () => {
 };
 $('clearSession').onclick = () => {
   pauseCaptions(false);
+  readController?.abort();
+  readController = null;
   stopSpeech();
+  setPageReading(false);
   messages = [];
   nextId = 1;
   demoActive = false;
@@ -687,6 +689,7 @@ $('clearSession').onclick = () => {
   $('leaveDialog').close();
   captionHint();
   render();
+  refreshSpeechControls();
   status(
     'Session effacée. Le microphone est coupé ; les messages et notes ont été supprimés de cette page.',
   );
@@ -774,7 +777,7 @@ $('notes').oninput = () => {
   $('notesWarning').textContent = 'Notes modifiées : relisez-les avant la lecture vocale.';
 };
 $('reviewed').onchange = () => {
-  $('readNotes').disabled = !$('reviewed').checked || !$('notes').value.trim() || !voices.length;
+  refreshSpeechControls();
   if (!$('reviewed').checked) stopSpeech();
 };
 $('readNotes').onclick = () => {
@@ -803,7 +806,6 @@ $('readGuide').onclick = () =>
   speak(
     'Vous êtes dans l’échange AccèsCheck. Le bouton Démarrer les sous-titres active l’écoute après votre accord. Dans Votre réponse, écrivez une phrase, puis choisissez Afficher ou Lire ma réponse. Le médecin entend cette voix seulement si l’appareil est près de lui, ou si le son de cette page est partagé dans l’appel. Cette lecture ne décrit pas votre environnement physique.',
   );
-if (synth) synth.addEventListener('voiceschanged', refreshVoices);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     stopSpeech();
@@ -820,7 +822,7 @@ $('supportInfo').textContent = Recognition
   ? 'Le microphone ne démarre jamais automatiquement. En cas d’indisponibilité, utilisez « Saisir aussi les paroles du soignant ».'
   : 'Reconnaissance vocale indisponible dans ce navigateur. La saisie manuelle reste utilisable.';
 micState('Microphone coupé');
-refreshVoices();
+refreshSpeechControls();
 
 function updateConnection() {
   const connected = !!sharedStream;
@@ -978,7 +980,63 @@ $('copyReplyForCall').onclick = async () => {
 updateConnection();
 
 $('quickVoiceTest').onclick = () =>
-  speak('Bonjour. Cette voix française peut lire vos messages pendant votre rendez-vous.');
+  speak('Bonjour. Vous pouvez faire lire vos messages pendant votre rendez-vous.');
+
+function setVisionMode(on, announce = true) {
+  const enabled = Boolean(on);
+  document.body.classList.toggle('vision', enabled);
+  const toolbar = $('visionMode');
+  const settings = $('visionModeSettings');
+  if (toolbar) toolbar.checked = enabled;
+  if (settings) settings.checked = enabled;
+  if (announce)
+    status(
+      enabled
+        ? 'Texte agrandi activé. Les sous-titres et boutons sont plus grands, avec un contraste renforcé.'
+        : 'Affichage standard rétabli.',
+    );
+}
+
+$('visionMode').onchange = () => setVisionMode($('visionMode').checked);
+$('visionModeSettings').onchange = () => setVisionMode($('visionModeSettings').checked);
+$('readPage').onclick = async () => {
+  if (pageReading || speaking) {
+    stopSpeech();
+    return;
+  }
+  const panel = $('notesPanel')?.hidden === false ? 'notes' : 'conversation';
+  const text =
+    panel === 'notes'
+      ? collectVisibleText(['#notesPanel'], { maxChars: 4000 })
+      : collectVisibleText(['#status', '#practiceContext', '#transcript', '.chat-suggestions'], {
+          maxChars: 4000,
+        });
+  const script =
+    text ||
+    'Page AccèsCheck, échange de consultation. Aucun message n’est encore affiché. Démarrez les sous-titres ou écrivez une réponse.';
+  setPageReading(true);
+  speaking = true;
+  try {
+    readController = new AbortController();
+    await speakEdge(script, {
+      signal: readController.signal,
+      onEnd: () => {
+        speaking = false;
+        setPageReading(false);
+      },
+      onError: () => {
+        speaking = false;
+        setPageReading(false);
+      },
+    });
+  } catch (error) {
+    speaking = false;
+    setPageReading(false);
+    if (error.name !== 'AbortError') status(error.message, true);
+  } finally {
+    readController = null;
+  }
+};
 
 // Explicit interface for the local developer bridge. Real messages are never shared.
 window.accescompanionSession = Object.freeze({
@@ -993,7 +1051,7 @@ window.accescompanionSession = Object.freeze({
   prepareReadingMode(mode) {
     $('settingsDialog').close();
     tab('conversation');
-    document.body.classList.toggle('vision', mode === 'vision');
+    setVisionMode(mode === 'vision', false);
     const target =
       mode === 'speak' ? 'reply' : mode === 'vision' ? 'captionScroll' : 'startCaptions';
     $(target).focus();

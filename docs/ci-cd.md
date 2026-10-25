@@ -20,6 +20,6 @@ La configuration du workflow ne prouve pas que le compte GitHub dispose de l’a
 
 ## Périmètre publié
 
-Le déploiement conserve les limites décrites dans le README : recherche publique, préparation de visite et interface de consultation dans le navigateur. Le pont local de consultation et son agent OpenAI restent locaux. Le workflow n’ajoute aucune clé OpenAI ou ElevenLabs et n’injecte aucun client de rechargement de développement dans la production.
+Le déploiement conserve les limites décrites dans le README : recherche publique, préparation de visite et interface de consultation dans le navigateur. Le pont local de consultation et son agent OpenAI restent locaux. Le workflow n’ajoute aucune clé OpenAI et n’injecte aucun client de rechargement de développement dans la production.
 
 Dans l’onglet **Actions**, ouvrir **Checks** pour lire l’échec d’un contrôle ou le résultat du déploiement. Un échec de test, de compilation ou de validation bloque le job de publication et conserve le déploiement précédent.

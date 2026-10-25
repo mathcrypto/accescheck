@@ -18,8 +18,13 @@
     <!--SITE_HEADER-->
     <main id="main" tabindex="-1">
       <div class="intro">
-        <div>
-          <h1>L’échange</h1>
+        <div class="intro-copy">
+          <div class="intro-heading">
+            <h1>L’échange</h1>
+            <button class="subtle settings-trigger" id="openSettings" aria-haspopup="dialog">
+              Réglages
+            </button>
+          </div>
           <div id="status" class="status" role="status">Microphone coupé. Vous pouvez écrire.</div>
           <div id="browserSpeechOffer" hidden>
             <button class="primary" id="useBrowserSpeech" type="button">
@@ -30,15 +35,13 @@
               fournisseur. AccèsCheck ne reçoit pas cet audio.
             </p>
           </div>
+          <div id="practiceContext" class="practice-context" hidden>
+            <strong id="practiceName"></strong><span id="practiceAddress"></span
+            ><a id="practiceDoctolib" target="_blank" rel="noopener noreferrer" hidden
+              >Fiche Doctolib ↗</a
+            >
+          </div>
         </div>
-        <button class="secondary" id="openSettings" aria-haspopup="dialog">Réglages</button>
-      </div>
-
-      <div id="practiceContext" class="practice-context" hidden>
-        <strong id="practiceName"></strong><span id="practiceAddress"></span
-        ><a id="practiceDoctolib" target="_blank" rel="noopener noreferrer" hidden
-          >Fiche Doctolib ↗</a
-        >
       </div>
 
       <div class="workspace-toolbar">
@@ -60,44 +63,56 @@
             Mon récapitulatif
           </button>
         </div>
-        <button class="subtle danger" id="clearSession">Effacer la session</button>
+        <div class="workspace-actions">
+          <label class="check-label vision-toggle"
+            ><input type="checkbox" id="visionMode" /><span>Texte agrandi</span></label
+          >
+          <button class="subtle" id="readPage" type="button">Lire la page</button>
+          <button class="subtle danger" id="clearSession">Effacer la session</button>
+        </div>
       </div>
       <div class="layout">
         <div>
           <section id="conversationPanel" role="tabpanel" aria-labelledby="conversationTab">
             <div class="conversation">
-              <div class="toolbar">
-                <h2>Sous-titres à vérifier</h2>
-                <span class="mic-status" id="micState"
-                  ><span class="indicator" aria-hidden="true"></span
-                  ><span id="micText">Microphone coupé</span
-                  ><meter
-                    id="audioMeter"
-                    min="0"
-                    max="100"
-                    value="0"
-                    hidden
-                    aria-label="Niveau du son reçu de l’onglet"
-                  ></meter
-                ></span>
-              </div>
-              <div class="caption-controls">
-                <label class="check-label agreement"
-                  ><input type="checkbox" id="consent" /><span
-                    >Les personnes présentes acceptent les sous-titres.</span
-                  ></label
-                >
-                <div class="caption-actions">
-                  <button class="primary" id="startCaptions" aria-label="Démarrer les sous-titres">
-                    Démarrer</button
-                  ><button
-                    class="secondary"
-                    id="pauseCaptions"
-                    aria-label="Mettre les sous-titres en pause"
-                    disabled
+              <div class="caption-bar">
+                <div class="caption-lead">
+                  <h2>Sous-titres à vérifier</h2>
+                  <span class="mic-status" id="micState"
+                    ><span class="indicator" aria-hidden="true"></span
+                    ><span id="micText">Microphone coupé</span
+                    ><meter
+                      id="audioMeter"
+                      min="0"
+                      max="100"
+                      value="0"
+                      hidden
+                      aria-label="Niveau du son reçu de l’onglet"
+                    ></meter
+                  ></span>
+                </div>
+                <div class="caption-controls">
+                  <label class="check-label agreement"
+                    ><input type="checkbox" id="consent" /><span
+                      >Les personnes présentes acceptent les sous-titres.</span
+                    ></label
                   >
-                    Pause
-                  </button>
+                  <div class="caption-actions">
+                    <button
+                      class="primary"
+                      id="startCaptions"
+                      aria-label="Démarrer les sous-titres"
+                    >
+                      Démarrer</button
+                    ><button
+                      class="secondary"
+                      id="pauseCaptions"
+                      aria-label="Mettre les sous-titres en pause"
+                      disabled
+                    >
+                      Pause
+                    </button>
+                  </div>
                 </div>
               </div>
               <div
@@ -316,9 +331,17 @@
           <p class="helper" id="supportInfo"></p>
         </section>
       </details>
+      <label class="check-label"
+        ><input type="checkbox" id="visionModeSettings" /><span
+          >Texte agrandi et contraste renforcé (malvoyant)</span
+        ></label
+      >
+      <p class="helper">
+        Grossit les sous-titres et les boutons, renforce le contraste. Aucun réglage n’est
+        enregistré hors de cette page.
+      </p>
       <div class="voice-inline">
-        <span id="activeVoiceLabel">Voix française de cet appareil</span
-        ><button class="subtle" id="quickVoiceTest">Écouter un exemple</button>
+        <button class="subtle" id="quickVoiceTest">Écouter un exemple</button>
       </div>
       <p id="hearingStatus" class="hearing" role="status">
         Le médecin n’entend pas encore votre réponse.

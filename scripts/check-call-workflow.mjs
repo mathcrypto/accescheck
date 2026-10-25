@@ -71,25 +71,16 @@ try {
         return window.__shared;
       },
     });
-    Object.defineProperty(window, 'speechSynthesis', {
-      configurable: true,
-      value: {
-        getVoices: () => [{ name: 'Français local test', lang: 'fr-FR', localService: true }],
-        addEventListener() {},
-        cancel() {},
-        speak(u) {
-          window.__ttsCalls.push(u.text);
-        },
-      },
-    });
-    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
-      configurable: true,
-      value: class {
-        constructor(text) {
-          this.text = text;
-        }
-      },
-    });
+    const realFetch = window.fetch.bind(window);
+    window.fetch = async (input, init = {}) => {
+      const url = String(input);
+      if (url.includes('/api/speech') && init.body) {
+        try {
+          window.__ttsCalls.push(JSON.parse(init.body).text || '');
+        } catch {}
+      }
+      return realFetch(input, init);
+    };
   });
   await page.goto(base + '/consultation');
   assert.equal(await page.locator('.mode').count(), 0);
@@ -161,11 +152,22 @@ try {
   assert.match(await page.locator('#status').textContent(), /partage a été arrêté/);
   await page.locator('#closeSettings').click();
   await page.locator('#reply').fill('Bonjour, pouvez-vous répéter ?');
+  const ttsBefore = await page.evaluate(() => window.__ttsCalls.length);
   await page.locator('#speakReply').click();
-  assert.equal(postBodies.length, 0);
+  await page.waitForFunction((n) => window.__ttsCalls.length > n, ttsBefore);
   assert.equal(
     await page.evaluate(() => window.__ttsCalls.at(-1)),
     'Bonjour, pouvez-vous répéter ?',
+  );
+  assert.ok(
+    postBodies.every((body) => {
+      try {
+        const data = JSON.parse(body || '');
+        return data.consent === true && typeof data.text === 'string';
+      } catch {
+        return false;
+      }
+    }),
   );
   await page.screenshot({ path: '/tmp/accescheck-call-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -190,7 +192,7 @@ try {
   await page.waitForSelector('#practiceContext:not([hidden])');
   assert.ok((await page.locator('#practiceName').textContent()).length > 3);
   console.log(
-    'Call workflow checks passed: platform links, consent, audio-track input, no microphone fallback, capture cleanup, missing audio, wrong surface, background sharing, stop-share, device voice reply, selected-practice handoff, mobile overflow, no meeting-link transmission. Audio events simulated; no real meeting or paid API used.',
+    'Call workflow checks passed: platform links, consent, audio-track input, no microphone fallback, capture cleanup, missing audio, wrong surface, background sharing, stop-share, Edge TTS reply, selected-practice handoff, mobile overflow, no meeting-link transmission. Capture events simulated; no real meeting used.',
   );
 } finally {
   await browser.close();

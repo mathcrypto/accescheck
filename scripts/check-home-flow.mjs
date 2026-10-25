@@ -89,6 +89,12 @@ try {
   await page.waitForFunction(() =>
     document.getElementById('aiStatus').textContent.includes('disponible'),
   );
+  assert.equal(await page.locator('#visionMode').isChecked(), false);
+  await page.locator('#visionMode').check();
+  assert.ok(await page.evaluate(() => document.body.classList.contains('vision')));
+  await page.locator('#visionMode').uncheck();
+  assert.equal(await page.evaluate(() => document.body.classList.contains('vision')), false);
+  assert.ok(await page.locator('#readPage').count());
   assert.equal(requests.length, 0);
   assert.equal(upstream.length, 0);
   assert.equal(await page.locator('form').count(), 1);

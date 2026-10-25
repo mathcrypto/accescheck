@@ -1,6 +1,8 @@
 import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
 import { practiceCard } from './search-results.js';
+import { collectVisibleText, speakEdge, stopSpeechPlayback } from './page-speech.js';
+let readController = null;
 const $ = (id) => document.getElementById(id);
 let state = null;
 let controller = null;
@@ -9,6 +11,7 @@ let lastLabel = '';
 let reviewJob = null;
 let reviewsAvailable = false;
 const reviewCache = new Map();
+let pageReading = false;
 function node(tag, text, className = '') {
   const element = document.createElement(tag);
   element.textContent = text;
@@ -177,6 +180,47 @@ async function ask(input, choiceLabel = '') {
     }
   }
 }
+$('visionMode').onchange = () => {
+  const enabled = $('visionMode').checked;
+  document.body.classList.toggle('vision', enabled);
+  $('chatStatus').textContent = enabled
+    ? 'Texte agrandi activé. Conversation, choix et fiches sont plus grands, avec un contraste renforcé.'
+    : 'Affichage standard rétabli.';
+};
+function setPageReading(active) {
+  pageReading = active;
+  const button = $('readPage');
+  if (!button) return;
+  button.textContent = active ? 'Arrêter la lecture' : 'Lire la page';
+  button.setAttribute('aria-pressed', String(active));
+}
+$('readPage').onclick = async () => {
+  if (pageReading) {
+    readController?.abort();
+    readController = null;
+    stopSpeechPlayback();
+    setPageReading(false);
+    return;
+  }
+  const text = collectVisibleText(
+    ['.intro-copy', '#thread', '#resultsCriteria', '#resultsSummary', '#results', '#dataset'],
+    { maxChars: 4000, cardLimit: 3 },
+  );
+  setPageReading(true);
+  try {
+    readController = new AbortController();
+    await speakEdge(text, {
+      signal: readController.signal,
+      onEnd: () => setPageReading(false),
+      onError: () => setPageReading(false),
+    });
+  } catch (error) {
+    setPageReading(false);
+    if (error.name !== 'AbortError') $('chatStatus').textContent = error.message;
+  } finally {
+    readController = null;
+  }
+};
 $('descriptionForm').onsubmit = (event) => {
   event.preventDefault();
   const message = $('description').value.trim();
@@ -193,6 +237,10 @@ $('clear').onclick = () => {
   controller = null;
   state = null;
   lastInput = null;
+  readController?.abort();
+  readController = null;
+  stopSpeechPlayback();
+  setPageReading(false);
   working(false);
   $('thread').replaceChildren();
   $('thread').setAttribute('aria-busy', 'false');

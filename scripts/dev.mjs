@@ -41,8 +41,7 @@ const server = createServer(async (request, response) => {
       {
         DB: database,
         DATA_IMPORT_TOKEN: process.env.DATA_IMPORT_TOKEN,
-        ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
-        ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+        EDGE_TTS_VOICE: process.env.EDGE_TTS_VOICE,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || process.env.openai_api_key,
         OPENAI_MODEL: process.env.OPENAI_MODEL || process.env.openai_model,
         OPENAI_REVIEW_MODEL: process.env.OPENAI_REVIEW_MODEL,

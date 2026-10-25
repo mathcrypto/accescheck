@@ -89,7 +89,7 @@ test('Vercel exposes no local bridge, development client, import token or paid A
   ])
     assert.notEqual((await request(path)).status, 200, path);
   assert.equal((await request('/internal/import/start', {})).status, 403);
-  assert.equal((await (await request('/api/voice-config')).json()).elevenlabsAvailable, false);
+  assert.equal((await (await request('/api/voice-config')).json()).provider, 'edge');
   assert.equal((await (await request('/api/ai-config')).json()).available, false);
   assert.equal(
     (
@@ -104,7 +104,6 @@ test('Vercel can enable only the search provider, keeping secrets and other inte
   const configured = createVercelHandler(database, {
     OPENAI_API_KEY: 'private-search-key',
     OPENAI_MODEL: 'test-model',
-    ELEVENLABS_API_KEY: 'must-not-propagate',
     DATA_IMPORT_TOKEN: 'must-not-propagate',
   });
   const config = await (await configured.fetch(new Request(origin + '/api/ai-config'))).json();
@@ -112,5 +111,6 @@ test('Vercel can enable only the search provider, keeping secrets and other inte
   assert.equal(config.model, 'test-model');
   assert.ok(!JSON.stringify(config).includes('private-search-key'));
   const voice = await (await configured.fetch(new Request(origin + '/api/voice-config'))).json();
-  assert.equal(voice.elevenlabsAvailable, false);
+  assert.equal(voice.provider, 'edge');
+  assert.equal(voice.edgeAvailable, true);
 });
