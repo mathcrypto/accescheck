@@ -29,10 +29,13 @@ const server = createServer(async (request, response) => {
       chunks.push(chunk);
     }
     const body = Buffer.concat(chunks);
+    const aborted = new AbortController();
+    response.once('close', () => aborted.abort());
     const result = await live.fetch(
       new Request('http://' + request.headers.host + request.url, {
         method: request.method,
         headers: request.headers,
+        signal: aborted.signal,
         ...(body.length ? { body, duplex: 'half' } : {}),
       }),
       {
@@ -45,12 +48,20 @@ const server = createServer(async (request, response) => {
       },
     );
     response.writeHead(result.status, Object.fromEntries(result.headers));
-    response.end(
-      result.headers.get('content-type')?.includes('text/html')
-        ? live.inject(await result.text())
-        : Buffer.from(await result.arrayBuffer()),
-    );
+    if (result.headers.get('content-type')?.includes('text/html'))
+      response.end(live.inject(await result.text()));
+    else {
+      for await (const chunk of result.body || []) {
+        if (response.destroyed) break;
+        response.write(Buffer.from(chunk));
+      }
+      response.end();
+    }
   } catch {
+    if (response.headersSent || response.destroyed) {
+      response.destroy();
+      return;
+    }
     response.writeHead(500);
     response.end('Preview unavailable');
   }

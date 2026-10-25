@@ -22,7 +22,9 @@ async function page(templatePath, entryPoint, stylePath) {
         ? '<button id="pauseMotion" type="button" aria-pressed="false">Mettre les animations en pause</button>'
         : '',
     );
-  template = template.replace('<!--SITE_HEADER-->', header);
+  template = template
+    .replace('<!--SITE_HEADER-->', header)
+    .replace('<!--AGENT_MARK-->', sharedHeader.match(/<svg[\s\S]*?<\/svg>/)[0]);
   if (stylePath) {
     const styles = await readFile(stylePath, 'utf8');
     template = template.replace('/*PAGE_STYLE*/', () => styles + '\n' + sharedStyles);

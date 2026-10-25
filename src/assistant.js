@@ -1,7 +1,10 @@
+import { readChatResponse } from './chat-events.mjs';
 import { practiceCard } from './search-results.js';
 const $ = (id) => document.getElementById(id);
 let state = null;
 let controller = null;
+let lastInput = null;
+let lastLabel = '';
 function node(tag, text, className = '') {
   const element = document.createElement(tag);
   element.textContent = text;
@@ -30,35 +33,48 @@ function actions(bubble, values) {
   bubble.append(group);
   return group;
 }
-async function post(path, body, signal) {
-  const response = await fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Service indisponible. Réessayez.');
-  return data;
+function working(active, text = '') {
+  $('agentActivity').hidden = !active;
+  document.body.classList.toggle('agent-working', active);
+  $('activityText').textContent = text;
 }
+function retry(input, text) {
+  const choices = actions(turn(text), [{ id: 'retry', label: 'Réessayer' }]);
+  choices.firstElementChild.onclick = () => ask(input, lastLabel);
+}
+
 async function ask(input, choiceLabel = '') {
   controller?.abort();
   const active = (controller = new AbortController());
+  lastInput = input;
+  lastLabel = choiceLabel;
   clearResults();
   document.querySelectorAll('.chat-choices button').forEach((button) => (button.disabled = true));
-  $('chatStatus').textContent =
-    input.action === 'confirm' ? 'Recherche des cabinets…' : 'Lecture de votre message…';
+  $('chatStatus').textContent = '';
+  working(true, 'Envoi de la demande');
+  let streamed = null;
   $('thread').setAttribute('aria-busy', 'true');
   if (input.message || choiceLabel) turn(input.message || choiceLabel, 'user');
   try {
-    const data = await post(
-      '/api/chat',
-      { ...input, state, consent: $('consent').checked },
-      active.signal,
-    );
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
+      body: JSON.stringify({ ...input, state, consent: $('consent').checked }),
+      signal: active.signal,
+    });
+    const data = await readChatResponse(response, (event) => {
+      if (active !== controller) return;
+      if (event.type === 'status') working(true, event.text);
+      if (event.type === 'reply') {
+        streamed ||= turn('');
+        streamed.querySelector('p').append(document.createTextNode(event.delta));
+      }
+    });
     if (active !== controller) return;
     state = data.state;
-    const bubble = turn((data.question ? '' : data.summary + '\n\n') + data.reply);
+    const bubble = streamed || turn('');
+    bubble.querySelector('p').textContent =
+      (data.question ? '' : data.summary + '\n\n') + data.reply;
     if (data.notice) bubble.append(node('p', data.notice, 'hint'));
     if (data.question) {
       bubble.dataset.question = data.question.id;
@@ -113,10 +129,12 @@ async function ask(input, choiceLabel = '') {
   } catch (error) {
     if (active !== controller || error.name === 'AbortError') return;
     $('chatStatus').textContent = error.message;
-    const retry = actions(turn(error.message), [{ id: 'retry', label: 'Réessayer' }]);
-    retry.firstElementChild.onclick = () => ask(input);
+    retry(input, error.message);
   } finally {
-    if (active === controller) $('thread').setAttribute('aria-busy', 'false');
+    if (active === controller) {
+      $('thread').setAttribute('aria-busy', 'false');
+      working(false);
+    }
   }
 }
 $('descriptionForm').onsubmit = (event) => {
@@ -130,12 +148,23 @@ $('clear').onclick = () => {
   controller?.abort();
   controller = null;
   state = null;
+  lastInput = null;
+  working(false);
   $('thread').replaceChildren();
   $('thread').setAttribute('aria-busy', 'false');
   $('descriptionForm').reset();
   $('consent').checked = false;
   clearResults();
   $('chatStatus').textContent = 'Conversation effacée.';
+  $('description').focus();
+};
+$('stopSearch').onclick = () => {
+  controller?.abort();
+  controller = null;
+  working(false);
+  $('thread').setAttribute('aria-busy', 'false');
+  $('chatStatus').textContent = 'Recherche interrompue.';
+  if (lastInput) retry(lastInput, 'Vous pouvez reprendre cette demande ou écrire une correction.');
   $('description').focus();
 };
 fetch('/api/ai-config')

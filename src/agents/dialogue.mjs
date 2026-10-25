@@ -96,7 +96,28 @@ function applyNeeds(state, parsed, text) {
     answered(state, 'access');
   }
 }
-export async function runDialogue(body, env = {}, transport = fetch) {
+export async function runDialogue(
+  body,
+  env = {},
+  transport = fetch,
+  { signal, emit = () => {} } = {},
+) {
+  signal?.throwIfAborted();
+  const upstream = transport;
+  transport = (url, options = {}) => {
+    signal?.throwIfAborted();
+    const host = new URL(url).hostname;
+    if (host === 'api.openai.com') emit({ type: 'status', text: 'OpenAI propose les critères' });
+    if (host === 'data.geopf.fr')
+      emit({ type: 'status', text: 'Je recherche le lieu auprès d’IGN' });
+    return upstream(url, {
+      ...options,
+      ...(signal
+        ? { signal: AbortSignal.any([signal, ...(options.signal ? [options.signal] : [])]) }
+        : {}),
+    });
+  };
+  emit({ type: 'status', text: 'Je précise votre recherche' });
   const input = dialogueInput(body);
   const state = input.state;
   const { specialties } = await createPracticeStore(env.DB).catalog();
@@ -107,6 +128,7 @@ export async function runDialogue(body, env = {}, transport = fetch) {
   if (input.action === 'confirm' || input.action === 'page') {
     if (nextQuestion(state, specialties))
       throw new Error('Répondez à la question en cours avant de confirmer.');
+    emit({ type: 'status', text: 'Je cherche les cabinets' });
     const results = await findPractices(env.DB, {
       confirmed: true,
       needs: state.needs,
