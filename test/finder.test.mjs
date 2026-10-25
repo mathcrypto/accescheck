@@ -1,6 +1,6 @@
-import test from 'node:test';
+import test, { beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { openSqlite } from '../storage/sqlite.mjs';
+import { createTestDatabase, fixtures } from './helpers/database.mjs';
 import {
   extractPlaceQuery,
   geocodeQueryFor,
@@ -9,8 +9,67 @@ import {
   targetPostcodes,
 } from '../src/agents/finder.mjs';
 
+// Test-only records make these checks independent of a developer's imported database.
+const bastille = {
+  ...fixtures[0],
+  id: 'test-generalist-bastille',
+  name: 'Test généraliste Bastille',
+  address: 'Place de la Bastille 75011 Paris',
+  postalCode: '75011',
+  location: { latitude: 48.8534, longitude: 2.3692 },
+  evidence: {
+    ...fixtures[0].evidence,
+    route: { ...fixtures[0].evidence.route, value: true, status: 'declared' },
+    width: { ...fixtures[0].evidence.width, value: 95, status: 'declared' },
+    hearing: { ...fixtures[0].evidence.hearing, value: true, status: 'declared' },
+  },
+};
+const fifteenth = {
+  ...bastille,
+  id: 'test-generalist-15',
+  name: 'Test généraliste 15',
+  address: 'Paris 75015',
+  postalCode: '75015',
+  location: { latitude: 48.841, longitude: 2.298 },
+};
+const finderDatabase = () => createTestDatabase([...fixtures, bastille, fifteenth]);
+beforeEach(() => {
+  mock.method(globalThis, 'fetch', async (value) => {
+    const url = new URL(value);
+    assert.equal(url.hostname, 'data.geopf.fr', 'Finder must only call IGN');
+    const query = url.searchParams.get('q').toLowerCase();
+    const point = query.includes('denfert')
+      ? {
+          label: 'Place Denfert-Rochereau 75014 Paris',
+          postcode: '75014',
+          latitude: 48.834,
+          longitude: 2.332,
+        }
+      : query.includes('15')
+        ? { label: 'Paris 15e 75015 Paris', postcode: '75015', ...fifteenth.location }
+        : { label: 'Place de la Bastille 75011 Paris', postcode: '75011', ...bastille.location };
+    return new Response(
+      JSON.stringify({
+        features: [
+          {
+            properties: {
+              label: point.label,
+              postcode: point.postcode,
+              city: 'Paris',
+              name: point.label,
+              type: 'street',
+            },
+            geometry: { coordinates: [point.longitude, point.latitude] },
+          },
+        ],
+      }),
+    );
+  });
+});
+afterEach(() => mock.restoreAll());
+
 test('finder uses local rules and returns Accès Libre practices without OpenAI', async () => {
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder(
       { message: 'Je me déplace avec une canne blanche.', consent: false },
@@ -20,7 +79,7 @@ test('finder uses local rules and returns Accès Libre practices without OpenAI'
     assert.deepEqual(result.state.needs.keys, ['signage']);
     assert.match(result.reply, /cabinet/i);
     assert.ok(result.results);
-    assert.ok(result.results.total >= 0);
+    assert.ok(result.results.total > 0);
     assert.ok(result.steps.some((step) => /Accès Libre/.test(step.label)));
     assert.ok(
       result.results.practices.every(
@@ -33,7 +92,7 @@ test('finder uses local rules and returns Accès Libre practices without OpenAI'
 });
 
 test('finder keeps unknown needs empty instead of inventing criteria', async () => {
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder({ message: 'Bonjour', consent: false }, { DB: db });
     assert.deepEqual(result.state.needs.keys, []);
@@ -44,7 +103,7 @@ test('finder keeps unknown needs empty instead of inventing criteria', async () 
 });
 
 test('finder matches short specialty forms and autour-de places', async () => {
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const catalog = await (
       await import('../src/practice-store.mjs')
@@ -65,7 +124,7 @@ test('finder matches short specialty forms and autour-de places', async () => {
 });
 
 test('finder searches immediately for specialty and place', async () => {
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder(
       {
@@ -96,7 +155,7 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
   assert.deepEqual(targetPostcodes('bastille'), []);
   assert.equal(geocodeQueryFor('bastille'), 'bastille Paris');
   assert.equal(geocodeQueryFor('Bastille Paris'), 'Bastille Paris');
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder(
       {
@@ -117,7 +176,7 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
 });
 
 test('Bastille alone resolves in Paris with a 5 km radius', async () => {
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder(
       {
@@ -138,7 +197,7 @@ test('Bastille alone resolves in Paris with a 5 km radius', async () => {
 
 test('bastille paris keeps Bastille as origin within 5 km', async () => {
   assert.equal(extractPlaceQuery('bastille paris medecin generaliste'), 'bastille paris');
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder(
       {
@@ -165,7 +224,7 @@ test('bastille paris keeps Bastille as origin within 5 km', async () => {
 test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
   assert.equal(extractPlaceQuery('autour de denfert paris 14eme'), 'denfert paris 14e');
   assert.deepEqual(targetPostcodes('denfert paris 14e'), ['75014']);
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder(
       {
@@ -189,7 +248,7 @@ test('denfert paris 14e keeps Denfert as origin within 5 km', async () => {
 });
 
 test('finder keeps prior needs when a follow-up only adds place or specialty', async () => {
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const first = await runFinder({ message: 'Je suis malentendant.', consent: false }, { DB: db });
     assert.deepEqual(first.state.needs.keys, ['hearing']);
@@ -212,7 +271,7 @@ test('finder keeps prior needs when a follow-up only adds place or specialty', a
 });
 
 test('finder fauteuil search no longer requires salle de consultation', async () => {
-  const db = openSqlite();
+  const db = await finderDatabase();
   try {
     const result = await runFinder(
       {
