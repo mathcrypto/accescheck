@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker/index.js';
+import { createTestDatabase } from './helpers/database.mjs';
+const database = await createTestDatabase();
+test.after(() => database.close());
 const request = (path, body, extra = {}) =>
   worker.fetch(
     new Request('https://example.com' + path, {
@@ -8,7 +11,7 @@ const request = (path, body, extra = {}) =>
       headers: { 'Content-Type': 'application/json', ...extra },
       body: JSON.stringify(body),
     }),
-    {},
+    { DB: database },
   );
 test('serves app with privacy headers', async () => {
   const r = await worker.fetch(new Request('https://example.com/'));
@@ -19,7 +22,7 @@ test('serves app with privacy headers', async () => {
 test('search API returns actual provenance', async () => {
   const r = await request('/api/search', { needs: 'fauteuil roulant', mode: 'real' });
   const d = await r.json();
-  assert.equal(d.results.length, 510);
+  assert.equal(d.results.length, 3);
   assert.equal(d.results[0].mode, 'real');
   assert.ok(d.results[0].sourceUrl.startsWith('https://acceslibre.beta.gouv.fr/'));
 });
@@ -36,7 +39,7 @@ test('MCP discovery, listing, and search round trip', async () => {
       params: { name: 'search_practices', arguments: { needs: 'malentendant' } },
     })
   ).json();
-  assert.equal(JSON.parse(d.result.content[0].text).results.length, 510);
+  assert.equal(JSON.parse(d.result.content[0].text).results.length, 3);
 });
 test('MCP invalid tools and params return isError', async () => {
   for (const params of [

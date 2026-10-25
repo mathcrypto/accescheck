@@ -1,0 +1,170 @@
+[
+  {
+    "id": "7a192d7e-76e9-4025-a02e-c9d7a2e25ad3",
+    "name": "Alloul-Toledano Irene",
+    "address": "16 Rue de l'Ouest 75014 Paris",
+    "postalCode": "75014",
+    "specialty": "Médecin généraliste",
+    "source": "Accès Libre",
+    "sourceUrl": "https://acceslibre.beta.gouv.fr/app/75-paris/a/medecin-generaliste/erp/alloul-toledano-irene/",
+    "mode": "real",
+    "doctolibUrl": null,
+    "exportDate": "2026-10-24",
+    "evidence": {
+      "stepFree": {
+        "value": true,
+        "status": "declared",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "route": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "width": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "hearing": {
+        "value": false,
+        "status": "declared",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "toilets": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "consultation": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "signage": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      }
+    }
+  },
+  {
+    "id": "1106c473-4bbc-4db2-a289-a82488c03226",
+    "name": "Antoine Botros",
+    "address": "173 Avenue de Wagram 75017 Paris",
+    "postalCode": "75017",
+    "specialty": "Dentiste, chirurgien dentiste",
+    "source": "Accès Libre",
+    "sourceUrl": "https://acceslibre.beta.gouv.fr/app/75-paris/a/chirurgien-dentiste/erp/antoine-botros/",
+    "mode": "real",
+    "doctolibUrl": null,
+    "exportDate": "2026-10-24",
+    "evidence": {
+      "stepFree": {
+        "value": true,
+        "status": "declared",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "route": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "width": {
+        "value": 80.0,
+        "status": "declared",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "hearing": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "toilets": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "consultation": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "signage": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      }
+    }
+  },
+  {
+    "id": "80a7cb86-ee9e-4833-83e5-08c77079371a",
+    "name": "Antoine Candelier",
+    "address": "16 Rue de Chabrol 75010 Paris",
+    "postalCode": "75010",
+    "specialty": "Kinésithérapeute",
+    "source": "Accès Libre",
+    "sourceUrl": "https://acceslibre.beta.gouv.fr/app/75-paris/a/masseur-kinesitherapeute/erp/antoine-candelier/",
+    "mode": "real",
+    "doctolibUrl": "https://www.doctolib.fr/masseur-kinesitherapeute/paris/antoine-candellier?utm_campaign=google-maps&utm_content=paris&utm_medium=organic&utm_source=google&utm_term=masseur-kinesitherapeute",
+    "exportDate": "2026-10-24",
+    "evidence": {
+      "stepFree": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "route": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "width": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "hearing": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "toilets": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "consultation": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      },
+      "signage": {
+        "value": null,
+        "status": "unknown",
+        "date": null,
+        "source": "Accès Libre · déclaration publique"
+      }
+    }
+  }
+]

@@ -3,21 +3,12 @@ import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import * as z from 'zod/v4';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import worker from '../worker/index.js';
+import { practiceTools } from '../src/practice-tools.mjs';
 import { consultationTools } from '../prototype/session-bridge.mjs';
 import { agentInstructions, agentPrompt } from './agent-prompt.mjs';
 
 const errorResult = (text) => ({ isError: true, content: [{ type: 'text', text }] });
 const request = (method, params) => ({ jsonrpc: '2.0', id: 1, method, params });
-const practiceList = await worker
-  .fetch(
-    new Request('http://127.0.0.1/mcp', {
-      method: 'POST',
-      body: JSON.stringify(request('tools/list', {})),
-    }),
-  )
-  .then((r) => r.json());
-
 export function bridgeEndpoint(value = 'http://127.0.0.1:4180/mcp') {
   const u = new URL(value);
   if (
@@ -95,8 +86,7 @@ export function createAgentServer({
     { name: 'accescompanion', version: '0.4.0' },
     { instructions: agentInstructions },
   );
-  const consultationNames = new Set(consultationTools.map((t) => t.name));
-  for (const tool of [...practiceList.result.tools, ...consultationTools]) {
+  for (const tool of [...practiceTools, ...consultationTools]) {
     const readOnly = [
       'search_practices',
       'get_practice_accessibility',
@@ -116,15 +106,7 @@ export function createAgentServer({
         },
       },
       async (args) => {
-        if (consultationNames.has(tool.name))
-          return forwardConsultation(tool.name, args, localEndpoint, fetcher);
-        const r = await worker.fetch(
-          new Request('http://127.0.0.1/mcp', {
-            method: 'POST',
-            body: JSON.stringify(request('tools/call', { name: tool.name, arguments: args })),
-          }),
-        );
-        return (await r.json()).result;
+        return forwardConsultation(tool.name, args, localEndpoint, fetcher);
       },
     );
   }

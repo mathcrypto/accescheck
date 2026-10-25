@@ -13,7 +13,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
-    "check": "npm run format:check && npm run lint && npm test && npm run build && npm run validate"
+    "check": "npm run format:check && npm run lint && npm test && npm run build && npm run validate",
+    "db:generate": "drizzle-kit generate --config drizzle.config.mjs",
+    "data:sync": "node scripts/sync-practices.mjs",
+    "data:sync:remote": "node scripts/sync-practices.mjs --remote"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.4.0",
@@ -22,8 +25,14 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@modelcontextprotocol/client": "2.4.0",
+    "drizzle-kit": "0.31.11",
+    "drizzle-orm": "0.45.4",
+    "esbuild": "0.28.2",
     "eslint": "10.13.0",
     "globals": "17.13.0",
     "prettier": "3.9.10"
+  },
+  "overrides": {
+    "esbuild": "$esbuild"
   }
 }

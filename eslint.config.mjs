@@ -30,38 +30,4 @@ export default defineConfig([
     files: ['scripts/*check*.mjs', 'prototype/check-end-to-end.mjs'],
     languageOptions: { globals: globals.browser },
   },
-  {
-    // The compiler places these exported helpers before the browser controller.
-    files: ['src/companion.js'],
-    languageOptions: {
-      globals: {
-        speakerLabel: 'readonly',
-        validateMessage: 'readonly',
-        buildDraft: 'readonly',
-        speechError: 'readonly',
-        safeCallUrl: 'readonly',
-        supportsCallAudio: 'readonly',
-      },
-    },
-  },
-  {
-    // This worker template receives its data and helpers from scripts/compile.mjs.
-    files: ['src/handler.mjs'],
-    languageOptions: {
-      globals: {
-        search: 'readonly',
-        practices: 'readonly',
-        evidenceState: 'readonly',
-        validateInput: 'readonly',
-        briefing: 'readonly',
-        parseNeeds: 'readonly',
-        html: 'readonly',
-        searchHtml: 'readonly',
-        consultationHtml: 'readonly',
-        speechConfig: 'readonly',
-        safeDoctolib: 'readonly',
-        generateSpeech: 'readonly',
-      },
-    },
-  },
 ]);

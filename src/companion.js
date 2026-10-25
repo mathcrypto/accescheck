@@ -1,3 +1,11 @@
+import {
+  speakerLabel,
+  validateMessage,
+  buildDraft,
+  speechError,
+  safeCallUrl,
+  supportsCallAudio,
+} from './companion-core.mjs';
 const $ = (id) => document.getElementById(id);
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const synth = window.speechSynthesis;

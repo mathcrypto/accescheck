@@ -1,170 +1,183 @@
+import { practiceTools, runPracticeTool, practiceSummary } from './practice-tools.mjs';
+import { createPracticeStore, DataUnavailable } from './practice-store.mjs';
+import { speechConfig, generateSpeech } from './speech.mjs';
+
 const headers = {
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store',
   'X-Content-Type-Options': 'nosniff',
 };
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers });
-const schema = {
-  type: 'object',
-  properties: {
-    needs: { type: 'string', maxLength: 2000 },
-    width: { type: 'number', minimum: 40, maximum: 200 },
-    district: { type: 'string' },
-    specialty: { type: 'string' },
-    mode: { type: 'string', enum: ['real'] },
-  },
-  required: ['needs'],
-  additionalProperties: false,
-};
-const tools = [
-  {
-    name: 'search_practices',
-    description:
-      'Compare les établissements par critères documentés. Données Accès Libre mises en cache ; aucun créneau ni réservation.',
-    inputSchema: schema,
-  },
-  {
-    name: 'get_practice_accessibility',
-    description: 'Retourne la provenance et les champs d’un établissement par identifiant.',
-    inputSchema: {
-      type: 'object',
-      properties: { id: { type: 'string' } },
-      required: ['id'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'create_visit_briefing',
-    description:
-      'Prépare les questions à poser au cabinet sans transmettre ni enregistrer les besoins.',
-    inputSchema: {
-      ...schema,
-      properties: { ...schema.properties, id: { type: 'string' } },
-      required: ['id', 'needs'],
-    },
-  },
-];
-function runTool(name, args) {
-  if (!args || typeof args !== 'object' || Array.isArray(args))
-    throw new Error('Arguments invalides.');
-  const tool = tools.find((t) => t.name === name);
-  if (!tool) throw new Error('Outil inconnu.');
-  if (Object.keys(args).some((k) => !Object.hasOwn(tool.inputSchema.properties, k)))
-    throw new Error('Paramètre inconnu.');
-  for (const required of tool.inputSchema.required)
-    if (args[required] === undefined) throw new Error('Paramètre requis : ' + required);
-  if (name === 'search_practices') return search(practices, args);
-  if (typeof args.id !== 'string' || args.id.length > 150) throw new Error('Identifiant invalide.');
-  const p = practices.find((p) => p.id === args.id);
-  if (!p) throw new Error('Établissement introuvable.');
-  if (name === 'get_practice_accessibility')
-    return {
-      ...p,
-      evidence: Object.fromEntries(
-        Object.entries(p.evidence).map(([k, v]) => [k, { ...v, state: evidenceState(v) }]),
-      ),
-    };
-  validateInput(args);
-  return briefing(p, parseNeeds(args.needs, args.width));
+
+async function readJson(request, limit) {
+  if (Number(request.headers.get('content-length')) > limit)
+    throw new Error('Requête trop volumineuse.');
+  const reader = request.body?.getReader();
+  if (!reader) throw new Error('JSON invalide.');
+  const chunks = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > limit) {
+        await reader.cancel();
+        throw new Error('Requête trop volumineuse.');
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(length);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch (error) {
+    if (error.message === 'Requête trop volumineuse.') throw error;
+    throw new Error('JSON invalide.', { cause: error });
+  }
 }
-export default {
-  async fetch(request, env = {}) {
-    const url = new URL(request.url);
-    if (
-      request.method === 'GET' &&
-      ['/', '/cabinets', '/consultation', '/consultation/'].includes(url.pathname)
-    )
-      return new Response(
-        url.pathname === '/' ? html : url.pathname === '/cabinets' ? searchHtml : consultationHtml,
-        {
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-store',
-            'X-Content-Type-Options': 'nosniff',
-            'Referrer-Policy': 'no-referrer',
-            'Content-Security-Policy':
-              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-          },
-        },
-      );
-    if (request.method === 'GET' && url.pathname === '/api/voice-config')
-      return json(speechConfig(env));
-    if (request.method === 'GET' && url.pathname === '/api/practice') {
-      const id = url.searchParams.get('id');
-      const p = practices.find((p) => p.id === id && p.mode === 'real');
-      return p
-        ? json({ name: p.name, address: p.address, doctolibUrl: safeDoctolib(p.doctolibUrl) })
-        : json({ error: 'Établissement introuvable.' }, 404);
-    }
-    if (request.method === 'GET' && url.pathname === '/api/catalog')
-      return json({
-        districts: [
-          ...new Set(practices.filter((p) => p.mode === 'real').map((p) => p.postalCode)),
-        ].sort(),
-        specialties: [
-          ...new Set(practices.filter((p) => p.mode === 'real').map((p) => p.specialty)),
-        ].sort(),
-        count: practices.filter((p) => p.mode === 'real').length,
-        datasetDate: '2026-10-24',
-      });
-    if (request.method === 'GET' && url.pathname === '/health')
-      return json({ ok: true, version: '0.3.0' });
-    if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
-    const origin = request.headers.get('Origin');
-    if (origin && origin !== url.origin) return json({ error: 'Origine non autorisée.' }, 403);
-    if (Number(request.headers.get('content-length')) > 12000)
-      return json({ error: 'Requête trop volumineuse.' }, 413);
-    let body;
+
+async function authorizedImport(request, expected) {
+  if (!expected || typeof expected !== 'string') return false;
+  const actual = request.headers.get('Authorization')?.replace(/^Bearer /, '') || '';
+  const encoder = new TextEncoder();
+  const [a, b] = await Promise.all(
+    [actual, expected].map((text) => crypto.subtle.digest('SHA-256', encoder.encode(text))),
+  );
+  return new Uint8Array(a).every((value, index) => value === new Uint8Array(b)[index]);
+}
+
+async function importRequest(request, env, path) {
+  if (!(await authorizedImport(request, env.DATA_IMPORT_TOKEN)))
+    return json({ error: 'Accès à l’import refusé.' }, 403);
+  const store = createPracticeStore(env.DB);
+  if (request.method === 'GET' && path === '/internal/import/status') {
     try {
-      const raw = await request.text();
-      if (raw.length > 12000) return json({ error: 'Requête trop volumineuse.' }, 413);
-      body = JSON.parse(raw);
-    } catch {
-      return json({ error: 'JSON invalide.' }, 400);
+      return json(await store.status());
+    } catch (error) {
+      if (error instanceof DataUnavailable) return json({ empty: true });
+      throw error;
     }
-    if (url.pathname === '/api/speech') return generateSpeech(body, env);
-    if (url.pathname === '/mcp') {
-      if (!body || body.jsonrpc !== '2.0' || typeof body.method !== 'string' || Array.isArray(body))
-        return json(
-          { jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Invalid Request' } },
-          400,
-        );
-      const id = body.id ?? null;
-      let result;
-      if (body.method.startsWith('notifications/')) return new Response(null, { status: 202 });
-      if (body.method === 'server/discover')
-        result = { supportedVersions: ['2026-07-28'], capabilities: { tools: {} } };
-      else if (body.method === 'initialize')
-        result = {
-          protocolVersion: '2025-03-26',
-          capabilities: { tools: {} },
-          serverInfo: { name: 'accescompanion', version: '0.3.0' },
-        };
-      else if (body.method === 'ping') result = {};
-      else if (body.method === 'tools/list') result = { tools };
-      else if (body.method === 'tools/call') {
-        try {
-          result = {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(runTool(body.params?.name, body.params?.arguments)),
+  }
+  if (request.method !== 'POST') return json({ error: 'Méthode non autorisée.' }, 405);
+  const body = await readJson(request, 1500000);
+  if (path === '/internal/import/start') return json(await store.begin(body));
+  if (path === '/internal/import/batch') return json(await store.append(body.id, body.records));
+  if (path === '/internal/import/activate') return json(await store.activate(body.id));
+  if (path === '/internal/import/checked') return json(await store.checked(body.checksum));
+  return json({ error: 'Route introuvable.' }, 404);
+}
+
+export function createHandler({ home, searchPage, consultationPage }) {
+  return {
+    async fetch(request, env = {}) {
+      const url = new URL(request.url);
+      try {
+        if (
+          request.method === 'GET' &&
+          ['/', '/cabinets', '/consultation', '/consultation/'].includes(url.pathname)
+        )
+          return new Response(
+            url.pathname === '/'
+              ? home
+              : url.pathname === '/cabinets'
+                ? searchPage
+                : consultationPage,
+            {
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-store',
+                'X-Content-Type-Options': 'nosniff',
+                'Referrer-Policy': 'no-referrer',
+                'Content-Security-Policy':
+                  "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
               },
-            ],
-          };
-        } catch (e) {
-          result = { isError: true, content: [{ type: 'text', text: e.message }] };
+            },
+          );
+        const origin = request.headers.get('Origin');
+        if (
+          (origin && origin !== url.origin) ||
+          request.headers.get('sec-fetch-site') === 'cross-site'
+        )
+          return json({ error: 'Origine non autorisée.' }, 403);
+        if (url.pathname.startsWith('/internal/import/'))
+          return await importRequest(request, env, url.pathname);
+        if (request.method === 'GET' && url.pathname === '/api/voice-config')
+          return json(speechConfig(env));
+        if (request.method === 'GET' && url.pathname === '/api/practice') {
+          const practice = await practiceSummary(env.DB, url.searchParams.get('id'));
+          return practice ? json(practice) : json({ error: 'Établissement introuvable.' }, 404);
         }
-      } else
-        return json({ jsonrpc: '2.0', id, error: { code: -32601, message: 'Method not found' } });
-      return json({ jsonrpc: '2.0', id, result });
-    }
-    try {
-      if (url.pathname === '/api/search') return json(runTool('search_practices', body));
-      if (url.pathname === '/api/briefing') return json(runTool('create_visit_briefing', body));
-      return json({ error: 'Route introuvable.' }, 404);
-    } catch (e) {
-      return json({ error: e.message }, 400);
-    }
-  },
-};
+        if (request.method === 'GET' && url.pathname === '/api/catalog')
+          return json(await createPracticeStore(env.DB).catalog());
+        if (request.method === 'GET' && url.pathname === '/api/data-status')
+          return json(await createPracticeStore(env.DB).status());
+        if (request.method === 'GET' && url.pathname === '/health')
+          return json({ ok: true, version: '0.5.0' });
+        if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
+        const body = await readJson(request, 12000);
+        if (url.pathname === '/api/speech') return generateSpeech(body, env);
+        if (url.pathname === '/mcp') {
+          if (
+            !body ||
+            body.jsonrpc !== '2.0' ||
+            typeof body.method !== 'string' ||
+            Array.isArray(body)
+          )
+            return json(
+              { jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Invalid Request' } },
+              400,
+            );
+          const id = body.id ?? null;
+          let result;
+          if (body.method.startsWith('notifications/')) return new Response(null, { status: 202 });
+          if (body.method === 'server/discover')
+            result = { supportedVersions: ['2026-07-28'], capabilities: { tools: {} } };
+          else if (body.method === 'initialize')
+            result = {
+              protocolVersion: '2025-03-26',
+              capabilities: { tools: {} },
+              serverInfo: { name: 'accescompanion', version: '0.5.0' },
+            };
+          else if (body.method === 'ping') result = {};
+          else if (body.method === 'tools/list') result = { tools: practiceTools };
+          else if (body.method === 'tools/call') {
+            try {
+              result = {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify(
+                      await runPracticeTool(body.params?.name, body.params?.arguments, env.DB),
+                    ),
+                  },
+                ],
+              };
+            } catch (error) {
+              result = { isError: true, content: [{ type: 'text', text: error.message }] };
+            }
+          } else
+            return json({
+              jsonrpc: '2.0',
+              id,
+              error: { code: -32601, message: 'Method not found' },
+            });
+          return json({ jsonrpc: '2.0', id, result });
+        }
+        if (url.pathname === '/api/search')
+          return json(await runPracticeTool('search_practices', body, env.DB));
+        if (url.pathname === '/api/briefing')
+          return json(await runPracticeTool('create_visit_briefing', body, env.DB));
+        return json({ error: 'Route introuvable.' }, 404);
+      } catch (error) {
+        return json(
+          { error: error.message },
+          error.status || (error.message.includes('volumineuse') ? 413 : 400),
+        );
+      }
+    },
+  };
+}

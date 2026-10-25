@@ -1,8 +1,11 @@
+import { openSqlite } from '../storage/sqlite.mjs';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import worker from '../worker/index.js';
 import { createSessionBridge, consultationTools } from './session-bridge.mjs';
 const bridge = createSessionBridge();
+const database = openSqlite(process.env.DATABASE_PATH);
+const workerEnv = { DB: database, DATA_IMPORT_TOKEN: process.env.DATA_IMPORT_TOKEN };
 const port = Number(process.env.MCP_TEST_PORT || 4180);
 const base = 'http://127.0.0.1:' + port;
 const assets = new Map([
@@ -89,6 +92,7 @@ const server = createServer(async (req, res) => {
       if (body.method === 'tools/list') {
         const r = await worker.fetch(
           new Request(base + '/mcp', { method: 'POST', body: JSON.stringify(body) }),
+          workerEnv,
         );
         const data = await r.json();
         data.result.tools.push(...consultationTools);
@@ -119,7 +123,7 @@ const server = createServer(async (req, res) => {
       headers: req.headers,
       ...(raw.length ? { body: raw, duplex: 'half' } : {}),
     });
-    const r = await worker.fetch(request, {});
+    const r = await worker.fetch(request, workerEnv);
     const headers = Object.fromEntries(r.headers);
     res.writeHead(r.status, headers);
     if (req.method === 'GET' && ['/consultation', '/consultation/'].includes(url.pathname)) {
@@ -145,6 +149,7 @@ server.listen(port, '127.0.0.1', () =>
 );
 function shutdown() {
   bridge.clear();
+  database.close();
   server.close();
   process.exit(0);
 }

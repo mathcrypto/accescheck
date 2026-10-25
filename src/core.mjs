@@ -151,7 +151,6 @@ export function search(practices, input) {
     mode: 'real',
     ranking:
       'Besoins documentés, puis inconnus ; obstacles connus en dernier. Pas de distance calculée.',
-    datasetDate: '2026-10-24',
   };
 }
 export function briefing(practice, needs) {

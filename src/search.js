@@ -2,8 +2,12 @@ const $ = (id) => document.getElementById(id);
 let response = null,
   page = 0,
   lastInput = null,
-  activeController = null;
+  activeController = null,
+  catalogData = null;
 const size = 6;
+function displayDate(value) {
+  return value ? new Date(value).toLocaleDateString('fr-FR', { timeZone: 'UTC' }) : 'date inconnue';
+}
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -55,17 +59,21 @@ async function api(path, body, signal) {
   if (!r.ok) throw new Error(data.error || 'Service indisponible.');
   return data;
 }
-async function search() {
+async function search(requestedPage = 0, reuseFilters = false) {
   activeController?.abort();
   const controller = new AbortController();
   activeController = controller;
-  lastInput = input();
+  lastInput = {
+    ...(reuseFilters && lastInput ? lastInput : input()),
+    page: requestedPage + 1,
+    pageSize: size,
+  };
   $('results').setAttribute('aria-busy', 'true');
   $('searchButton').disabled = true;
   $('searchButton').textContent = 'Recherche…';
   try {
     response = await api('/api/search', lastInput, controller.signal);
-    page = 0;
+    page = response.page - 1;
     render();
   } catch (e) {
     if (e.name !== 'AbortError') {
@@ -91,15 +99,23 @@ function render() {
   const data = response.results;
   const start = page * size;
   $('resultTitle').textContent =
-    data.length + ' cabinet' + (data.length > 1 ? 's' : '') + ' à explorer';
-  $('resultSubtitle').textContent = 'Informations en cache · classement par critères documentés';
-  $('clarification').textContent = response.needs.clarification || '';
+    response.total + ' cabinet' + (response.total > 1 ? 's' : '') + ' à explorer';
+  $('resultSubtitle').textContent =
+    'Accès Libre · export du ' +
+    displayDate(response.dataset.exportedAt) +
+    ' · importé le ' +
+    displayDate(response.dataset.importedAt);
+  $('clarification').textContent = [
+    response.needs.clarification,
+    catalogData?.dataset.stale ? 'La dernière synchronisation date de plus de trois jours.' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   $('summary').innerHTML = response.needs.keys
     .map((k) => '<span>' + esc(labels[k]) + '</span>')
     .join('');
   $('results').innerHTML = data.length
     ? data
-        .slice(start, start + size)
         .map((p) => {
           const booking = safeLink(p.doctolibUrl, ['www.doctolib.fr', 'doctolib.fr']);
           const initials = p.name
@@ -166,30 +182,30 @@ function render() {
         .join('')
     : '<div class="empty">Aucun établissement dans cet échantillon pour ces filtres. Essayez tout Paris ou une autre spécialité.</div>';
   $('pager').innerHTML =
-    data.length > size
+    response.total > size
       ? '<button id="prev" ' +
         (page === 0 ? 'disabled' : '') +
         '>← Précédent</button><span>' +
         (start + 1) +
         '–' +
-        Math.min(start + size, data.length) +
+        Math.min(start + size, response.total) +
         ' sur ' +
-        data.length +
+        response.total +
         '</span><button id="next" ' +
-        (start + size >= data.length ? 'disabled' : '') +
+        (start + size >= response.total ? 'disabled' : '') +
         '>Suivant →</button>'
       : '';
   if ($('prev'))
     $('prev').onclick = () => {
-      page--;
-      render();
-      $('resultTitle').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      search(page - 1, true).then(() =>
+        $('resultTitle').scrollIntoView({ block: 'start', behavior: 'smooth' }),
+      );
     };
   if ($('next'))
     $('next').onclick = () => {
-      page++;
-      render();
-      $('resultTitle').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      search(page + 1, true).then(() =>
+        $('resultTitle').scrollIntoView({ block: 'start', behavior: 'smooth' }),
+      );
     };
 }
 function modal(content) {
@@ -235,7 +251,7 @@ async function detail(id) {
       (source
         ? '<p><a target="_blank" rel="noopener noreferrer" href="' +
           esc(source) +
-          '">Consulter la fiche Accès Libre ↗</a> · Export du 24/10/2026</p>'
+          '">Consulter la fiche Accès Libre ↗</a></p>'
         : '') +
       '' +
       (booking
@@ -289,7 +305,7 @@ async function detail(id) {
 }
 function trust() {
   modal(
-    '<div class="eyebrow">LA TRANSPARENCE D’ABORD</div><h2 id="dialogTitle">Ce que les données nous disent.</h2><p>Nous utilisons un extrait de l’export public Accès Libre du 24 octobre 2026 : 510 établissements médicaux à Paris. La source est collaborative et ses informations ne constituent pas une garantie d’accès.</p><h3>Une date d’export n’est pas une date de vérification</h3><p>Le fichier ne fournit pas les dates de confirmation individuelles ni les identités des contributeurs. Les critères renseignés sont donc marqués « déclarés ». Aucun n’est présenté comme vérifié par une photo ou confirmé par un patient.</p><h3>Comment fonctionne le classement ?</h3><p>Les critères correspondant à vos besoins et renseignés positivement passent en premier. Les obstacles connus passent en dernier. Les informations manquantes ou contradictoires restent à confirmer. Nous ne calculons ni distance, ni temps de trajet, ni disponibilité de rendez-vous.</p><h3>Vos besoins restent temporaires</h3><p>Le texte est traité par des règles explicites sur notre serveur, sans modèle IA, sans compte et sans enregistrement dans une base de données. Il est envoyé dans le corps de la requête, jamais dans l’adresse de la page. Vous pouvez l’effacer à tout moment.</p><p>Le compagnon de rendez-vous propose des sous-titres selon le navigateur, des messages parlés et des notes à relire. La vérification par photos et les retours de patients restent à développer.</p><p><a href="https://www.data.gouv.fr/datasets/acceslibre/" target="_blank" rel="noopener noreferrer">Source : Accès Libre — Ministère de la Transition écologique ↗</a><br>Licence Ouverte / Etalab 2.0. Données importées le 25/10/2026.</p>',
+    '<div class="eyebrow">LA TRANSPARENCE D’ABORD</div><h2 id="dialogTitle">Ce que les données nous disent.</h2><p>Nous utilisons un extrait de l’export public Accès Libre : les cabinets médicaux parisiens importés dans la base. La source est collaborative et ses informations ne constituent pas une garantie d’accès.</p><h3>Une date d’export n’est pas une date de vérification</h3><p>Le fichier ne fournit pas les dates de confirmation individuelles ni les identités des contributeurs. Les critères renseignés sont donc marqués « déclarés ». Aucun n’est présenté comme vérifié par une photo ou confirmé par un patient.</p><h3>Comment fonctionne le classement ?</h3><p>Les critères correspondant à vos besoins et renseignés positivement passent en premier. Les obstacles connus passent en dernier. Les informations manquantes ou contradictoires restent à confirmer. Nous ne calculons ni distance, ni temps de trajet, ni disponibilité de rendez-vous.</p><h3>Vos besoins restent temporaires</h3><p>Le texte est traité par des règles explicites sur notre serveur, sans modèle IA, sans compte et sans enregistrement dans une base de données. Il est envoyé dans le corps de la requête, jamais dans l’adresse de la page. Vous pouvez l’effacer à tout moment.</p><p>Le compagnon de rendez-vous propose des sous-titres selon le navigateur, des messages parlés et des notes à relire. La vérification par photos et les retours de patients restent à développer.</p><p><a href="https://www.data.gouv.fr/datasets/acceslibre/" target="_blank" rel="noopener noreferrer">Source : Accès Libre — Ministère de la Transition écologique ↗</a><br>Licence Ouverte / Etalab 2.0. Dates d’export et de synchronisation disponibles dans les résultats.</p>',
   );
 }
 $('searchForm').onsubmit = (e) => {
@@ -348,6 +364,7 @@ $('easy').onclick = () => {
     const r = await fetch('/api/catalog');
     if (!r.ok) throw new Error();
     const d = await r.json();
+    catalogData = d;
     for (const zip of d.districts) {
       const o = document.createElement('option');
       o.value = zip;
@@ -363,7 +380,11 @@ $('easy').onclick = () => {
     }
     $('datasetCount').textContent =
       d.count +
-      ' établissements médicaux à Paris. Source : Accès Libre. Export du 24/10/2026 ; dates individuelles non disponibles.';
+      ' établissements médicaux à Paris. Accès Libre · export du ' +
+      displayDate(d.dataset.exportedAt) +
+      ' · synchronisé le ' +
+      displayDate(d.dataset.lastCheckedAt || d.dataset.importedAt) +
+      '. Dates de vérification individuelles non disponibles.';
     await search();
   } catch {
     $('results').innerHTML =

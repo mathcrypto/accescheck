@@ -1,41 +1,41 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-const scriptPlaceholder = '/*PAGE_SCRIPT*/';
+import { readFile, mkdir } from 'node:fs/promises';
+import { build } from 'esbuild';
+import { resolve } from 'node:path';
 
-async function inlinePageScript(templatePath, script) {
+async function page(templatePath, entryPoint) {
   const template = await readFile(templatePath, 'utf8');
-  if (!template.includes(scriptPlaceholder)) {
+  const placeholder = '/*PAGE_SCRIPT*/';
+  if (!template.includes(placeholder))
     throw new Error(`${templatePath} is missing its script placeholder.`);
-  }
-  return template.replace(scriptPlaceholder, script);
+  const result = await build({
+    entryPoints: [entryPoint],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2022',
+    minify: false,
+  });
+  return template.replace(placeholder, () =>
+    result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script'),
+  );
 }
-
-const core = (await readFile('src/core.mjs', 'utf8')).replace(/^export /gm, '');
-const data = await readFile('data/practices.json', 'utf8');
-const html = await readFile('src/index.html', 'utf8');
-const searchScript = await readFile('src/search.js', 'utf8');
-const search = await inlinePageScript('src/search.html', searchScript);
-const companionCore = (await readFile('src/companion-core.mjs', 'utf8')).replace(/^export /gm, '');
-const companionJs = await readFile('src/companion.js', 'utf8');
-const companion = await inlinePageScript(
-  'src/consultation.html',
-  companionCore + '\n' + companionJs,
-);
-const speech = (await readFile('src/speech.mjs', 'utf8')).replace(/^export /gm, '');
-const handler = await readFile('src/handler.mjs', 'utf8');
+const pages = {
+  home: await readFile('src/index.html', 'utf8'),
+  searchPage: await page('src/search.html', 'src/search.js'),
+  consultationPage: await page('src/consultation.html', 'src/companion.js'),
+};
 await mkdir('worker', { recursive: true });
-await writeFile(
-  'worker/index.js',
-  core +
-    '\nconst practices=' +
-    data +
-    ';\nconst html=' +
-    JSON.stringify(html) +
-    ';\nconst searchHtml=' +
-    JSON.stringify(search) +
-    ';\nconst consultationHtml=' +
-    JSON.stringify(companion) +
-    ';\n' +
-    speech +
-    '\n' +
-    handler,
-);
+await build({
+  stdin: {
+    contents: `import { createHandler } from './src/handler.mjs'; export default createHandler(${JSON.stringify(pages)});`,
+    resolveDir: resolve('.'),
+    loader: 'js',
+  },
+  bundle: true,
+  outfile: 'worker/index.js',
+  format: 'esm',
+  platform: 'browser',
+  target: 'es2022',
+  minify: false,
+});

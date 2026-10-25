@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/client';
-import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
-const base = 'http://127.0.0.1:4180';
+import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/client/stdio';
+const base = process.env.MCP_TEST_URL || 'http://127.0.0.1:4180';
 let session;
 const browser = async (action, extra = {}) => {
   const r = await fetch(base + '/bridge/' + action, {
@@ -22,6 +22,7 @@ const transport = new StdioClientTransport({
   command: process.execPath,
   args: [fileURLToPath(new URL('../mcp/server.mjs', import.meta.url))],
   stderr: 'pipe',
+  env: { ...getDefaultEnvironment(), ACCESCHECK_MCP_URL: base + '/mcp' },
 });
 const call = async (name, args) => {
   const r = await client.callTool({ name, arguments: args });

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseNeeds, assess, search, safeDoctolib, evidenceState } from '../src/core.mjs';
-const practices = JSON.parse(readFileSync(new URL('../data/practices.json', import.meta.url)));
+const practices = JSON.parse(readFileSync(new URL('./fixtures/practices.json', import.meta.url)));
 const cases = [
   ['fauteuil roulant', ['stepFree', 'route', 'width', 'consultation']],
   ['electric wheelchair', ['stepFree', 'route', 'width', 'consultation']],
@@ -64,7 +64,7 @@ test('unmet requirements rank after unresolved requirements', () => {
   assert.equal(search(ps, { needs: 'sans marche' }).results[0].id, 'b');
 });
 test('only imported practices are available and fictional search is rejected', () => {
-  assert.equal(practices.length, 510);
+  assert.equal(practices.length, 3);
   assert.ok(
     practices.every((practice) => practice.mode === 'real' && practice.source === 'Accès Libre'),
   );
@@ -73,7 +73,7 @@ test('only imported practices are available and fictional search is rejected', (
       practice.sourceUrl.startsWith('https://acceslibre.beta.gouv.fr/'),
     ),
   );
-  assert.equal(search(practices, { needs: 'fauteuil' }).results.length, 510);
+  assert.equal(search(practices, { needs: 'fauteuil' }).results.length, 3);
   assert.throws(() => search(practices, { needs: 'fauteuil', mode: 'demo' }));
 });
 test('filters exactly by district and specialty', () => {

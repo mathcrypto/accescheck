@@ -3,19 +3,14 @@
 Usage: python3 scripts/import-data.py input.csv
 """
 
+import argparse
 import csv
 import json
-import sys
+import os
+import tempfile
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
-EXPORT_DATE = "2026-10-24"
-IMPORT_DATE = "2026-10-25"
-SOURCE_URL = (
-    "https://static.data.gouv.fr/resources/"
-    "accessibilite-des-etablissements-recevant-du-public-erp-pour-les-personnes-"
-    "en-situation-de-handicap/20261024-230521/acceslibre-with-web-url.csv"
-)
 MEDICAL_ACTIVITIES = (
     "médecin",
     "médecine",
@@ -85,7 +80,7 @@ def booking_url(row):
     return None
 
 
-def build_practice(row):
+def build_practice(row, exported_at=None):
     address = " ".join(
         part
         for part in (
@@ -106,47 +101,76 @@ def build_practice(row):
         "sourceUrl": row["web_url"],
         "mode": "real",
         "doctolibUrl": booking_url(row),
-        "exportDate": EXPORT_DATE,
+        "exportDate": exported_at[:10] if exported_at else None,
         "evidence": build_evidence(row),
     }
+
+
+REQUIRED_COLUMNS = {"id", "name", "postal_code", "activite", "web_url", *EVIDENCE_FIELDS.values()}
+
+
+def source_fields(row):
+    """Keep public source values without executable widget markup."""
+    fields = {}
+    for key, value in row.items():
+        if key == "widget_code":
+            continue
+        if value in (None, ""):
+            fields[key] = None
+        elif value in ("True", "False"):
+            fields[key] = boolean_value(value)
+        elif value.startswith("["):
+            try:
+                fields[key] = json.loads(value)
+            except json.JSONDecodeError:
+                fields[key] = value
+        else:
+            fields[key] = value
+    return fields
 
 
 def import_practices(source):
     return [build_practice(row) for row in csv.DictReader(source) if is_selected_practice(row)]
 
 
-def write_dataset(practices, destination):
-    destination.mkdir(exist_ok=True, parents=True)
-    provenance = {
-        "publisher": "Accès Libre — Ministère de la Transition écologique",
-        "license": "Licence Ouverte / Etalab 2.0",
-        "dataset": "https://www.data.gouv.fr/datasets/acceslibre/",
-        "resource": SOURCE_URL,
-        "exportDate": EXPORT_DATE,
-        "importedAt": IMPORT_DATE,
-        "selection": (
-            "Paris (75), activités médicales sélectionnées, "
-            "hors pharmacies et services administratifs"
-        ),
-        "recordCount": len(practices),
-        "limitations": (
-            "Export ne contenant pas les dates de confirmation individuelles ; "
-            "aucune date de vérification ni identité du contributeur supposée."
-        ),
-    }
-    for name, data in (("practices.json", practices), ("provenance.json", provenance)):
-        (destination / name).write_text(
-            json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-        )
+def write_records(source, destination, exported_at):
+    csv.field_size_limit(2_000_000)
+    reader = csv.DictReader(source)
+    if not reader.fieldnames or not REQUIRED_COLUMNS.issubset(reader.fieldnames):
+        raise ValueError("The export is missing required source columns.")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(dir=destination.parent, prefix="import-")
+    identifiers = set()
+    count = 0
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as target:
+            for row in reader:
+                if not is_selected_practice(row):
+                    continue
+                record = build_practice(row, exported_at)
+                if not record["id"] or record["id"] in identifiers:
+                    raise ValueError("A selected source ID is missing or duplicated.")
+                identifiers.add(record["id"])
+                target.write(json.dumps({"record": record, "sourceFields": source_fields(row)}, ensure_ascii=False) + "\n")
+                count += 1
+        if not count:
+            raise ValueError("The export contains no selected medical practices.")
+        os.replace(temporary, destination)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    return {"count": count, "columns": reader.fieldnames}
 
 
 def main():
-    if len(sys.argv) != 2:
-        raise SystemExit(__doc__)
-    with Path(sys.argv[1]).open(encoding="utf-8", newline="") as source:
-        practices = import_practices(source)
-    write_dataset(practices, Path("data"))
-    print(f"Imported {len(practices)} practices from Accès Libre.")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("input", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--exported-at", required=True)
+    arguments = parser.parse_args()
+    with arguments.input.open(encoding="utf-8-sig", newline="") as source:
+        result = write_records(source, arguments.output, arguments.exported_at)
+    print(json.dumps(result))
 
 
 if __name__ == "__main__":

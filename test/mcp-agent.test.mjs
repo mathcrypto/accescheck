@@ -6,11 +6,21 @@ import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { createAgentServer, bridgeEndpoint, forwardConsultation } from '../mcp/server.mjs';
 import { createSessionBridge } from '../prototype/session-bridge.mjs';
 import { fileURLToPath } from 'node:url';
+import worker from '../worker/index.js';
+import { createTestDatabase } from './helpers/database.mjs';
+import { consultationTools } from '../prototype/session-bridge.mjs';
 
 async function linked(fn) {
   const bridge = createSessionBridge();
+  const database = await createTestDatabase();
   const fetcher = async (_url, init) => {
     const body = JSON.parse(init.body);
+    if (!consultationTools.some((tool) => tool.name === body.params.name)) {
+      return worker.fetch(
+        new Request('http://127.0.0.1/mcp', { method: 'POST', body: init.body }),
+        { DB: database },
+      );
+    }
     let result;
     try {
       result = {
@@ -37,6 +47,7 @@ async function linked(fn) {
     await client.close();
     await server.close();
     bridge.clear();
+    database.close();
   }
 }
 const parse = (r) => JSON.parse(r.content[0].text);

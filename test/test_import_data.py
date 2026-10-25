@@ -3,7 +3,6 @@
 import csv
 import importlib.util
 import io
-import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -48,14 +47,25 @@ class ImportDataTests(unittest.TestCase):
         self.assertEqual(evidence["width"]["value"], 85)
         self.assertIsNone(evidence["hearing"]["value"])
 
-    def test_output_count_does_not_append_fictional_practices(self):
+    def test_invalid_export_keeps_previous_output(self):
         with tempfile.TemporaryDirectory() as directory:
-            destination = Path(directory)
-            import_data.write_dataset([], destination)
-            practices = json.loads((destination / "practices.json").read_text())
-            provenance = json.loads((destination / "provenance.json").read_text())
-            self.assertEqual(practices, [])
-            self.assertEqual(provenance["recordCount"], 0)
+            destination = Path(directory) / "records.jsonl"
+            destination.write_text("previous import")
+            with self.assertRaises(ValueError):
+                import_data.write_records(io.StringIO("id,name\n"), destination, "2026-10-24")
+            self.assertEqual(destination.read_text(), "previous import")
+
+    def test_full_source_fields_preserve_unknowns_and_remove_widget(self):
+        fields = import_data.source_fields({
+            "stationnement_pmr": "",
+            "entree_plain_pied": "False",
+            "accueil_equipements_malentendants": '["lsf", "bim"]',
+            "widget_code": "<script>unsafe</script>",
+        })
+        self.assertIsNone(fields["stationnement_pmr"])
+        self.assertIs(fields["entree_plain_pied"], False)
+        self.assertEqual(fields["accueil_equipements_malentendants"], ["lsf", "bim"])
+        self.assertNotIn("widget_code", fields)
 
 
 if __name__ == "__main__":
