@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
+import { EventEmitter } from 'node:events';
 import { createSessionBridge } from '../prototype/session-bridge.mjs';
 import { createOpenAIAgent } from '../prototype/openai-agent.mjs';
 
@@ -172,19 +173,28 @@ test('local HTTP routes authenticate generation, queue approval and clear the se
           headers: { host, ...headers },
         });
         const result = { headers: {} };
-        server.emit('request', req, {
-          setHeader(key, value) {
-            result.headers[key] = value;
-          },
-          writeHead(status, values) {
-            result.status = status;
-            Object.assign(result.headers, values);
-          },
-          end(data) {
-            result.body = data?.toString() || '';
-            resolve(result);
-          },
-        });
+        let output = '';
+        server.emit(
+          'request',
+          req,
+          Object.assign(new EventEmitter(), {
+            setHeader(key, value) {
+              result.headers[key] = value;
+            },
+            writeHead(status, values) {
+              result.status = status;
+              Object.assign(result.headers, values);
+            },
+            write(data) {
+              output += data.toString();
+              return true;
+            },
+            end(data) {
+              result.body = output + (data?.toString() || '');
+              resolve(result);
+            },
+          }),
+        );
       });
     const config = await request('/bridge/agent-config');
     assert.equal(config.status, 200);

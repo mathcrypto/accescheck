@@ -145,9 +145,12 @@ export const server = createServer(async (req, res) => {
         return json(res, { jsonrpc: '2.0', id: body.id ?? null, result });
       }
     }
+    const aborted = new AbortController();
+    res.once('close', () => aborted.abort());
     const request = new Request(base + req.url, {
       method: req.method,
       headers: req.headers,
+      signal: aborted.signal,
       ...(raw.length ? { body: raw, duplex: 'half' } : {}),
     });
     const r = await (live || worker).fetch(request, workerEnv);
@@ -159,8 +162,16 @@ export const server = createServer(async (req, res) => {
         html = html.replace('</body>', '<script src="/mcp-test/client.js"></script></body>');
       return res.end(live ? live.inject(html) : html);
     }
-    res.end(Buffer.from(await r.arrayBuffer()));
+    for await (const chunk of r.body || []) {
+      if (res.destroyed) break;
+      res.write(Buffer.from(chunk));
+    }
+    res.end();
   } catch {
+    if (res.headersSent || res.destroyed) {
+      res.destroy();
+      return;
+    }
     json(res, { error: 'Local test request failed' }, 500);
   }
 });
