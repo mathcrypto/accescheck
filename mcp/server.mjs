@@ -55,7 +55,7 @@ export async function forwardConsultation(name,args,endpoint,fetcher=fetch) {
 
 export function createAgentServer({endpoint=process.env.ACCESCHECK_MCP_URL,fetcher=fetch}={}) {
   const localEndpoint=bridgeEndpoint(endpoint);
-  const server=new McpServer({name:'accescheck',version:'0.4.0'},{instructions:agentInstructions});
+  const server=new McpServer({name:'accescompanion',version:'0.4.0'},{instructions:agentInstructions});
   const consultationNames=new Set(consultationTools.map(t=>t.name));
   for(const tool of [...practiceList.result.tools,...consultationTools]) {
     const readOnly=['search_practices','get_practice_accessibility','create_visit_briefing','get_caption_updates','get_consultation_context'].includes(tool.name);
@@ -76,9 +76,9 @@ export function createAgentServer({endpoint=process.env.ACCESCHECK_MCP_URL,fetch
 
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   try {
-    serveStdio(()=>createAgentServer(),{onerror:()=>console.error('AccèsCheck MCP: transport error.')});
+    serveStdio(()=>createAgentServer(),{onerror:()=>console.error('accescompanion MCP: transport error.')});
   } catch {
-    console.error('AccèsCheck MCP: configuration invalide. Utilisez une adresse HTTP locale 127.0.0.1 avec le chemin /mcp.');
+    console.error('accescompanion MCP: configuration invalide. Utilisez une adresse HTTP locale 127.0.0.1 avec le chemin /mcp.');
     process.exitCode=1;
   }
 }

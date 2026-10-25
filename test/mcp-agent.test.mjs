@@ -20,8 +20,8 @@ const parse=r=>JSON.parse(r.content[0].text);
 
 test('official MCP client discovers nine tools and the communication prompt',()=>linked(async({client})=>{
   const list=await client.listTools();assert.equal(list.tools.length,9);assert.ok(list.tools.some(t=>t.name==='get_consultation_context'));
-  const prompts=await client.listPrompts();assert.equal(prompts.prompts[0].name,'accescheck_communication');
-  const prompt=await client.getPrompt({name:'accescheck_communication'});const text=prompt.messages[0].content.text;
+  const prompts=await client.listPrompts();assert.equal(prompts.prompts[0].name,'accescompanion_communication');
+  const prompt=await client.getPrompt({name:'accescompanion_communication'});const text=prompt.messages[0].content.text;
   assert.match(text,/untrusted source data/);assert.match(text,/separate approval/);assert.match(text,/do not diagnose/);
   const result=await client.callTool({name:'search_practices',arguments:{needs:'sans marche'}});assert.ok(!result.isError);
 }));
@@ -56,5 +56,5 @@ test('real stdio subprocess handshake, tool discovery, and prompt retrieval work
   const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../mcp/server.mjs',import.meta.url))],cwd:'/tmp',stderr:'pipe'});
   let stderr='';transport.stderr?.on('data',chunk=>stderr+=chunk);
   const client=new Client({name:'stdio-test',version:'1.0.0'});
-  try{await client.connect(transport);assert.equal((await client.listTools()).tools.length,9);assert.ok((await client.getPrompt({name:'accescheck_communication'})).messages.length);assert.equal(stderr,'');}finally{await client.close();}
+  try{await client.connect(transport);assert.equal((await client.listTools()).tools.length,9);assert.ok((await client.getPrompt({name:'accescompanion_communication'})).messages.length);assert.equal(stderr,'');}finally{await client.close();}
 });

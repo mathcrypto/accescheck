@@ -1,6 +1,6 @@
-# AccèsCheck MCP agent connection
+# accescompanion MCP agent connection
 
-This local stdio server lets an MCP host supply the AI model and use AccèsCheck's tools. It uses the official MCP SDK. AccèsCheck does not run an LLM in the background or require a separate paid model API. The host's own plan and data-processing policies apply to shared fictional text.
+This local stdio server lets an MCP host supply the AI model and use accescompanion's tools. It uses the official MCP SDK. accescompanion does not run an LLM in the background or require a separate paid model API. The host's own plan and data-processing policies apply to shared fictional text.
 
 ## Start
 
@@ -25,13 +25,13 @@ If Node is not on the desktop app's PATH, use the full Node executable path prin
 
 [Official Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp) explains the shared configuration and server instructions. [Official MCP SDK stdio documentation](https://ts.sdk.modelcontextprotocol.io/v2/serving/stdio) describes the transport.
 
-## Test with the extension
+## Test the local consultation
 
-1. Open http://127.0.0.1:4180/mock-call in desktop Chrome, invoke the extension on that tab, and expand **Agent de communication**.
-2. Click **Relier l’agent au test**. Share the displayed single-use code with your connected AI client. Pairing does not start captions or audio.
-3. Ask the agent: “Utilise AccèsCheck avec ce code. Lis la conversation fictive partagée et aide-moi à préparer une question. Propose-la avant de demander sa lecture.”
-4. The agent calls `prepare_consultation`, then `get_consultation_context`. You choose whether to activate captions or display fictional typed text in the panel.
-5. To request speech, the agent calls `speak_patient_message` with `expected_cursor` from the latest context. The panel still requires **Approuver et lire**. The request alone never plays audio. Duplicate pending proposals at the same cursor reuse their action ID.
+1. Open http://127.0.0.1:4180/consultation while `npm run dev:companion` is running.
+2. Click **Partager l’exemple et lier un agent**. Share the displayed single-use code with your connected AI client. Pairing does not start captions or audio.
+3. Ask the agent: “Utilise accescompanion avec ce code. Lis la conversation fictive partagée et aide-moi à préparer une question. Propose-la avant de demander sa lecture.”
+4. The agent calls `prepare_consultation`, then `get_consultation_context`. You choose whether to activate captions on the consultation page.
+5. To request speech, the agent calls `speak_patient_message` with `expected_cursor` from the latest context. The page still requires **Approuver et lire cette réponse**. The request alone never plays audio. Duplicate pending proposals at the same cursor reuse their action ID.
 6. A corrected caption expires pending speech proposals. The agent must read updated context before proposing a replacement. Rejecting a proposal never plays audio.
 7. Ask for `draft_visit_notes` for an exact editable transcript draft, or `stop_session` to revoke access and clear the shared test.
 

@@ -1,32 +1,25 @@
-# AccèsCheck
+# accescompanion
 
-Accessibility evidence for medical practices in Paris, with a French patient interface and an MCP server. This is an initial working vertical slice, not an appointment system.
-
-## Browser extension and consultation demo
-
-The project includes a Chrome extension that opens a communication panel beside a selected Doctolib tab: French captions, typed replies spoken with a device voice, and reviewable notes. A prerecorded fictional call provides a test without a medical appointment. This is an independent prototype; live Doctolib call compatibility and outgoing reply audio remain unverified.
-
-With Node.js 24 LTS installed:
+One place to prepare a medical visit and follow the appointment. Search documented accessibility for Paris practices, book on Doctolib when the source includes a link, then read what is said and answer. The doctor hears a spoken reply only if the device is next to them, or if this page’s sound is shared into the call.
 
 ```sh
 npm ci
 npm run build
-npm test
-npm run dev:companion
+npm run dev
 ```
 
-Open http://127.0.0.1:4180/mock-call in desktop Chrome. In `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select the repository's `extension` folder. Click AccèsCheck's toolbar icon on the mock-call tab. Activate captions, explicitly select the recognition mode and consent, then play the fictional recording. Local recognition requires a compatible French pack; browser-service recognition requires a separate audio-processing acknowledgment.
+Open http://127.0.0.1:4173. Describe a need, open a practice, choose **Prendre rendez-vous** when Doctolib is listed, then **Suivre l’échange**.
 
-See [extension setup and limits](extension/README.md) and [local consultation MCP tools](prototype/README.md). No paid voice API or API key is needed for the default device voice. Speech plays on the patient's device; it is not automatically sent into Doctolib's outgoing microphone.
+The fictional mock call and the MCP pairing code are developer checks. They are not part of the patient path. See [local consultation tools](prototype/README.md).
 
 ## AI agent connection
 
-[Connect Codex or another MCP client](mcp/README.md) to the nine local tools with `node mcp/server.mjs`. The host supplies the model. AccèsCheck provides conversation context, a communication prompt, reply approval, and notes. Correcting a caption expires pending replies; no response is spoken automatically. The hosted Site retains its three search tools.
+[Connect Codex or another MCP client](mcp/README.md) to the nine local tools with `node mcp/server.mjs`. The host supplies the model. accescompanion provides conversation context, a communication prompt, reply approval, and notes. Correcting a caption expires pending replies; no response is spoken automatically. The hosted Site retains its three search tools.
 
 ## Development
 
-- Edit the search and standalone companion in `src/`, the extension in `extension/`, and the fictional call/MCP bridge in `prototype/`.
-- After changing `src/`, run `npm run build`. After changing extension files, click **Reload** on its Chrome extensions card and reopen its panel.
+- Edit the search and standalone companion in `src/`, and the fictional call/MCP bridge in `prototype/`.
+- After changing `src/`, run `npm run build`.
 - Run `npm test` before pushing. GitHub Actions also runs tests, builds the site artifact, and validates its entry point.
 - Generated packages, local reports, signing keys, and `.env` files are excluded from Git. Keep real appointment data and patient conversations out of fixtures and issues.
 
@@ -96,12 +89,12 @@ Photo analysis/redaction, patient feedback, write-back payload review, multiling
 Open `/consultation`, or “Mon rendez-vous” from search.
 
 - Live French captions via browser SpeechRecognition when supported. Microphone starts only after an explicit action and an agreement checkbox. Default is strictly on-device recognition (`processLocally=true`). Missing support or French language pack is reported without a silent remote fallback. Optional language pack installation requires a separate click.
-- An explicit browser-service mode is available with an additional acknowledgment that the browser may send audio to its speech provider. AccèsCheck never receives or uploads audio. Browser-provider processing and retention cannot be guaranteed by this app.
+- An explicit browser-service mode is available with an additional acknowledgment that the browser may send audio to its speech provider. accescompanion never receives or uploads audio. Browser-provider processing and retention cannot be guaranteed by this app.
 - Recognized speech is labeled as captured speech with an unidentified speaker: no invented diarization. Provisional words appear separately; final phrases can be corrected.
 - Patients can display typed messages or speak them using French voices marked local by the browser. Phrases are prepared but never automatically spoken. Speech playback stops recognition to avoid self-transcription; microphone does not restart automatically.
 - Enlarged reading mode and spoken interface orientation support low vision and screen-reader use. This does **not** provide camera-based or environmental audio description.
 - Notes can be entered manually, or a verbatim conversation draft can be copied into an editable field. This is not LLM summarization or a medical synthesis. Audio playback requires review acknowledgment; edits or new conversation content invalidate the acknowledgment. Copying notes requires an explicit action.
-- No transcript, audio, or notes are posted to AccèsCheck, stored in a database, or persisted in browser storage. Page hide clears the session; leaving the foreground stops microphone and playback. Users can explicitly copy notes to their system clipboard.
+- No transcript, audio, or notes are posted to accescompanion, stored in a database, or persisted in browser storage. Page hide clears the session; leaving the foreground stops microphone and playback. Users can explicitly copy notes to their system clipboard.
 - No API credentials required. Unsupported speech browsers retain manual two-way communication. Lack of a French local synthesis voice disables audio playback with an explanation.
 
 The companion is a communication aid, not a clinical record or qualified interpreter. Critical instructions should be confirmed by the clinician.
@@ -120,7 +113,7 @@ The four communication tools are now visible directly below the introduction. Th
 
 This is a **side-by-side companion**, not a native Doctolib or Zoom integration. It does not join a meeting, embed its video, log into either platform, or inject synthesized speech into another app's microphone. Users open their own meeting link and explicitly share that browser tab's audio. Share-audio instructions, a connection indicator, disconnect control, and a copy-to-clipboard action for typed replies are provided. Forwarding spoken replies requires an audio-sharing setup supported by the call platform; the patient must verify that the clinician can hear them.
 
-Shared-tab recognition is limited to desktop Chromium/Chrome/Edge 135+ with getDisplayMedia, following MDN browser compatibility data for `SpeechRecognition.start(audioTrack)`. Other browsers retain microphone/manual communication without silently substituting microphone input for a video call. Only a selected browser-tab surface with a live audio track is accepted. Entire-screen/window or audio-less selections are stopped and rejected. The browser necessarily creates a video track for the chooser; AccèsCheck does not display, process, transmit, or record its frames. No MediaRecorder is used. Native sharing controls remain available. Ending the share, disconnecting, clearing, navigating away, or recognition errors stop all tracks. Unlike in-person microphone capture, explicitly shared tab audio can continue while the call tab is in the foreground, as explained in the interface. Speech playback pauses transcription but retains an already connected tab until explicit disconnect or session clear.
+Shared-tab recognition is limited to desktop Chromium/Chrome/Edge 135+ with getDisplayMedia, following MDN browser compatibility data for `SpeechRecognition.start(audioTrack)`. Other browsers retain microphone/manual communication without silently substituting microphone input for a video call. Only a selected browser-tab surface with a live audio track is accepted. Entire-screen/window or audio-less selections are stopped and rejected. The browser necessarily creates a video track for the chooser; accescompanion does not display, process, transmit, or record its frames. No MediaRecorder is used. Native sharing controls remain available. Ending the share, disconnecting, clearing, navigating away, or recognition errors stop all tracks. Unlike in-person microphone capture, explicitly shared tab audio can continue while the call tab is in the foreground, as explained in the interface. Speech playback pauses transcription but retains an already connected tab until explicit disconnect or session clear.
 
 ### French voices
 
