@@ -714,6 +714,89 @@ test('a displayed-order hint cannot override accessibility priority or widen aut
   }
 });
 
+const confirmationProposal = {
+  locationRef: null,
+  specialty: null,
+  needs: { keys: [], minWidth: null },
+  radiusKm: null,
+  notes: [],
+};
+async function pendingSearch(question = null) {
+  let step = 0;
+  return runSearchAgent(
+    { message: 'Un cabinet sans contrainte géographique', consent: true },
+    env,
+    async () =>
+      step++ === 0
+        ? call('prepare_search', confirmationProposal)
+        : complete({ reply: 'Voici le récapitulatif.', question }),
+  );
+}
+test('a prepared search exposes a real confirmation even when the model asks its own confirmation QCM', async () => {
+  const prepared = await pendingSearch({
+    id: 'confirmez-recapitulatif',
+    text: 'Confirmez-vous ?',
+    options: [{ label: 'Oui, confirmer', value: 'oui' }],
+  });
+  assert.ok(prepared.state.proposal);
+  assert.ok(
+    prepared.actions.some((action) => action.id === 'confirm'),
+    'A confirmation must use the server action instead of resetting the proposal as a QCM answer',
+  );
+  assert.equal(prepared.question, null);
+  assert.equal(prepared.state.question, null);
+  const result = await runSearchAgent(
+    { action: 'confirm', consent: true, state: prepared.state },
+    env,
+    async (_url, options) => {
+      const body = JSON.parse(options.body);
+      return body.input.at(-1).type === 'function_call_output'
+        ? complete({ reply: 'Voici les cabinets.', question: null })
+        : call('search_practices', { proposalId: prepared.state.proposal.id });
+    },
+  );
+  assert.ok(result.results);
+  assert.equal(result.state.confirmed, true);
+});
+test('re-preparing a confirmed proposal cannot reset consent and require another confirmation', async () => {
+  const prepared = await pendingSearch();
+  let step = 0;
+  const result = await runSearchAgent(
+    { action: 'confirm', consent: true, state: prepared.state },
+    env,
+    async (_url, options) => {
+      const body = JSON.parse(options.body);
+      if (step++ === 0) return call('prepare_search', confirmationProposal);
+      if (step === 2) {
+        assert.match(toolOutput(body).error || '', /déjà confirmée/);
+        return call('search_practices', { proposalId: prepared.state.proposal.id });
+      }
+      assert.ok(Array.isArray(toolOutput(body).results));
+      return complete({ reply: 'Voici les cabinets.', question: null });
+    },
+  );
+  assert.ok(result.results);
+  assert.equal(result.state.proposal.id, prepared.state.proposal.id);
+  assert.equal(result.state.confirmed, true);
+  assert.equal(result.actions.length, 0);
+});
+test('a confirmed turn without an executed search fails explicitly instead of asking confirmation again', async () => {
+  const prepared = await pendingSearch();
+  await assert.rejects(
+    runSearchAgent({ action: 'confirm', consent: true, state: prepared.state }, env, async () =>
+      complete({
+        reply: 'Merci de confirmer à nouveau.',
+        question: {
+          id: 'encore-confirmer',
+          text: 'Confirmez-vous ?',
+          options: [{ label: 'Oui', value: 'oui' }],
+        },
+      }),
+    ),
+    /recherche confirmée.*exécutée/,
+  );
+});
+
 test('principal model honors the user default and generic configuration before any generation', async () => {
   for (const [settings, expected] of [
     [{}, 'gpt-5.4-mini'],
@@ -734,4 +817,30 @@ test('principal model honors the user default and generic configuration before a
       },
     );
   }
+});
+
+test('re-preparing the same search after execution preserves results even if the model repeats notes', async () => {
+  const prepared = await pendingSearch();
+  let step = 0;
+  const result = await runSearchAgent(
+    { action: 'confirm', consent: true, state: prepared.state },
+    env,
+    async (_url, options) => {
+      const body = JSON.parse(options.body);
+      if (step++ === 0) return call('search_practices', { proposalId: prepared.state.proposal.id });
+      if (step === 2) {
+        assert.ok(Array.isArray(toolOutput(body).results));
+        return call('prepare_search', {
+          ...confirmationProposal,
+          notes: ['Lieu déjà validé.'],
+        });
+      }
+      assert.equal(toolOutput(body).requiresUserConfirmation, false);
+      return complete({ reply: 'Voici les cabinets.', question: null });
+    },
+  );
+  assert.ok(result.results);
+  assert.equal(result.state.confirmed, true);
+  assert.equal(result.state.proposal.id, prepared.state.proposal.id);
+  assert.equal(result.actions.length, 0);
 });
