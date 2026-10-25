@@ -1,0 +1,68 @@
+[
+  {
+    "text": "fauteuil roulant",
+    "keys": ["stepFree", "route", "width", "consultation"],
+    "minWidth": null
+  },
+  {
+    "text": "electric wheelchair",
+    "keys": ["stepFree", "route", "width", "consultation"],
+    "minWidth": null
+  },
+  {
+    "text": "fauteuil électrique et malentendant",
+    "keys": ["stepFree", "route", "width", "consultation", "hearing"],
+    "minWidth": null
+  },
+  { "text": "Je suis sourd", "keys": ["hearing"], "minWidth": null },
+  { "text": "hard of hearing", "keys": ["hearing"], "minWidth": null },
+  { "text": "malvoyant", "keys": ["signage"], "minWidth": null },
+  { "text": "aveugle", "keys": ["signage"], "minWidth": null },
+  { "text": "sans marche", "keys": ["stepFree", "route"], "minWidth": null },
+  { "text": "entrée de plain-pied", "keys": ["stepFree", "route"], "minWidth": null },
+  { "text": "sanitaires adaptés", "keys": ["toilets"], "minWidth": null },
+  { "text": "toilettes accessibles", "keys": ["toilets"], "minWidth": null },
+  { "text": "aide au transfert", "keys": ["consultation"], "minWidth": null },
+  {
+    "text": "déambulateur",
+    "keys": ["stepFree", "route", "width", "consultation"],
+    "minWidth": null
+  },
+  { "text": "Porte 95 cm", "keys": ["width"], "minWidth": 95 },
+  { "text": "Bonjour", "keys": [], "minWidth": null },
+  {
+    "text": "Je ne suis pas en fauteuil, mais je suis malentendant",
+    "keys": ["hearing"],
+    "minWidth": null
+  },
+  { "text": "Je me déplace avec une canne blanche", "keys": ["signage"], "minWidth": null },
+  { "text": "Je communique en LSF", "keys": ["signLanguage"], "minWidth": null },
+  {
+    "text": "Je suis paraplégique",
+    "keys": ["stepFree", "route", "width", "consultation"],
+    "minWidth": null
+  },
+  { "text": "Je suis autiste", "keys": [], "minWidth": null },
+  { "text": "Il me faut une porte de 0,9 m", "keys": ["width"], "minWidth": 90 },
+  { "text": "Je veux un passage large de 1 m", "keys": ["width"], "minWidth": 100 },
+  {
+    "text": "Je ne suis pas malvoyant. J’ai seulement besoin d’une boucle auditive",
+    "keys": ["hearing"],
+    "minWidth": null
+  },
+  {
+    "text": "Pas besoin de sanitaires, mais une entrée sans marche",
+    "keys": ["stepFree", "route"],
+    "minWidth": null
+  },
+  {
+    "text": "Je ne peux pas parler, je communique par écrit",
+    "keys": ["communication"],
+    "minWidth": null
+  },
+  {
+    "text": "J’ai besoin d’un espace calme et d’une lumière réduite",
+    "keys": ["sensory"],
+    "minWidth": null
+  }
+]

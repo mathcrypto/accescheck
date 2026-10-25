@@ -151,7 +151,7 @@ export function createPracticeStore(database) {
         dataset: provenance(dataset, checked?.value || null),
       };
     },
-    async candidates(filters) {
+    async candidates(filters, includeSource = false) {
       const dataset = await active();
       const conditions = ['dataset_id = ?'];
       const parameters = [dataset.id];
@@ -164,13 +164,16 @@ export function createPracticeStore(database) {
         parameters.push(filters.specialty);
       }
       const records = await rows(
-        `SELECT record_json FROM practices WHERE ${conditions.join(' AND ')} LIMIT 20001`,
+        `SELECT record_json${includeSource ? ', source_json' : ''} FROM practices WHERE ${conditions.join(' AND ')} LIMIT 20001`,
         ...parameters,
       );
       if (records.length > 20000)
         throw new Error('Précisez la zone ou la spécialité de votre recherche.');
       return {
-        records: records.map((row) => JSON.parse(row.record_json)),
+        records: records.map((row) => ({
+          ...JSON.parse(row.record_json),
+          ...(includeSource ? { sourceFields: JSON.parse(row.source_json) } : {}),
+        })),
         dataset: provenance(dataset),
       };
     },

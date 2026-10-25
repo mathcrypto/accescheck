@@ -2,8 +2,12 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { build } from 'esbuild';
 import { resolve } from 'node:path';
 
-async function page(templatePath, entryPoint) {
-  const template = await readFile(templatePath, 'utf8');
+async function page(templatePath, entryPoint, stylePath) {
+  let template = await readFile(templatePath, 'utf8');
+  if (stylePath) {
+    const styles = await readFile(stylePath, 'utf8');
+    template = template.replace('/*PAGE_STYLE*/', () => styles);
+  }
   const placeholder = '/*PAGE_SCRIPT*/';
   if (!template.includes(placeholder))
     throw new Error(`${templatePath} is missing its script placeholder.`);
@@ -24,6 +28,7 @@ const pages = {
   home: await readFile('src/index.html', 'utf8'),
   searchPage: await page('src/search.html', 'src/search.js'),
   consultationPage: await page('src/consultation.html', 'src/companion.js'),
+  assistantPage: await page('src/assistant.html', 'src/assistant.js', 'src/assistant.css'),
 };
 await mkdir('worker', { recursive: true });
 await build({

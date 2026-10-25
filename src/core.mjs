@@ -29,6 +29,19 @@ export const criteria = {
     label: 'Signalétique intérieure',
     question: 'Une signalétique lisible et compréhensible permet-elle de s’orienter ?',
   },
+  signLanguage: {
+    label: 'Communication en LSF',
+    question:
+      'Une personne peut-elle communiquer en langue des signes française pendant la consultation ?',
+  },
+  sensory: {
+    label: 'Aménagements sensoriels',
+    question: 'Quels aménagements sont possibles pour le bruit, la lumière et l’attente ?',
+  },
+  communication: {
+    label: 'Communication adaptée',
+    question: 'Puis-je communiquer par écrit ou avec mon outil de communication, à mon rythme ?',
+  },
 };
 export function validateInput(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input))

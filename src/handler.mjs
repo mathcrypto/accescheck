@@ -1,6 +1,8 @@
 import { practiceTools, runPracticeTool, practiceSummary } from './practice-tools.mjs';
 import { createPracticeStore, DataUnavailable } from './practice-store.mjs';
 import { speechConfig, generateSpeech } from './speech.mjs';
+import { aiConfiguration, interpretNeeds } from './agents/needs-agent.mjs';
+import { findPractices, geocode } from './discovery.mjs';
 
 const headers = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -71,21 +73,23 @@ async function importRequest(request, env, path) {
   return json({ error: 'Route introuvable.' }, 404);
 }
 
-export function createHandler({ home, searchPage, consultationPage }) {
+export function createHandler({ home, searchPage, consultationPage, assistantPage }) {
   return {
     async fetch(request, env = {}) {
       const url = new URL(request.url);
       try {
         if (
           request.method === 'GET' &&
-          ['/', '/cabinets', '/consultation', '/consultation/'].includes(url.pathname)
+          ['/', '/cabinets', '/assistant', '/consultation', '/consultation/'].includes(url.pathname)
         )
           return new Response(
             url.pathname === '/'
               ? home
-              : url.pathname === '/cabinets'
-                ? searchPage
-                : consultationPage,
+              : url.pathname === '/assistant'
+                ? assistantPage
+                : url.pathname === '/cabinets'
+                  ? searchPage
+                  : consultationPage,
             {
               headers: {
                 'Content-Type': 'text/html; charset=utf-8',
@@ -107,6 +111,8 @@ export function createHandler({ home, searchPage, consultationPage }) {
           return await importRequest(request, env, url.pathname);
         if (request.method === 'GET' && url.pathname === '/api/voice-config')
           return json(speechConfig(env));
+        if (request.method === 'GET' && url.pathname === '/api/ai-config')
+          return json(aiConfiguration(env));
         if (request.method === 'GET' && url.pathname === '/api/practice') {
           const practice = await practiceSummary(env.DB, url.searchParams.get('id'));
           return practice ? json(practice) : json({ error: 'Établissement introuvable.' }, 404);
@@ -119,6 +125,10 @@ export function createHandler({ home, searchPage, consultationPage }) {
           return json({ ok: true, version: '0.5.0' });
         if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
         const body = await readJson(request, 12000);
+        if (url.pathname === '/api/locations')
+          return json({ locations: await geocode(body.query) });
+        if (url.pathname === '/api/interpret') return json(await interpretNeeds(body, env));
+        if (url.pathname === '/api/discover') return json(await findPractices(env.DB, body));
         if (url.pathname === '/api/speech') return generateSpeech(body, env);
         if (url.pathname === '/mcp') {
           if (

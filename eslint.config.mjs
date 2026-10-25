@@ -23,7 +23,13 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/companion.js', 'src/search.js', 'prototype/client.js', 'prototype/mock-call.js'],
+    files: [
+      'src/companion.js',
+      'src/search.js',
+      'src/assistant.js',
+      'prototype/client.js',
+      'prototype/mock-call.js',
+    ],
     languageOptions: { globals: globals.browser },
   },
   {

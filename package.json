@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/compile.mjs && bash scripts/build.sh",
-    "test": "node --test test/*.test.mjs",
-    "dev": "node scripts/dev.mjs",
+    "test": "node scripts/compile.mjs && node --test test/*.test.mjs",
+    "dev": "node --env-file-if-exists=.env.local scripts/dev.mjs",
     "validate": "node scripts/validate-artifact.mjs",
     "dev:companion": "node prototype/server.mjs",
     "mcp": "node mcp/server.mjs",
@@ -16,7 +16,9 @@
     "check": "npm run format:check && npm run lint && npm test && npm run build && npm run validate",
     "db:generate": "drizzle-kit generate --config drizzle.config.mjs",
     "data:sync": "node scripts/sync-practices.mjs",
-    "data:sync:remote": "node scripts/sync-practices.mjs --remote"
+    "data:sync:remote": "node scripts/sync-practices.mjs --remote",
+    "eval:needs": "node scripts/evaluate-needs.mjs",
+    "eval:needs:live": "node --env-file-if-exists=.env.local scripts/evaluate-needs.mjs --live"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.4.0",
