@@ -85,8 +85,7 @@ try {
   await page.locator('#reviewConsent').check();
   await page.locator('#description').fill('Sans contrainte géographique, équipement auditif.');
   await page.locator('#local').click();
-  await page.getByRole('button', { name: 'Sans préférence', exact: true }).click();
-  await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
+  await page.getByRole('button', { name: 'Consulter l’annuaire public', exact: true }).click();
   await page.waitForFunction(
     () =>
       document.querySelectorAll('.review-content a').length >= 6 &&

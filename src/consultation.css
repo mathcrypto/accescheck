@@ -984,7 +984,7 @@ body.vision .empty h3 {
     padding: 20px;
   }
 }
-@media (max-height: 540px) {
+@media (max-height: 640px) {
   main {
     height: auto;
     min-height: 100dvh;

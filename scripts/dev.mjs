@@ -45,6 +45,7 @@ const server = createServer(async (request, response) => {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || process.env.openai_api_key,
         OPENAI_MODEL: process.env.OPENAI_MODEL || process.env.openai_model,
         OPENAI_REVIEW_MODEL: process.env.OPENAI_REVIEW_MODEL,
+        OPENAI_SEARCH_MODEL: process.env.OPENAI_SEARCH_MODEL,
       },
     );
     response.writeHead(result.status, Object.fromEntries(result.headers));

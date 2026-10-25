@@ -41,7 +41,7 @@ try {
         .locator('#description')
         .fill('Généraliste sans contrainte géographique, équipement auditif.');
       await page.locator('#description').press('Enter');
-      await page.getByRole('button', { name: 'Confirmer et chercher', exact: true }).click();
+      await page.getByRole('button', { name: 'Consulter l’annuaire public', exact: true }).click();
       const link = page
         .locator('.practice-card')
         .first()
@@ -54,7 +54,7 @@ try {
       await popup.waitForLoadState();
       await popup.locator('#practiceContext').waitFor();
       await popup.close();
-      assert.match(await page.locator('#thread').innerText(), /équipement auditif/);
+      assert.match(await page.locator('#thread').textContent(), /équipement auditif/);
       assert.ok(await page.locator('.practice-card').count());
     });
     await check(`${width}: missing needs keep the conversation editable`, async () => {
@@ -76,7 +76,8 @@ try {
       await page.locator('#local').click();
       await page.locator('.bubble.agent').waitFor();
       assert.equal(await page.locator('.practice-card').count(), 0);
-      assert.match(await page.locator('#thread').innerText(), /largeur|passage/i);
+      assert.match(await page.locator('#thread').innerText(), /accord|indisponible/i);
+      assert.equal(await page.locator('.bubble.agent[data-question]').count(), 0);
       await page
         .locator('#description')
         .fill('Généraliste sans contrainte géographique, équipement auditif.');
@@ -86,11 +87,14 @@ try {
     });
     await check(`${width}: consultation actions without page scrolling`, async () => {
       await page.goto(base + '/consultation');
+      if (height <= 640) await page.locator('#showReply').scrollIntoViewIfNeeded();
       assert.ok(await page.locator('#showReply').evaluate(inView));
+      if (height <= 640) await page.locator('#startCaptions').scrollIntoViewIfNeeded();
       assert.ok(await page.locator('#startCaptions').evaluate(inView));
-      assert.ok(
-        await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
-      );
+      if (height > 640)
+        assert.ok(
+          await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
+        );
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       assert.ok(
         await page.evaluate(
@@ -122,6 +126,7 @@ try {
       assert.ok(await page.locator('#conversationPanel').isVisible());
       const message = page.locator('#transcript .message').last();
       assert.match(await message.innerText(), /Message fictif à afficher/);
+      if (height <= 640) await message.locator('p').scrollIntoViewIfNeeded();
       assert.ok(await message.locator('p').evaluate(inView));
       assert.ok(
         await message.locator('p').evaluate((text) => {

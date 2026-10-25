@@ -103,7 +103,7 @@ test('Vercel exposes no local bridge, development client, import token or paid A
 test('Vercel can enable only the search provider, keeping secrets and other integrations private', async () => {
   const configured = createVercelHandler(database, {
     OPENAI_API_KEY: 'private-search-key',
-    OPENAI_MODEL: 'test-model',
+    OPENAI_SEARCH_MODEL: 'test-model',
     DATA_IMPORT_TOKEN: 'must-not-propagate',
   });
   const config = await (await configured.fetch(new Request(origin + '/api/ai-config'))).json();

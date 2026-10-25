@@ -90,3 +90,24 @@ Après le point sûr du lot review-sources, implémenter `feature/search-agent` 
 - Le mode local sans accord/fournisseur est étiqueté dégradé. Une extraction rapide éventuelle ne remplace pas la décision géographique de l’agent et nécessite une comparaison coût/latence/qualité.
 
 Sources à vérifier au démarrage : https://developers.openai.com/api/docs/guides/function-calling et https://developers.openai.com/api/docs/guides/model-selection .
+
+## Tranche préalable — fix/structured-geography
+
+L’IGN réel confirme Lyon 3e (69383/69003), Paris 14e (75114/75014) et Marseille 8e (13208/13008). Nouveau module géographique réutilisable par les outils : contexte structuré, codes et identifiants conservés, homonymes filtrés, doublons éliminés, aucune transformation d’un arrondissement en ville entière. Les résultats de cabinets hors code postal d’arrondissement sont exclus même s’ils sont proches.
+Les tests hérités supposaient Bastille→Paris et « dans le 14e »→Paris : remplacés par des assertions d’absence de cette supposition, selon la nouvelle demande. La base locale parisienne de 510 fiches a été synchronisée avec l’importateur officiel : 19 750 fiches nationales, contrôles checksum/lecture réussis.
+Revue indépendante approuvée après ajout des régressions code postal seul / code commune sans nom de ville. 145 tests Node et 4 tests Python passent. Mutation du garde de contexte administratif détectée.
+
+## Précision utilisateur — retirer les décisions déterministes
+
+Le prochain lot supprime du parcours principal l’arbre de questions, l’extraction par regex et les hypothèses de lieu. Le principal décide réellement des appels, reformulations et précisions. Les validateurs de données/provenance, consentements, bornes et ordre accessibilité→proximité→réputation restent des garde-fous serveur.
+Le mode sans IA devient un annuaire dégradé explicitement choisi, sans fausse conversation autonome ni interprétation silencieuse. Adapter les tests de l’ancien arbre aux capacités du nouvel agent, sans perdre la couverture des besoins, des corrections, des sources et des annulations.
+
+### Tranches `feature/search-agent`
+
+1. Contrat et boucle Responses testés avec fournisseur contrôlé : demande complète, historique signé conservé en mémoire, outils stricts, plafond de 7 réponses / 8 outils / 8 000 tokens de sortie / 160 000 octets cumulés envoyés / 55 s. Préparation des critères vérifiables, confirmation explicite puis recherche. Réutiliser IGN, Accès Libre, preuves et avis.
+2. Brancher le chat existant : choix de question produits par l’agent, saisie libre/inconnu, consentement au contexte complet, traces d’actions réelles et annuaire public dégradé explicitement choisi. Retirer l’ancien arbre et ses heuristiques de recherche ; conserver les contrôles de données et le pont fictif.
+3. Remplacer les anciennes attentes de parcours imposé par les régressions d’agent : géographies Lyon 3e/Paris 14e/Marseille 8e, homonymes, correction, incohérences, consentement, provenance, limites et arrêt. Vérifier le prompt complet dans Chromium avec IGN réel et modèle contrôlé, mobile/clavier/erreurs, sans appel payant.
+
+Modèle principal proposé : `gpt-6.1-sol`, effort medium, configurable par `OPENAI_SEARCH_MODEL` sans changement métier. Documentation officielle consultée : function-calling, model-selection et page modèle. Ce choix répond aux capacités nécessaires ; les simulations ne prouvent pas le coût/la latence réels. Aucun modèle rapide ajouté sans comparaison autorisée. Les plafonds sont par requête ; le budget du compte reste externe.
+
+Vérification search-agent : boucle réelle exécutée avec fournisseur contrôlé, IGN réel pour Lyon 3e et Marseille 8e dans Chromium à 320/390/768/1440 px ; revue indépendante et régressions des corrections de consentement, identité, références héritées et cohérence résultats/récapitulatif. Les contrôles du modèle réel restent non exécutés conformément à la règle sans appels payants supplémentaires.

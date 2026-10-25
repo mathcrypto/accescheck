@@ -873,14 +873,6 @@ summary,
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
-.search-panel.has-results #descriptionForm {
-  position: sticky;
-  top: 72px;
-  z-index: 2;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  background: var(--paper);
-}
 .results-panel {
   width: 100%;
   margin: 24px 0 24px;
@@ -1044,6 +1036,17 @@ summary,
   overflow-wrap: anywhere;
 }
 
+.chat-controls .ai-option {
+  margin-top: 0;
+}
+.chat-controls .text-button,
+.chat-controls summary {
+  min-height: 44px;
+}
+.chat-choices button {
+  max-width: 100%;
+}
+
 body.home.vision {
   --muted: #222;
   --line: #171717;
@@ -1129,4 +1132,19 @@ body.home.vision .vision-toggle,
 body.home.vision .ai-option > summary {
   font-size: 16px;
   min-height: 44px;
+}
+
+@media (max-width: 600px), (max-height: 600px) {
+  html {
+    scroll-padding-bottom: 96px;
+  }
+  .chat-history,
+  .agent-working .chat-history {
+    max-height: none;
+    overflow: visible;
+  }
+  .bubble {
+    max-width: 100%;
+    scroll-margin-top: 96px;
+  }
 }

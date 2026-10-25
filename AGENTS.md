@@ -14,7 +14,7 @@ For chat-only search, contextual questions, or review reputation work, read [CAP
 
 - Edit `src/`, not generated `worker/` or `dist/`. `scripts/compile.mjs` bundles page templates, styles and browser scripts.
 - Shared visual tokens and header styles live in `src/ui.css`; shared navigation and the red asterisk live in `src/header.html`. Change these sources rather than copying their markup or styles into individual pages.
-- Search lives only on the homepage (`/#recherche`) via `src/assistant.js` calling `/api/agent` (`src/agents/finder.mjs`). Shared need parsing belongs in `src/core.mjs`.
+- Search lives on the homepage (`/#recherche`) via `src/assistant.js` and `/api/chat`. `src/agents/search-agent.mjs` runs the Responses tool loop; `search-contract.mjs` defines its tools and instructions. The model chooses questions and research steps. Keep consent, signed geographic references, confirmation, evidence validation, budgets and ranking on the server. Local mode is an explicitly selected public directory with no interpretation. The old `/api/agent` endpoint returns 410. `src/core.mjs` parsing remains only for legacy MCP/consultation compatibility.
 - Consultation behavior belongs in `src/companion.js`, markup in `src/consultation.html`, styles in `src/consultation.css`. Preserve consent, audio cleanup, session clearing and the local bridge interface.
 - `src/handler.mjs` serves HTTP routes. `storage/` and `db/` manage public practice data. The Vercel function receives a read-only snapshot; see [docs/vercel.md](docs/vercel.md) when changing deployment or data loading.
 - `prototype/` and `mcp/` implement the local fictional agent workflow. Keep its controls in consultation settings and keep real patient messages outside that bridge.
@@ -31,7 +31,7 @@ For chat-only search, contextual questions, or review reputation work, read [CAP
 
 - Never commit or print keys, `.env` contents, tokens or private meeting links.
 - Do not persist need descriptions, conversations or notes in browser storage, URLs or server logs. Opening a consultation from results keeps the search tab alive without saving health text.
-- Keep explicit consent before remote interpretation or browser speech processing. Never enable microphone capture or paid calls automatically.
+- Keep explicit consent before remote interpretation or browser speech processing. Never enable microphone capture or paid calls automatically. Automated implementation checks use controlled provider responses; live paid evaluations require explicit authorization.
 - Unknown accessibility stays unknown. Keep source provenance, correction labels and fictional examples visible. A declaration is not a guarantee of access.
 - Warn before leaving a consultation containing text. Clear the session and stop audio when the user leaves or explicitly clears it.
 
