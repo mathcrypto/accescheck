@@ -38,7 +38,7 @@ const status = (text, error = false) => {
 function micState(text, active = false) {
   if (sharedStream && text === 'Microphone coupé') text = 'Son d’onglet connecté · en pause';
   $('micText').textContent = text;
-  document.title = active ? '● Sous-titres — accescompanion' : 'Mon rendez-vous — accescompanion';
+  document.title = active ? '● Sous-titres — AccèsCheck' : 'Mon rendez-vous — AccèsCheck';
   $('micState').classList.toggle('recording', active);
   $('pauseCaptions').disabled = !active && !starting;
   $('startCaptions').disabled = !Recognition || active || starting || !!utterance;
@@ -492,7 +492,7 @@ $('useBrowserSpeech').onclick = () => {
   $('remoteConsentLabel').hidden = false;
   $('remoteConsent').checked = true;
   $('recognitionHelp').textContent =
-    'Ce mode peut transmettre l’audio au fournisseur du navigateur. accescompanion ne reçoit pas cet audio. Son traitement dépend du navigateur.';
+    'Ce mode peut transmettre l’audio au fournisseur du navigateur. AccèsCheck ne reçoit pas cet audio. Son traitement dépend du navigateur.';
   startCaptions();
 };
 $('recognitionMode').onchange = () => {
@@ -502,8 +502,8 @@ $('recognitionMode').onchange = () => {
   $('remoteConsent').checked = false;
   $('installLanguage').hidden = true;
   $('recognitionHelp').textContent = remote
-    ? 'Ce mode peut transmettre l’audio au fournisseur du navigateur. accescompanion ne reçoit pas cet audio. Son traitement dépend du navigateur.'
-    : 'Aucun envoi audio via accescompanion. Le mode local nécessite un navigateur et un pack français compatibles.';
+    ? 'Ce mode peut transmettre l’audio au fournisseur du navigateur. AccèsCheck ne reçoit pas cet audio. Son traitement dépend du navigateur.'
+    : 'Aucun envoi audio via AccèsCheck. Le mode local nécessite un navigateur et un pack français compatibles.';
   status('Mode modifié. Le microphone reste coupé.');
 };
 $('consent').onchange = () => {
@@ -720,7 +720,7 @@ $('copyNotes').onclick = async () => {
 };
 $('readGuide').onclick = () =>
   speak(
-    'Vous êtes dans l’échange accescompanion. Le bouton Démarrer les sous-titres active l’écoute après votre accord. Dans Votre réponse, écrivez une phrase, puis choisissez Afficher ou Lire ma réponse. Le médecin entend cette voix seulement si l’appareil est près de lui, ou si le son de cette page est partagé dans l’appel. Cette lecture ne décrit pas votre environnement physique.',
+    'Vous êtes dans l’échange AccèsCheck. Le bouton Démarrer les sous-titres active l’écoute après votre accord. Dans Votre réponse, écrivez une phrase, puis choisissez Afficher ou Lire ma réponse. Le médecin entend cette voix seulement si l’appareil est près de lui, ou si le son de cette page est partagé dans l’appel. Cette lecture ne décrit pas votre environnement physique.',
   );
 if (synth) synth.addEventListener('voiceschanged', refreshVoices);
 document.addEventListener('visibilitychange', () => {
@@ -752,7 +752,7 @@ function updateConnection() {
       ? 'Microphone de cet appareil'
       : 'Son de l’appel non connecté';
   $('callAudioStatus').textContent = connected
-    ? 'Vous entendez cet appel sur cette page. Laissez accescompanion ouvert à côté de la vidéo.'
+    ? 'Vous entendez cet appel sur cette page. Laissez AccèsCheck ouvert à côté de la vidéo.'
     : supportsCallAudio(navigator.userAgent, !!navigator.mediaDevices?.getDisplayMedia)
       ? 'Aucun son d’appel connecté. Choisissez l’onglet de la vidéo, pas la fenêtre entière, et cochez « Partager l’audio de l’onglet ».'
       : 'Le partage du son d’un onglet nécessite Chrome ou Edge récent sur ordinateur. La saisie manuelle reste disponible.';
@@ -792,7 +792,7 @@ document.querySelectorAll('[data-platform]').forEach(
           ? 'Placez cet appareil entre vous et le médecin. Le microphone capte les voix dans la pièce.'
           : 'Ouvrez ' +
             (sessionPlatform === 'zoom' ? 'Zoom' : 'Doctolib') +
-            ' dans un autre onglet. Ici, choisissez cet onglet-là et cochez « Partager l’audio de l’onglet ». Ne choisissez pas la page accescompanion : elle n’a pas le son de l’appel.';
+            ' dans un autre onglet. Ici, choisissez cet onglet-là et cochez « Partager l’audio de l’onglet ». Ne choisissez pas la page AccèsCheck : elle n’a pas le son de l’appel.';
       updateConnection();
       status('Mode de consultation modifié. Aucune capture audio active.');
     }),

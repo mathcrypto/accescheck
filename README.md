@@ -1,4 +1,4 @@
-# accescompanion
+# AccèsCheck
 
 Prepare a medical visit and follow the conversation: find documented accessibility information, open a practice's Doctolib link when available, read captions, type a reply, and prepare notes to review with the clinician.
 
