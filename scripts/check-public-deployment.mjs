@@ -26,6 +26,14 @@ async function verify() {
   assert.ok(!home.includes('/__dev/'));
   assert.ok(consultation.includes('id="startCaptions"'));
   assert.ok(catalog.count >= 100 && catalog.count <= 20000);
+  if (process.env.REQUIRE_SEARCH_AGENT === 'true') {
+    const config = await (await request('/api/ai-config')).json();
+    assert.equal(
+      config.available,
+      true,
+      'The production search agent must receive its server key.',
+    );
+  }
   const result = await (
     await request('/api/discover', {
       confirmed: true,

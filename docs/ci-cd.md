@@ -20,6 +20,12 @@ La configuration du workflow ne prouve pas que le compte GitHub dispose de l’a
 
 ## Périmètre publié
 
-Le déploiement conserve les limites décrites dans le README : recherche publique, préparation de visite et interface de consultation dans le navigateur. Le pont local de consultation et son agent OpenAI restent locaux. Le workflow n’ajoute aucune clé OpenAI et n’injecte aucun client de rechargement de développement dans la production.
+Le déploiement conserve les limites décrites dans le README : recherche publique, préparation de visite et interface de consultation dans le navigateur. Le pont local de consultation et son agent OpenAI restent locaux. L’étape de déploiement peut transmettre la clé OpenAI uniquement au runtime et n’injecte aucun client de rechargement de développement dans la production.
 
 Dans l’onglet **Actions**, ouvrir **Checks** pour lire l’échec d’un contrôle ou le résultat du déploiement. Un échec de test, de compilation ou de validation bloque le job de publication et conserve le déploiement précédent.
+
+## Configuration de l’agent en production
+
+Le déploiement peut transmettre le secret GitHub Actions `OPENAI_API_KEY` à la Function Vercel avec `vercel deploy --env`. Seule l’étape de déploiement reçoit ce secret ; les tests et la construction ne reçoivent pas cette variable du workflow. Le secret n’est pas inclus dans la page ni le dépôt. Les variables GitHub `OPENAI_MODEL`, `OPENAI_SEARCH_MODEL` et `OPENAI_REVIEW_MODEL` conservent les choix de modèles ; sinon les valeurs par défaut du code s’appliquent. [Documentation Vercel du paramètre runtime](https://vercel.com/docs/cli/deploy#env).
+
+Le contrôle public exige alors `/api/ai-config.available = true`, sans appeler OpenAI. Sans secret GitHub, le workflow conserve les éventuelles variables du projet Vercel et le mode annuaire reste disponible si aucun fournisseur n’est configuré. Les appels patients exigent toujours leur consentement ; ce déploiement ne lance aucun appel payant de validation.
