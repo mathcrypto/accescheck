@@ -82,9 +82,10 @@ Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a 
 ## Source layout and deployment
 
 - `src/core.mjs`: need parsing, evidence rules, ranking, and briefing.
+- `src/ui.css`, `src/header.html`: shared visual tokens, header and navigation across patient pages.
 - `src/index.html`, `src/home.js`, `src/assistant.*`: AccèsCheck homepage and accompanied search.
 - `src/finder.html`, `src/finder.js`, `src/agents/finder.mjs`: `/cabinets` finder chat over Accès Libre.
-- `src/consultation.html`, `src/companion.js`: consultation interface and browser speech/capture lifecycle.
+- `src/consultation.html`, `src/consultation.css`, `src/companion.js`: consultation interface and browser speech/capture lifecycle.
 - `src/handler.mjs`, `src/speech.mjs`: HTTP/MCP routes and optional voice API.
 - `prototype/`: fictional call and local in-memory MCP bridge.
 - `mcp/`: official-SDK stdio connection and communication prompt.
@@ -92,6 +93,10 @@ Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a 
 - `scripts/build.sh`: packages the generated worker and Sites hosting manifest into `dist/`.
 
 Edit `src/` rather than the generated worker. Build before deployment. Generated reports, local packages, `.env`, and signing keys are excluded from Git. Photo verification, patient feedback, direct Doctolib APIs, and clinical summaries are not implemented. Screen-reader and clinical acceptance audits remain necessary before patient deployment; no WCAG or FALC conformance is claimed.
+
+Read [AGENTS.md](AGENTS.md) for code and verification rules, and [DESIGN.MD](DESIGN.MD) before changing the interface. Consultation opens in a new tab so the original search stays in memory. Conversations and notes are cleared on departure; nonempty work triggers a warning before leaving.
+
+`node scripts/check-user-journey.mjs` checks search validation, retained results, consultation layout, keyboard focus, reply visibility and departure warnings at desktop and mobile sizes. It uses `APP_URL` (default `http://127.0.0.1:4180`) and the same `PLAYWRIGHT_MODULE` / `CHROME_BIN` overrides as the other browser checks. It does not activate audio or call paid APIs.
 
 ## Vercel and automatic deployment
 

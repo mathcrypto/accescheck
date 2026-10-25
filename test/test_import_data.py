@@ -14,7 +14,7 @@ SPEC.loader.exec_module(import_data)
 
 
 class ImportDataTests(unittest.TestCase):
-    def test_import_only_includes_selected_source_records(self):
+    def test_import_includes_medical_source_records_across_france(self):
         columns = ["id", "name", "postal_code", "activite", "web_url"]
         source = io.StringIO()
         writer = csv.DictWriter(source, fieldnames=columns)
@@ -23,6 +23,8 @@ class ImportDataTests(unittest.TestCase):
             ("source-paris", "75011", "Médecin généraliste"),
             ("source-lyon", "69001", "Médecin généraliste"),
             ("source-shop", "75011", "Commerce"),
+            ("source-invalid-postcode", "7501", "Médecin généraliste"),
+            ("source-missing-postcode", "", "Médecin généraliste"),
         ):
             writer.writerow({
                 "id": identifier,
@@ -33,11 +35,10 @@ class ImportDataTests(unittest.TestCase):
             })
         source.seek(0)
         practices = import_data.import_practices(source)
-        self.assertEqual(
-            [practice["id"] for practice in practices], ["source-paris", "source-lyon"]
-        )
-        self.assertEqual(practices[0]["mode"], "real")
-        self.assertIsNone(practices[0]["evidence"]["width"]["value"])
+        self.assertEqual([practice["id"] for practice in practices], ["source-paris", "source-lyon"])
+        for practice in practices:
+            self.assertEqual(practice["mode"], "real")
+            self.assertIsNone(practice["evidence"]["width"]["value"])
 
     def test_conflicting_entrance_is_not_presented_as_confirmed(self):
         evidence = import_data.build_evidence({

@@ -93,11 +93,14 @@ try {
   });
   await page.goto(base + '/consultation');
   assert.equal(await page.locator('.mode').count(), 0);
+  await page.locator('#openSettings').click();
   await page.locator('[data-platform=doctolib]').click();
   assert.equal(await page.locator('#videoSetup').isVisible(), true);
+  await page.locator('#closeSettings').click();
   await page.locator('#startCaptions').click();
   assert.match(await page.locator('#status').textContent(), /Connectez d’abord/);
   assert.equal(await page.evaluate(() => window.__started), 0);
+  await page.locator('#openSettings').click();
   await page.locator('#callUrl').fill('https://evil.com/?zoom.us');
   assert.equal(await page.locator('#openCall').getAttribute('aria-disabled'), 'true');
   await page
@@ -107,7 +110,9 @@ try {
   await page.locator('#connectCallAudio').click();
   assert.match(await page.locator('#status').textContent(), /accord/);
   assert.equal(await page.evaluate(() => window.__captures), 0);
+  await page.locator('#closeSettings').click();
   await page.locator('#consent').check();
+  await page.locator('#openSettings').click();
   await page.locator('#connectCallAudio').click();
   assert.match(await page.locator('#connectionBadge').textContent(), /sous-titres actifs/);
   assert.equal(await page.evaluate(() => window.__captures), 1);
@@ -154,6 +159,7 @@ try {
   assert.equal(await page.evaluate(() => window.__started), startsBeforeZoom + 1);
   await page.evaluate(() => window.__shared.getAudioTracks()[0].onended());
   assert.match(await page.locator('#status').textContent(), /partage a été arrêté/);
+  await page.locator('#closeSettings').click();
   await page.locator('#reply').fill('Bonjour, pouvez-vous répéter ?');
   await page.locator('#speakReply').click();
   assert.equal(postBodies.length, 0);
@@ -167,11 +173,14 @@ try {
   await page.screenshot({ path: '/tmp/accescheck-call-mobile.png', fullPage: true });
   assert.ok(!urls.some((u) => u.includes('private-meeting') || u.includes('private=meeting')));
   assert.deepEqual(errors, []);
+  await page.locator('#clearSession').click();
   await page.goto(base + '/cabinets');
-  await page.waitForSelector('.card');
-  await page.locator('.detail').first().click();
+  await page.locator('#message').fill('Je suis malentendant.');
+  await page.locator('#send').click();
+  await page.locator('.card').first().waitFor();
   const href = await page
-    .getByRole('link', { name: 'Compagnon de ce rendez-vous' })
+    .getByRole('link', { name: /Préparer la visite/ })
+    .first()
     .getAttribute('href');
   assert.ok(href.startsWith('/consultation?practice='));
   await page.goto(base + href);

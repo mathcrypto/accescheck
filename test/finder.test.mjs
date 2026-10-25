@@ -106,6 +106,7 @@ const places = [
 const realFetch = globalThis.fetch;
 before(() => {
   globalThis.fetch = async (url) => {
+    assert.equal(new URL(url).hostname, 'data.geopf.fr', 'Finder must only call IGN');
     const query = new URL(url).searchParams.get('q') || '';
     const place = places.find(([pattern]) => pattern.test(query));
     const features = place
@@ -140,7 +141,7 @@ test('finder uses local rules and returns Accès Libre practices without OpenAI'
     assert.deepEqual(result.state.needs.keys, ['signage']);
     assert.match(result.reply, /cabinet/i);
     assert.ok(result.results);
-    assert.ok(result.results.total >= 0);
+    assert.ok(result.results.total > 0);
     assert.ok(result.steps.some((step) => /Accès Libre/.test(step.label)));
     assert.ok(
       result.results.practices.every(

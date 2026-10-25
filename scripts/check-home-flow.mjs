@@ -107,6 +107,7 @@ try {
   assert.equal(discoveries.length, 0);
   await page.locator('#search').click();
   assert.equal(discoveries.length, 0);
+  await page.locator('#advancedSearch>summary').click();
   await page.locator('#location').fill('99 Rue de Rivoli');
   await page.locator('#findLocation').click();
   await page.getByRole('button', { name: origin.label, exact: true }).click();
