@@ -1,0 +1,1 @@
+{"name":"accescheck","private":true,"type":"module","scripts":{"build":"node scripts/compile.mjs && bash scripts/build.sh","test":"node --test test/*.test.mjs","dev":"node scripts/dev.mjs","validate":"node scripts/validate-artifact.mjs"}}
