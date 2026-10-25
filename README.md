@@ -63,6 +63,8 @@ The patient interface currently uses device voices only. The backend retains `/a
 
 ## Finder agent
 
+The proposed next iteration is defined in [CAPABILITY-MAP.md](CAPABILITY-MAP.md): a single chat, contextual multiple-choice questions, visible agent activity and sourced review reputation. Its proposed features are not yet implemented.
+
 `/cabinets` is one stateful finder (session needs, specialty, place). The UI keeps a single current request: a correction replaces the previous turn; **Nouvelle conversation** clears everything. Simple accessibility phrases search immediately; mixed requests (profession or quartier) ask for confirmation first. Local rules translate the patient’s sentence. Optional OpenAI extraction remains available server-side for other callers, but the patient finder does not send descriptions to OpenAI. Search and ranking stay deterministic on Accès Libre data.
 
 ## MCP and consultation tools
