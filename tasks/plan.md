@@ -62,3 +62,10 @@ Référence ajoutée par l’utilisateur : https://github.com/RomaGab/2026-mistr
 Revue indépendante approuvée : accès avant distance même si un code postal est préféré, établissements identifiés comme tels, provenance/date/inconnus et besoins non documentés visibles.
 Liste intégrée dans un historique défilant avec saisie disponible ; réponses QCM visibles comme messages et anciens choix retirés du parcours clavier.
 Mutation inversant l’ordre de l’accessibilité détectée.
+
+## Revue — agent-activity
+
+Revue indépendante approuvée après déplacement des statuts fournisseurs au départ effectif du transport, après validation.
+Flux NDJSON avec statuts réels, fragments de réponse disponibles et résultat final, sans délai de frappe artificiel.
+Décodage UTF-8, absence de résultat final, erreur, annulation réseau et reprise testés ; mutation du contrôle de résultat final détectée.
+Playwright mobile : marque SVG partagée, pulsation, réduction de mouvement, saisie visible, arrêt réel d’IGN et reprise.

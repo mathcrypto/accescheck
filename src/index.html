@@ -113,6 +113,11 @@
               </button>
             </div>
           </form>
+          <div id="agentActivity" class="agent-activity" hidden>
+            <span class="agent-mark" aria-hidden="true"><!--AGENT_MARK--></span>
+            <span id="activityText" role="status" aria-live="polite" aria-atomic="true"></span>
+            <button id="stopSearch" class="text-button" type="button">Interrompre</button>
+          </div>
           <p id="chatStatus" class="hint" role="status"></p>
           <div class="chat-controls">
             <button id="clear" class="text-button" type="button">Tout effacer</button>
