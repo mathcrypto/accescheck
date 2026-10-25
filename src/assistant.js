@@ -1,3 +1,4 @@
+import { renderMessage, renderRecap } from './chat-content.js';
 import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
 import { practiceCard } from './search-results.js';
@@ -22,7 +23,10 @@ function node(tag, text, className = '') {
 function turn(text, who = 'agent') {
   const bubble = node('div', '', 'bubble ' + who);
   bubble.append(node('p', who === 'user' ? 'Vous' : 'AccèsCheck', 'who'));
-  bubble.append(node('p', text, 'say'));
+  const content = node(who === 'user' ? 'p' : 'div', '', 'say');
+  if (who === 'user') content.textContent = text;
+  else renderMessage(content, text);
+  bubble.append(content);
   $('thread').append(bubble);
   return bubble;
 }
@@ -33,7 +37,8 @@ function setResultsMode(on, summary = '') {
   if (on) {
     $('chatFoldSummary').textContent = 'Voir la conversation et les critères';
     $('resultsCriteria').hidden = !summary;
-    $('resultsCriteria').textContent = summary;
+    if (summary) renderRecap($('resultsCriteria'), summary);
+    else $('resultsCriteria').replaceChildren();
   } else {
     $('resultsCriteria').hidden = true;
     $('resultsCriteria').textContent = '';
@@ -192,8 +197,12 @@ async function ask(input, choiceLabel = '') {
     } else {
       setResultsMode(false);
       const bubble = streamed || turn('');
-      bubble.querySelector('.say').textContent =
-        (data.question ? '' : data.summary ? data.summary + '\n\n' : '') + data.reply;
+      renderMessage(bubble.querySelector('.say'), data.reply);
+      if (data.summary) {
+        const recap = node('section', '', 'chat-recap');
+        renderRecap(recap, data.summary);
+        bubble.querySelector('.say').before(recap);
+      }
       if (data.notice) bubble.append(node('p', data.notice, 'hint'));
       if (data.question) question(bubble, data.question);
       else actions(bubble, data.actions || []);

@@ -26,6 +26,7 @@ export default defineConfig([
     files: [
       'src/companion.js',
       'src/assistant.js',
+      'src/chat-content.js',
       'src/page-speech.js',
       'src/search-results.js',
       'src/review-cards.js',

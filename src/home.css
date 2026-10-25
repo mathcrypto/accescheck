@@ -792,8 +792,73 @@ summary,
 .bubble .say + .chat-choices {
   margin-top: 12px;
 }
-.bubble.user .say {
+.bubble.user {
+  width: fit-content;
+  max-width: 85%;
+  justify-self: end;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.bubble.agent .say {
+  white-space: normal;
+}
+.bubble.agent .say > p {
+  margin: 0 0 16px;
+  white-space: pre-wrap;
+}
+.bubble.agent .say > :last-child {
+  margin-bottom: 0;
+}
+.bubble.agent .say h3,
+.chat-recap h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.5;
   font-weight: 500;
+}
+.message-list {
+  margin: 16px 0;
+  padding-left: 24px;
+  border-block: 1px solid var(--line);
+}
+.message-list li {
+  padding: 12px 0 12px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.message-list li:last-child {
+  border-bottom: 0;
+}
+.message-list li::marker {
+  color: var(--muted);
+  font-weight: 500;
+}
+.chat-recap {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.chat-recap h3 {
+  font-size: 14px;
+}
+.chat-recap ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chat-recap li {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.chat-recap li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.chat-recap li:last-child {
+  padding-bottom: 0;
 }
 .chat-choices,
 .chat-controls {
@@ -880,8 +945,7 @@ summary,
   padding: 12px 16px;
   background: white;
   border: 1px solid var(--line);
-  border-left: 2px solid var(--ink);
-  border-radius: 3px;
+  border-radius: 6px;
   font-size: 14px;
   line-height: 1.7;
   white-space: pre-wrap;
