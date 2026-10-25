@@ -52,7 +52,7 @@ Recompile after source edits. `worker/index.js` and `dist` are generated; edit `
 
 ## Current limitations and next steps
 
-Voice, photo analysis/redaction, patient feedback, write-back payload review, multilingual UI, LLM parsing, and direct Doctolib APIs are deferred. No WCAG conformance claim; manually audit with a screen reader before patient deployment. Enlarged reading is not FALC. Only selected medical activities in Paris are included. Do not use demo fixtures for a real visit.
+Photo analysis/redaction, patient feedback, write-back payload review, multilingual UI, LLM parsing, and direct Doctolib APIs are deferred. No WCAG conformance claim; manually audit with a screen reader before patient deployment. Enlarged reading is not FALC. Only selected medical activities in Paris are included. Do not use demo fixtures for a real visit.
 
 ## Three-minute demo
 
@@ -61,3 +61,27 @@ Voice, photo analysis/redaction, patient feedback, write-back payload review, mu
 3. 1:30–2:15: Generate the call briefing, copy unresolved questions, and show a Doctolib link where the source provides one.
 4. 2:15–2:40: Show a read-only MCP call returning the same results.
 5. 2:40–3:00: Report measured tests with their limits; outline photo verification and authorized platform integration.
+
+
+## Appointment companion (v0.2)
+
+Open `/consultation`, or “Mon rendez-vous” from search.
+
+- Live French captions via browser SpeechRecognition when supported. Microphone starts only after an explicit action and an agreement checkbox. Default is strictly on-device recognition (`processLocally=true`). Missing support or French language pack is reported without a silent remote fallback. Optional language pack installation requires a separate click.
+- An explicit browser-service mode is available with an additional acknowledgment that the browser may send audio to its speech provider. AccèsCheck never receives or uploads audio. Browser-provider processing and retention cannot be guaranteed by this app.
+- Recognized speech is labeled as captured speech with an unidentified speaker: no invented diarization. Provisional words appear separately; final phrases can be corrected.
+- Patients can display typed messages or speak them using French voices marked local by the browser. Phrases are prepared but never automatically spoken. Speech playback stops recognition to avoid self-transcription; microphone does not restart automatically.
+- Enlarged reading mode and spoken interface orientation support low vision and screen-reader use. This does **not** provide camera-based or environmental audio description.
+- Notes can be entered manually, or a verbatim conversation draft can be copied into an editable field. This is not LLM summarization or a medical synthesis. Audio playback requires review acknowledgment; edits or new conversation content invalidate the acknowledgment. Copying notes requires an explicit action.
+- No transcript, audio, or notes are posted to AccèsCheck, stored in a database, or persisted in browser storage. Page hide clears the session; leaving the foreground stops microphone and playback. Users can explicitly copy notes to their system clipboard.
+- No API credentials required. Unsupported speech browsers retain manual two-way communication. Lack of a French local synthesis voice disables audio playback with an explanation.
+
+The companion is a communication aid, not a clinical record or qualified interpreter. Critical instructions should be confirmed by the clinician.
+
+### Companion verification
+
+`node --test test/*.test.mjs` covers serving, pure helpers, exact transcript preservation, and privacy constraints alongside the existing data/API/MCP tests.
+
+`scripts/check-companion.mjs` runs Playwright interaction tests with deterministic simulated speech recognition and synthesis: consent gates, local/remote handling, language pack errors, mic denial, interim/final captions, correction and XSS escaping, playback stopping the mic, notes review invalidation, overwrite protection, demo isolation, unsupported-browser fallback, mobile overflow, and no POST traffic. Set optional `PLAYWRIGHT_MODULE` and `CHROME_BIN` for your environment. Actual microphone transcription accuracy, French pack availability, audible playback quality, and assistive-device behavior require testing on the intended browser/device.
+
+Browser APIs: [on-device speech recognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/processLocally), [language availability](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/available_static), [speech synthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis).
