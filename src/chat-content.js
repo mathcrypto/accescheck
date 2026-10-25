@@ -56,7 +56,12 @@ export function renderRecap(container, text) {
   const title = element('h3');
   title.textContent = 'Votre recherche';
   const list = element('ul');
-  for (const line of text.split('\n').filter((line) => line.trim())) {
+  for (const line of new Set(
+    text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean),
+  )) {
     const row = element('li');
     row.textContent = line;
     list.append(row);

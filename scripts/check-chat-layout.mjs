@@ -36,7 +36,7 @@ try {
         json: {
           state: {},
           summary:
-            'Dentiste, chirurgien dentiste\nLyon 3e Arrondissement · 69003\n3 km à vol d’oiseau\nEntrée sans marche',
+            'Dentiste, chirurgien dentiste\nLyon 3e Arrondissement · 69003\n3 km à vol d’oiseau\nEntrée sans marche\nEntrée sans marche',
           results: showResults
             ? {
                 results: [],
@@ -52,20 +52,21 @@ try {
             : showResults
               ? 'Aucun cabinet ne correspond à cette recherche.'
               : '### Informations à préciser\n\n- **Entrée** : sans marche demandée\n- **Largeur** : non précisée\n\n1. Choisissez le lieu.\n2. Confirmez les critères.',
-          question: showResults
-            ? null
-            : {
-                id: 'location',
-                options: [
-                  {
-                    value: '0',
-                    label:
-                      'Lyon 3e Arrondissement · 69003 · 69, Rhône, Auvergne-Rhône-Alpes · point approximatif',
-                  },
-                  { value: '__free__', label: 'Saisir un autre lieu' },
-                  { value: '__unknown__', label: 'Je ne sais pas' },
-                ],
-              },
+          question:
+            showResults || unsafeReply
+              ? null
+              : {
+                  id: 'location',
+                  options: [
+                    {
+                      value: '0',
+                      label:
+                        'Lyon 3e Arrondissement · 69003 · 69, Rhône, Auvergne-Rhône-Alpes · point approximatif',
+                    },
+                    { value: '__free__', label: 'Saisir un autre lieu' },
+                    { value: '__unknown__', label: 'Je ne sais pas' },
+                  ],
+                },
         },
       }),
     );
@@ -100,7 +101,7 @@ try {
       'rgba(0, 0, 0, 0)',
       'Agent replies have no bubble background',
     );
-    assert.equal(await latest.locator('.chat-recap li').count(), 4);
+    assert.equal(await latest.locator('.chat-recap').count(), 0);
     assert.equal(await latest.locator('.say ul > li').count(), 2);
     assert.equal(await latest.locator('.say ol > li').count(), 2);
     assert.equal(await latest.locator('.say strong').first().innerText(), 'Entrée');
@@ -136,6 +137,7 @@ try {
     await page.waitForFunction(
       () => document.getElementById('thread').getAttribute('aria-busy') === 'false',
     );
+    assert.equal(await page.locator('#resultsCriteria li').count(), 4);
     await page.locator('#chatFoldSummary').click();
     await page.locator('#descriptionForm').scrollIntoViewIfNeeded();
     const fold = await page.locator('#chatFold').boundingBox();
@@ -160,6 +162,7 @@ try {
     );
     const unsafe = page.locator('.bubble.agent').last().locator('.say');
     assert.equal(await unsafe.locator('img, script, a').count(), 0);
+    assert.equal(await page.locator('.bubble.agent').last().locator('.chat-recap li').count(), 4);
     assert.equal(await unsafe.locator('strong').innerText(), '<script>alert(1)</script>');
     assert.equal(await unsafe.locator('ol li').getAttribute('value'), '3');
     assert.match(await unsafe.innerText(), /onerror=alert/);

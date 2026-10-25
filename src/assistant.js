@@ -200,7 +200,7 @@ async function ask(input, choiceLabel = '') {
       setResultsMode(false);
       const bubble = streamed || turn('');
       renderMessage(bubble.querySelector('.say'), data.reply);
-      if (data.summary) {
+      if (data.summary && !data.question) {
         const recap = node('section', '', 'chat-recap');
         renderRecap(recap, data.summary);
         bubble.querySelector('.say').before(recap);
