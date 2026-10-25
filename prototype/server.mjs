@@ -1,11 +1,21 @@
 import { openSqlite } from '../storage/sqlite.mjs';
 import { createServer } from 'node:http';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createLiveReload } from '../scripts/live-reload.mjs';
+import { createOpenAIAgent } from './openai-agent.mjs';
 import worker from '../worker/index.js';
 import { createSessionBridge, consultationTools } from './session-bridge.mjs';
+const direct = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const envFile = new URL('../.env', import.meta.url);
+if (direct && existsSync(envFile)) process.loadEnvFile(fileURLToPath(envFile));
 const bridge = createSessionBridge();
 const database = openSqlite(process.env.DATABASE_PATH);
 const workerEnv = { DB: database, DATA_IMPORT_TOKEN: process.env.DATA_IMPORT_TOKEN };
+const agent = createOpenAIAgent({ bridge });
+const live = direct ? await createLiveReload() : null;
 const port = Number(process.env.MCP_TEST_PORT || 4180);
 const base = 'http://127.0.0.1:' + port;
 const assets = new Map([
@@ -14,7 +24,6 @@ const assets = new Map([
   ['/mock-call.js', ['mock-call.js', 'text/javascript']],
   ['/mock-doctor.wav', ['assets/mock-doctor.wav', 'audio/wav']],
 ]);
-const client = await readFile(new URL('./client.js', import.meta.url), 'utf8');
 const json = (res, data, status = 200) => {
   res.writeHead(status, {
     'Content-Type': 'application/json',
@@ -23,7 +32,7 @@ const json = (res, data, status = 200) => {
   });
   res.end(JSON.stringify(data));
 };
-const server = createServer(async (req, res) => {
+export const server = createServer(async (req, res) => {
   try {
     if (req.headers.host !== '127.0.0.1:' + port) return json(res, { error: 'Invalid host' }, 403);
     const origin = req.headers.origin;
@@ -31,6 +40,7 @@ const server = createServer(async (req, res) => {
       return json(res, { error: 'Cross-origin requests blocked' }, 403);
     if (req.headers['sec-fetch-site'] === 'cross-site')
       return json(res, { error: 'Cross-site requests blocked' }, 403);
+    if (live?.handle(req, res)) return;
     const url = new URL(req.url, base);
     if (req.method === 'GET' && assets.has(url.pathname)) {
       const [file, type] = assets.get(url.pathname);
@@ -58,9 +68,21 @@ const server = createServer(async (req, res) => {
         return json(res, { error: 'Invalid JSON' }, 400);
       }
     }
+    if (req.method === 'GET' && url.pathname === '/bridge/agent-config')
+      return json(res, agent.config());
+    if (req.method === 'POST' && url.pathname === '/bridge/agent') {
+      try {
+        return json(
+          res,
+          await agent.propose(body, req.headers.authorization?.replace(/^Bearer /, '')),
+        );
+      } catch (error) {
+        return json(res, { error: error.message }, 400);
+      }
+    }
     if (req.method === 'GET' && url.pathname === '/mcp-test/client.js') {
       res.writeHead(200, { 'Content-Type': 'text/javascript', 'Cache-Control': 'no-store' });
-      return res.end(client);
+      return res.end(await readFile(new URL('./client.js', import.meta.url), 'utf8'));
     }
     if (req.method === 'POST' && url.pathname === '/bridge/pair') {
       if (body.fictional_test !== true)
@@ -90,7 +112,7 @@ const server = createServer(async (req, res) => {
           400,
         );
       if (body.method === 'tools/list') {
-        const r = await worker.fetch(
+        const r = await (live || worker).fetch(
           new Request(base + '/mcp', { method: 'POST', body: JSON.stringify(body) }),
           workerEnv,
         );
@@ -123,13 +145,14 @@ const server = createServer(async (req, res) => {
       headers: req.headers,
       ...(raw.length ? { body: raw, duplex: 'half' } : {}),
     });
-    const r = await worker.fetch(request, workerEnv);
+    const r = await (live || worker).fetch(request, workerEnv);
     const headers = Object.fromEntries(r.headers);
     res.writeHead(r.status, headers);
-    if (req.method === 'GET' && ['/consultation', '/consultation/'].includes(url.pathname)) {
-      return res.end(
-        (await r.text()).replace('</body>', '<script src="/mcp-test/client.js"></script></body>'),
-      );
+    if (r.headers.get('content-type')?.includes('text/html')) {
+      let html = await r.text();
+      if (['/consultation', '/consultation/'].includes(url.pathname))
+        html = html.replace('</body>', '<script src="/mcp-test/client.js"></script></body>');
+      return res.end(live ? live.inject(html) : html);
     }
     res.end(Buffer.from(await r.arrayBuffer()));
   } catch {
@@ -138,20 +161,33 @@ const server = createServer(async (req, res) => {
 });
 const timer = setInterval(() => bridge.sweep(), 60000);
 timer.unref();
-server.listen(port, '127.0.0.1', () =>
-  console.log(
-    'Local MCP test: ' +
-      base +
-      '/consultation\nMCP endpoint: ' +
-      base +
-      '/mcp\nFictional sessions only. No audio starts automatically.',
-  ),
-);
-function shutdown() {
+if (direct)
+  server.listen(port, '127.0.0.1', () =>
+    console.log(
+      'Local MCP test: ' +
+        base +
+        '/consultation\nMCP endpoint: ' +
+        base +
+        '/mcp\nOpenAI: ' +
+        (agent.config().ready ? 'configured' : 'set OPENAI_API_KEY in .env') +
+        '\nFictional sessions only. No audio starts automatically.\nRechargement automatique de l’accueil actif.',
+    ),
+  );
+let closed = false;
+export function closePrototype() {
+  if (closed) return;
+  closed = true;
+  clearInterval(timer);
+  live?.close();
   bridge.clear();
   database.close();
-  server.close();
+  if (server.listening) server.close();
+}
+function shutdown() {
+  closePrototype();
   process.exit(0);
 }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+if (direct) {
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}

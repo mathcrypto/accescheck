@@ -15,12 +15,33 @@
   const statusElement = panel.querySelector('#mcpTestStatus');
   const pendingElement = panel.querySelector('#mcpPending');
   const historyElement = panel.querySelector('#mcpHistory');
+  const openaiForm = panel.querySelector('#openaiForm');
+  const askOpenAI = panel.querySelector('#askOpenAI');
+  const openaiStatus = panel.querySelector('#openaiStatus');
   const seenCommands = new Set();
 
   let session = null;
   let pollTimer = null;
   let polling = false;
   let lastSnapshot = '';
+  let agentReady = false;
+
+  fetch('/bridge/agent-config')
+    .then((response) => {
+      if (!response.ok) throw new Error('Configuration indisponible.');
+      return response.json();
+    })
+    .then((config) => {
+      agentReady = config.ready === true;
+      askOpenAI.disabled = !agentReady;
+      panel.querySelector('#openaiConfig').textContent = agentReady
+        ? 'OpenAI configuré · ' + config.model
+        : 'Ajoutez OPENAI_API_KEY dans le fichier .env du projet, puis redémarrez le serveur.';
+    })
+    .catch(() => {
+      panel.querySelector('#openaiConfig').textContent =
+        'Configuration OpenAI indisponible. Rechargez la page.';
+    });
 
   function createTestPanel() {
     const element = document.createElement('section');
@@ -38,6 +59,20 @@
         Partager l’exemple et lier un agent
       </button>
       <p id="mcpTestStatus" role="status"></p>
+      <form id="openaiForm" hidden>
+        <h3>Préparer ma réponse avec OpenAI</h3>
+        <p id="openaiConfig" role="status"></p>
+        <label for="agentIntent">Ce que je souhaite dire dans cet exemple fictif</label>
+        <textarea id="agentIntent" maxlength="1000" required
+          placeholder="Je voudrais demander au soignant de répéter plus lentement."></textarea>
+        <label class="check-label">
+          <input id="openaiConsent" type="checkbox" required>
+          <span>J’accepte d’envoyer à OpenAI l’échange fictif partagé et ma demande.
+            Ces requêtes utilisent les crédits API du compte configuré.</span>
+        </label>
+        <button class="primary" id="askOpenAI" disabled>Proposer une réponse à approuver</button>
+        <p id="openaiStatus" role="status"></p>
+      </form>
       <div id="mcpPending"></div>
       <div id="mcpHistory" aria-live="polite"></div>
       <button class="secondary" id="stopMcpTest" hidden>
@@ -85,6 +120,10 @@
     lastSnapshot = '';
     seenCommands.clear();
     pendingElement.replaceChildren();
+    openaiForm.hidden = true;
+    openaiForm.reset();
+    openaiStatus.textContent = '';
+    askOpenAI.disabled = !agentReady;
     delete panel.dataset.pairingCode;
     pairingButton.disabled = false;
     stopButton.hidden = true;
@@ -276,6 +315,7 @@
       session = await bridgeRequest('pair', { fictional_test: true });
       pairingButton.disabled = true;
       stopButton.hidden = false;
+      openaiForm.hidden = false;
       panel.dataset.pairingCode = session.pairing_code;
       setStatus(`Code de liaison à usage unique : ${session.pairing_code} · valable 5 minutes.`);
       await pollSession();
@@ -304,6 +344,32 @@
       setStatus('Test déconnecté et conversation effacée.');
     }
   }
+
+  openaiForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const linkedSession = session;
+    if (!linkedSession || !agentReady) return;
+    askOpenAI.disabled = true;
+    openaiStatus.textContent = 'OpenAI prépare une proposition…';
+    try {
+      if (consultation.hasRealMessages())
+        throw new Error('Seul l’exemple fictif peut être partagé avec cet agent.');
+      await bridgeRequest('snapshot', { messages: consultation.getFictionalMessages() });
+      if (session !== linkedSession) return;
+      await bridgeRequest('agent', {
+        intent: panel.querySelector('#agentIntent').value,
+        openai_consent: panel.querySelector('#openaiConsent').checked,
+      });
+      if (session !== linkedSession) return;
+      openaiStatus.textContent =
+        'Proposition prête. Vous pouvez l’approuver ou la refuser ci-dessous.';
+      await pollSession();
+    } catch (error) {
+      if (session === linkedSession) openaiStatus.textContent = error.message;
+    } finally {
+      if (session === linkedSession) askOpenAI.disabled = !agentReady;
+    }
+  });
 
   pairingButton.addEventListener('click', startTest);
   stopButton.addEventListener('click', () => {

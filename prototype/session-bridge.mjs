@@ -103,6 +103,17 @@ export function createSessionBridge(now = () => Date.now()) {
       throw new Error('Invalid reading mode.');
   }
   return {
+    connectAgent(id, key) {
+      const s = session(id, key, 'browserToken');
+      if (!s.active) throw new Error('Session stopped.');
+      if (s.paired && !s.localAgent)
+        throw new Error('Un agent MCP est déjà lié. Déconnectez le test avant d’utiliser OpenAI.');
+      if (!s.paired) {
+        this.call('prepare_consultation', { pairing_code: s.code });
+        s.localAgent = true;
+      }
+      return { session_id: s.id, agent_token: s.agentToken };
+    },
     create() {
       sweep();
       if (sessions.size >= 8) throw new Error('Local session limit reached.');

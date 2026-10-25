@@ -1,10 +1,22 @@
 import { createServer } from 'node:http';
 import { openSqlite } from '../storage/sqlite.mjs';
-import worker from '../worker/index.js';
+import { createLiveReload } from './live-reload.mjs';
+const live = await createLiveReload();
 const database = openSqlite(process.env.DATABASE_PATH);
 const port = Number(process.env.PORT || 4173);
 const server = createServer(async (request, response) => {
   try {
+    const base = 'http://127.0.0.1:' + port;
+    if (
+      request.headers.host !== '127.0.0.1:' + port ||
+      (request.headers.origin && request.headers.origin !== base) ||
+      request.headers['sec-fetch-site'] === 'cross-site'
+    ) {
+      response.writeHead(403);
+      response.end('Invalid local origin');
+      return;
+    }
+    if (live.handle(request, response)) return;
     const chunks = [];
     let length = 0;
     for await (const chunk of request) {
@@ -17,7 +29,7 @@ const server = createServer(async (request, response) => {
       chunks.push(chunk);
     }
     const body = Buffer.concat(chunks);
-    const result = await worker.fetch(
+    const result = await live.fetch(
       new Request('http://' + request.headers.host + request.url, {
         method: request.method,
         headers: request.headers,
@@ -33,7 +45,11 @@ const server = createServer(async (request, response) => {
       },
     );
     response.writeHead(result.status, Object.fromEntries(result.headers));
-    response.end(Buffer.from(await result.arrayBuffer()));
+    response.end(
+      result.headers.get('content-type')?.includes('text/html')
+        ? live.inject(await result.text())
+        : Buffer.from(await result.arrayBuffer()),
+    );
   } catch {
     response.writeHead(500);
     response.end('Preview unavailable');
@@ -41,9 +57,10 @@ const server = createServer(async (request, response) => {
 });
 server.listen(port, '127.0.0.1', () => console.log('Local: http://127.0.0.1:' + port));
 for (const signal of ['SIGINT', 'SIGTERM'])
-  process.on(signal, () =>
+  process.on(signal, () => {
+    live.close();
     server.close(() => {
       database.close();
       process.exit();
-    }),
-  );
+    });
+  });

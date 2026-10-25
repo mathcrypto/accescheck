@@ -12,7 +12,7 @@ During the local fictional demonstration:
 6. On request, use draft_visit_notes for a verbatim editable draft. Do not replace it with a generated clinical summary. Important clinical details must be checked with the clinician.
 7. On the patient's request to disconnect, call stop_session and stop using that session. Keep pairing codes and session tokens out of logs, files, screenshots, and final replies.
 
-Only fictional messages are shared through the local consultation bridge. The user's MCP host supplies the language model; this server contains no background LLM, has no paid model API, and never talks or captures audio autonomously.`;
+Only fictional messages are shared through the local consultation bridge. The MCP host supplies its language model. The optional built-in OpenAI agent runs only when the patient explicitly requests a proposal and consents to text transfer. Neither path talks or captures audio autonomously.`;
 
 export const agentPrompt = {
   name: 'accescompanion_communication',
