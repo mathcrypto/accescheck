@@ -2,8 +2,8 @@
   "datasetId": "60a528e8b656ce01b4c0c0a6",
   "resourceId": "93ae96a7-1db7-4cb4-a9f1-6d778370b640",
   "resourceTitle": "acceslibre-with-web-url.csv",
-  "postalPrefix": "75",
-  "mappingVersion": 1,
+  "postalPrefix": "",
+  "mappingVersion": 2,
   "publisher": "Accès Libre — Ministère de la Transition écologique",
   "license": "Licence Ouverte / Etalab 2.0",
   "datasetUrl": "https://www.data.gouv.fr/datasets/acceslibre/"

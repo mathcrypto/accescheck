@@ -228,7 +228,7 @@ try {
     if (imported.status !== 0)
       throw new Error('The export failed schema/record validation; previous data is retained.');
     const parsed = JSON.parse(imported.stdout);
-    if (parsed.count < 100 || parsed.count > 20000)
+    if (parsed.count < 100 || parsed.count > 100000)
       throw new Error('Unexpected number of selected practices.');
     const metadata = {
       ...sourceIdentity,
@@ -238,7 +238,7 @@ try {
       checksumType: resource.checksum.type,
       expectedCount: parsed.count,
       columns: parsed.columns,
-      selection: 'Paris (75), activités médicales sélectionnées',
+      selection: 'France entière, activités médicales sélectionnées',
     };
     const run = await store.begin(metadata);
     if (!run.unchanged) {

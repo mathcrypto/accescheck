@@ -32,7 +32,7 @@ export function validateImportMetadata(metadata) {
   if (
     !Number.isInteger(metadata.expectedCount) ||
     metadata.expectedCount < 1 ||
-    metadata.expectedCount > 20000
+    metadata.expectedCount > 100000
   )
     throw new Error('Nombre de cabinets invalide.');
   if (
@@ -56,9 +56,15 @@ export function validateImportedPractice(item) {
     typeof record.name !== 'string' ||
     !record.name.trim() ||
     record.name.length > 500 ||
-    !/^75\d{3}$/.test(record.postalCode) ||
+    !/^\d{5}$/.test(record.postalCode) ||
     typeof record.specialty !== 'string' ||
     typeof record.address !== 'string'
+  )
+    throw new Error('Cabinet importé invalide.');
+  if (
+    record.websiteUrl !== null &&
+    record.websiteUrl !== undefined &&
+    typeof record.websiteUrl !== 'string'
   )
     throw new Error('Cabinet importé invalide.');
   const url = new URL(record.sourceUrl);
@@ -194,7 +200,7 @@ export function createPracticeStore(database) {
     },
     async begin(metadata) {
       validateImportMetadata(metadata);
-      const fingerprint = `${metadata.resourceId}:${metadata.checksum}:paris-medical-v${sourceIdentity.mappingVersion}`;
+      const fingerprint = `${metadata.resourceId}:${metadata.checksum}:france-medical-v${sourceIdentity.mappingVersion}`;
       const existing = await first(
         'SELECT id, status FROM datasets WHERE fingerprint = ?',
         fingerprint,

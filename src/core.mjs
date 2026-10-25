@@ -61,27 +61,57 @@ export function validateInput(input) {
     throw new Error('Largeur attendue : 40 à 200 cm.');
   return input;
 }
+function denied(text, pattern) {
+  return new RegExp(
+    String.raw`(?:\bne\b[\w\s']{0,24}\bpas\b|\bpas\b(?:\s+besoin(?:\s+de)?)?)[\w\s']{0,40}(?:${pattern.source})`,
+    'i',
+  ).test(text);
+}
 export function parseNeeds(text, width) {
   const t = text
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
   const keys = new Set();
-  const wheelchair = /fauteuil|wheelchair|mobilite reduite|deambulateur/.test(t);
-  if (wheelchair || /sans marche|plain.pied|step.free|bequille/.test(t)) {
+  const wheelchair =
+    !denied(t, /fauteuil|wheelchair|mobilite reduite|deambulateur|paraplegi/) &&
+    /fauteuil|wheelchair|mobilite reduite|deambulateur|paraplegi/.test(t);
+  const stepFree =
+    wheelchair ||
+    (!denied(t, /sans marche|plain.?pied|step.?free|bequille/) &&
+      /sans marche|plain.?pied|step.?free|bequille/.test(t));
+  if (stepFree) {
     keys.add('stepFree');
     keys.add('route');
   }
-  if (wheelchair) {
-    keys.add('width');
-    keys.add('consultation');
-  }
-  if (/malentendant|sourd|auditi|hard of hearing|hearing/.test(t)) keys.add('hearing');
-  if (/toilet|sanitaire/.test(t)) keys.add('toilets');
-  if (/malvoyant|aveugle|signaleti|visuel|blind/.test(t)) keys.add('signage');
-  if (/transfert|transfer/.test(t)) keys.add('consultation');
+  if (wheelchair) keys.add('width');
+  if (
+    !denied(t, /malentendant|sourd|auditi|hard of hearing|hearing|boucle/) &&
+    /malentendant|sourd|auditi|hard of hearing|hearing|boucle/.test(t)
+  )
+    keys.add('hearing');
+  if (!denied(t, /toilet|sanitaire/) && /toilet|sanitaire/.test(t)) keys.add('toilets');
+  if (
+    !denied(t, /malvoyant|aveugle|signaleti|visuel|blind|canne blanche/) &&
+    /malvoyant|aveugle|signaleti|visuel|blind|canne blanche/.test(t)
+  )
+    keys.add('signage');
+  if (!denied(t, /lsf|langue des signes/) && /lsf|langue des signes/.test(t))
+    keys.add('signLanguage');
+  if (
+    !denied(t, /calme|lumiere|sensoriel|bruit/) &&
+    /espace calme|lumiere reduite|amenagements? sensoriels?|sensible au bruit/.test(t)
+  )
+    keys.add('sensory');
+  if (
+    /communiqu\w* par ecrit|outil de communication/.test(t) ||
+    (/\bne peux pas parler\b/.test(t) && /communiqu|ecrit/.test(t))
+  )
+    keys.add('communication');
+  const meter = t.match(/\b(\d+(?:[.,]\d+)?)\s*m\b/);
   const match = t.match(/\b(\d{2,3})\s*cm\b/);
-  const requested = width ?? (match ? Number(match[1]) : null);
+  const fromMeter = meter ? Math.round(Number(meter[1].replace(',', '.')) * 100) : null;
+  const requested = width ?? (match ? Number(match[1]) : fromMeter);
   if (requested !== null && (requested < 40 || requested > 200))
     throw new Error('Largeur attendue : 40 à 200 cm.');
   if (requested !== null) keys.add('width');
@@ -90,7 +120,7 @@ export function parseNeeds(text, width) {
     minWidth: requested,
     clarification:
       keys.size === 0
-        ? 'Précisez un besoin ou sélectionnez un exemple ci-dessus.'
+        ? 'Précisez un besoin concret (déplacement, audition, vision, communication…).'
         : keys.has('width') && requested === null
           ? 'Quelle largeur de passage vous faut-il ? Renseignez-la pour comparer les portes ; aucun seuil n’est supposé.'
           : null,
@@ -193,4 +223,69 @@ export function safeDoctolib(value) {
   } catch {
     return null;
   }
+}
+
+export function safeWebsite(value) {
+  try {
+    const u = new URL(value);
+    const host = u.hostname.toLowerCase();
+    if (
+      u.protocol !== 'https:' ||
+      u.username ||
+      u.password ||
+      host === 'doctolib.fr' ||
+      host === 'www.doctolib.fr' ||
+      host.endsWith('.doctolib.fr')
+    )
+      return null;
+    return u.href;
+  } catch {
+    return null;
+  }
+}
+
+export function safeAccesLibre(value) {
+  try {
+    const u = new URL(value);
+    return u.protocol === 'https:' &&
+      u.hostname === 'acceslibre.beta.gouv.fr' &&
+      !u.username &&
+      !u.password
+      ? u.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+const DOCTOLIB_SPECIALTY_SLUGS = {
+  'Médecin généraliste': 'medecin-generaliste',
+  'Dentiste, chirurgien dentiste': 'chirurgien-dentiste',
+  Kinésithérapeute: 'masseur-kinesitherapeute',
+  'Médecin orl': 'orl',
+  'Maison de santé ou centre de santé': 'centre-de-sante',
+};
+
+function slugifyPlace(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80);
+}
+
+/** Outbound Doctolib directory link only — never invents a practitioner profile. */
+export function doctolibDirectoryUrl(specialty, placeLabel) {
+  const slug = DOCTOLIB_SPECIALTY_SLUGS[specialty];
+  if (!slug) return 'https://www.doctolib.fr/';
+  const label = String(placeLabel || '');
+  const city =
+    label.match(/\b\d{5}\s+([^,]+)$/)?.[1] ||
+    (!/\d/.test(label) ? label : '') ||
+    label.split(/\s+/).at(-1) ||
+    '';
+  const place = slugifyPlace(city);
+  return place ? `https://www.doctolib.fr/${slug}/${place}` : 'https://www.doctolib.fr/';
 }

@@ -36,7 +36,8 @@ def boolean_value(value):
 
 
 def is_selected_practice(row):
-    if not row.get("postal_code", "").startswith("75"):
+    postal = row.get("postal_code", "")
+    if not postal.isdigit() or len(postal) != 5:
         return False
     activity = row.get("activite", "").lower()
     return any(keyword in activity for keyword in MEDICAL_ACTIVITIES)
@@ -80,6 +81,26 @@ def booking_url(row):
     return None
 
 
+def website_url(row):
+    """Public cabinet site or contact page, excluding Doctolib (handled separately)."""
+    for column in ("contact_url", "site_internet"):
+        try:
+            parsed = urlparse(row.get(column, ""))
+            host = (parsed.hostname or "").lower()
+            if (
+                parsed.scheme == "https"
+                and host
+                and host not in ("www.doctolib.fr", "doctolib.fr")
+                and not host.endswith(".doctolib.fr")
+                and not parsed.username
+                and not parsed.password
+            ):
+                return urlunparse(parsed._replace(fragment=""))
+        except ValueError:
+            continue
+    return None
+
+
 def build_practice(row, exported_at=None):
     address = " ".join(
         part
@@ -87,7 +108,7 @@ def build_practice(row, exported_at=None):
             row.get("numero"),
             row.get("voie"),
             row["postal_code"],
-            "Paris",
+            row.get("commune"),
         )
         if part
     )
@@ -101,6 +122,7 @@ def build_practice(row, exported_at=None):
         "sourceUrl": row["web_url"],
         "mode": "real",
         "doctolibUrl": booking_url(row),
+        "websiteUrl": website_url(row),
         "exportDate": exported_at[:10] if exported_at else None,
         "evidence": build_evidence(row),
     }

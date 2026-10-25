@@ -4,12 +4,9 @@ import { readFileSync } from 'node:fs';
 import { parseNeeds, assess, search, safeDoctolib, evidenceState } from '../src/core.mjs';
 const practices = JSON.parse(readFileSync(new URL('./fixtures/practices.json', import.meta.url)));
 const cases = [
-  ['fauteuil roulant', ['stepFree', 'route', 'width', 'consultation']],
-  ['electric wheelchair', ['stepFree', 'route', 'width', 'consultation']],
-  [
-    'fauteuil électrique et malentendant',
-    ['stepFree', 'route', 'width', 'consultation', 'hearing'],
-  ],
+  ['fauteuil roulant', ['stepFree', 'route', 'width']],
+  ['electric wheelchair', ['stepFree', 'route', 'width']],
+  ['fauteuil électrique et malentendant', ['stepFree', 'route', 'width', 'hearing']],
   ['Je suis sourd', ['hearing']],
   ['hard of hearing', ['hearing']],
   ['malvoyant', ['signage']],
@@ -18,8 +15,8 @@ const cases = [
   ['entrée de plain-pied', ['stepFree', 'route']],
   ['sanitaires adaptés', ['toilets']],
   ['toilettes accessibles', ['toilets']],
-  ['aide au transfert', ['consultation']],
-  ['déambulateur', ['stepFree', 'route', 'width', 'consultation']],
+  ['aide au transfert', []],
+  ['déambulateur', ['stepFree', 'route', 'width']],
   ['Porte 95 cm', ['width']],
   ['Bonjour', []],
 ];

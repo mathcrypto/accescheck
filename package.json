@@ -9,7 +9,7 @@
     "build": "node scripts/compile.mjs && bash scripts/build.sh",
     "build:vercel": "node scripts/build-vercel.mjs",
     "test": "node scripts/compile.mjs && node --test test/*.test.mjs",
-    "dev": "node --env-file-if-exists=.env.local scripts/dev.mjs",
+    "dev": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/dev.mjs",
     "validate": "node scripts/validate-artifact.mjs",
     "dev:companion": "node prototype/server.mjs",
     "mcp": "node mcp/server.mjs",

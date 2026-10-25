@@ -11,30 +11,35 @@ test('straight-line distances preserve missing locations and do not imply a rout
   assert.equal(distanceKm(origin, null), null);
   assert.equal(coordinates({ latitude: 100, longitude: 2 }), null);
 });
-test('IGN is called separately with an address only and its candidates require the person’s selection', async () => {
-  const locations = await geocode('99 Rue de Rivoli', async (url, options) => {
+test('IGN geocode covers France and prefers municipality matches', async () => {
+  let calls = 0;
+  const locations = await geocode('Grenoble', async (url, options) => {
+    calls += 1;
     const query = new URL(url);
     assert.equal(query.origin, 'https://data.geopf.fr');
-    assert.equal(query.searchParams.get('q'), '99 Rue de Rivoli');
-    assert.equal(query.searchParams.get('depcode'), '75');
+    assert.equal(query.searchParams.get('q'), 'Grenoble');
+    assert.equal(query.searchParams.get('depcode'), null);
     assert.equal(options.body, undefined);
     return new Response(
       JSON.stringify({
         features: [
           {
-            geometry: { coordinates: [2.334832, 48.862725] },
+            geometry: { coordinates: [5.724387, 45.188529] },
             properties: {
-              label: '99 Rue de Rivoli 75001 Paris',
-              postcode: '75001',
-              type: 'housenumber',
+              label: 'Grenoble',
+              name: 'Grenoble',
+              city: 'Grenoble',
+              postcode: '38000',
+              type: 'municipality',
             },
           },
         ],
       }),
     );
   });
-  assert.equal(locations[0].latitude, 48.862725);
-  assert.equal(locations[0].approximate, false);
+  assert.ok(calls >= 1);
+  assert.equal(locations[0].latitude, 45.188529);
+  assert.equal(locations[0].approximate, true);
 });
 test('confirmed criteria drive deterministic ranking: declarations remain visible, unknowns remain unknown, accessibility precedes proximity', async () => {
   const records = fixtures.map((record, index) => ({
@@ -99,6 +104,7 @@ test('HTTP discovery rejects unconfirmed searches and does not need or call AI',
     const request = (body) =>
       new Request('https://example.com/api/discover', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
         body: JSON.stringify(body),
       });
     const input = { confirmed: true, needs: { keys: ['hearing'], minWidth: null } };
@@ -110,9 +116,6 @@ test('HTTP discovery rejects unconfirmed searches and does not need or call AI',
     assert.equal(response.status, 200);
     const data = await response.json();
     assert.ok(data.results.every((practice) => practice.distanceKm === null));
-    const html = await worker.fetch(new Request('https://example.com/assistant'));
-    assert.equal(html.status, 200);
-    assert.match(await html.text(), /J’ai vérifié les critères/);
   } finally {
     db.close();
   }

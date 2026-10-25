@@ -25,7 +25,7 @@ export default defineConfig([
   {
     files: [
       'src/companion.js',
-      'src/search.js',
+      'src/finder.js',
       'src/assistant.js',
       'src/home.js',
       'src/ambient.js',

@@ -1,4 +1,4 @@
-import { assess, criteria, safeDoctolib } from './core.mjs';
+import { assess, criteria, safeAccesLibre, safeDoctolib, safeWebsite } from './core.mjs';
 import { createPracticeStore } from './practice-store.mjs';
 
 export const criterionKeys = Object.keys(criteria);
@@ -41,40 +41,100 @@ export function validateRequirements(value) {
   return { keys: value.keys, minWidth: value.minWidth };
 }
 
-export async function geocode(query, transport = fetch) {
-  if (typeof query !== 'string' || query.trim().length < 3 || query.length > 200)
-    throw new Error('Adresse ou quartier requis.');
+function plainLabel(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function geocodeScore(feature, query) {
+  const properties = feature.properties || {};
+  const q = plainLabel(query);
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const city = plainLabel(properties.city);
+  const name = plainLabel(properties.name);
+  const label = plainLabel(properties.label);
+  const postcode = String(properties.postcode || '');
+  let score = 0;
+  if (properties.type === 'municipality' && (city === q || name === q)) score += 100;
+  else if (properties.type === 'municipality' && (city.startsWith(q) || name.startsWith(q)))
+    score += 80;
+  if (city === q || name === q) score += 40;
+  if (label === q || label.startsWith(q + ' ')) score += 20;
+  if (properties.type === 'street' && label.includes(q)) score += 5;
+  // « bastille paris »: every token should appear; do not collapse to the city alone.
+  if (tokens.length >= 2) {
+    const hits = tokens.filter(
+      (token) => label.includes(token) || name.includes(token) || city.includes(token),
+    ).length;
+    score += hits * 35;
+    if (
+      properties.type === 'municipality' &&
+      tokens.some((token) => token !== city && token !== name && !name.includes(token))
+    ) {
+      score -= 120;
+    }
+  }
+  // Prefer major urban centres when several streets share the same name.
+  if (/^75/.test(postcode)) score += 30;
+  else if (/^(69|13|31|33|59|44|67|34|38|06)/.test(postcode)) score += 12;
+  return score;
+}
+
+async function fetchGeocodeFeatures(query, transport, type) {
   const url = new URL('https://data.geopf.fr/geocodage/search');
-  url.search = new URLSearchParams({
+  const params = {
     q: query,
     index: 'address',
-    limit: '3',
+    limit: '5',
     autocomplete: '0',
-    depcode: '75',
-  });
+  };
+  if (type) params.type = type;
+  url.search = new URLSearchParams(params);
   const response = await transport(url.href, {
     signal: AbortSignal.timeout(10000),
     redirect: 'error',
   });
   if (!response.ok) throw new Error('La recherche d’adresse IGN est indisponible.');
   const data = await response.json();
-  return (data.features || []).slice(0, 3).flatMap((feature) => {
-    const [longitude, latitude] = feature.geometry?.coordinates || [];
-    const point = coordinates({ latitude, longitude });
-    const properties = feature.properties || {};
-    return point &&
-      typeof properties.label === 'string' &&
-      String(properties.postcode).startsWith('75')
-      ? [
-          {
-            ...point,
-            label: properties.label.slice(0, 250),
-            source: 'IGN · Base Adresse Nationale',
-            approximate: properties.type !== 'housenumber',
-          },
-        ]
-      : [];
-  });
+  return data.features || [];
+}
+
+export async function geocode(query, transport = fetch) {
+  if (typeof query !== 'string' || query.trim().length < 3 || query.length > 200)
+    throw new Error('Adresse ou quartier requis.');
+  const trimmed = query.trim();
+  // Only single-token queries (e.g. « Grenoble ») ask for a municipality — not « bastille paris ».
+  const simple = plainLabel(trimmed).split(/\s+/).length === 1 && !/\d/.test(trimmed);
+  const features = [
+    ...(simple ? await fetchGeocodeFeatures(trimmed, transport, 'municipality') : []),
+    ...(await fetchGeocodeFeatures(trimmed, transport)),
+  ];
+  const seen = new Set();
+  const ranked = features
+    .map((feature) => ({ feature, score: geocodeScore(feature, trimmed) }))
+    .sort((a, b) => b.score - a.score)
+    .flatMap(({ feature }) => {
+      const [longitude, latitude] = feature.geometry?.coordinates || [];
+      const point = coordinates({ latitude, longitude });
+      const properties = feature.properties || {};
+      const postcode = String(properties.postcode || '');
+      const key = `${latitude},${longitude},${properties.label}`;
+      if (!point || typeof properties.label !== 'string' || !/^\d{5}$/.test(postcode) || seen.has(key))
+        return [];
+      seen.add(key);
+      return [
+        {
+          ...point,
+          label: properties.label.slice(0, 250),
+          source: 'IGN · Base Adresse Nationale',
+          approximate: properties.type !== 'housenumber',
+        },
+      ];
+    });
+  return ranked.slice(0, 5);
 }
 
 function sourceLocation(record) {
@@ -97,7 +157,10 @@ export async function findPractices(database, input) {
     !input ||
     input.confirmed !== true ||
     Object.keys(input).some(
-      (key) => !['confirmed', 'needs', 'specialty', 'origin', 'radiusKm', 'page'].includes(key),
+      (key) =>
+        !['confirmed', 'needs', 'specialty', 'origin', 'radiusKm', 'page', 'preferPostcodes'].includes(
+          key,
+        ),
     )
   )
     throw new Error('Confirmez vos critères avant la recherche.');
@@ -144,6 +207,8 @@ export async function findPractices(database, input) {
       {
         ...practice,
         doctolibUrl: safeDoctolib(practice.doctolibUrl),
+        websiteUrl: safeWebsite(practice.websiteUrl),
+        sourceUrl: safeAccesLibre(practice.sourceUrl),
         distanceKm: distance,
         distanceKind: 'straight_line',
         location: point,
@@ -158,14 +223,20 @@ export async function findPractices(database, input) {
       },
     ];
   });
+  const preferPostcodes = Array.isArray(input.preferPostcodes)
+    ? input.preferPostcodes.filter((code) => /^\d{5}$/.test(String(code)))
+    : [];
+  const inPreferred = (practice) =>
+    preferPostcodes.some((code) => String(practice.address || '').includes(code));
   candidates.sort(
     (a, b) =>
+      Number(inPreferred(b)) - Number(inPreferred(a)) ||
       Number(a.needsConfirmation) - Number(b.needsConfirmation) ||
       b.met - a.met ||
       (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity) ||
       a.name.localeCompare(b.name, 'fr'),
   );
-  const pageSize = 6;
+  const pageSize = 12;
   return {
     needs,
     results: candidates.slice((page - 1) * pageSize, page * pageSize),

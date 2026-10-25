@@ -14,23 +14,24 @@ npm run dev
 
 Open http://127.0.0.1:4173:
 
-- `/`: introduction and links to the patient journey.
-- `/cabinets`: search practices, inspect evidence, and prepare questions for the cabinet.
-- `/consultation`: captions, typed/spoken replies, corrections, and editable notes.
+- `/`: AccèsCheck homepage and entry to search.
+- `/assistant`: accompanied search on the homepage flow.
+- `/cabinets`: chat with the finder agent over Accès Libre, then open Doctolib when listed.
+- `/consultation`: captions and replies during a visit (separate from finding a cabinet).
 
 The local preview recompiles source changes and reloads an idle homepage. Entered fields and consultation sessions defer automatic refresh to preserve their contents. Restart after changing the server or reload tooling. The Chrome extension has been removed; the consultation page runs alongside an appointment website.
 
 ## Search and accessibility evidence
 
-Practice data is imported from the official Accès Libre export into SQLite locally and D1 on Sites. The Vercel build generates a verified, read-only SQLite snapshot; the current export contains 510 Paris medical practices. The API returns the export date, checksum and source with the results. See [data/source.json](data/source.json) and [Vercel deployment](docs/vercel.md). Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0.
+Practice data is imported from the official Accès Libre export into SQLite locally (and a verified read-only snapshot on Vercel). Sync with `npm run data:sync`. The current medical export covers **France** (about **19 750** practices; see [data/source.json](data/source.json) and [Vercel deployment](docs/vercel.md)). Attribution: Accès Libre — Ministère de la Transition écologique, Licence Ouverte / Etalab 2.0. Places use the IGN address API for France. Contact actions prefer a verified [Doctolib](https://www.doctolib.fr/) profile from Accès Libre when present, otherwise the cabinet website/contact page or Accès Libre fiche. The app does not scrape reviews or rank by reputation.
 
-Search sends the submitted needs to the app server. Local rules are the homepage default; optional OpenAI interpretation requires explicit consent and the patient reviews the proposed criteria before searching. No patient account, health profile database or application request logging is created. Infrastructure may retain operational logs independently of the application.
+Search and the finder chat send submitted needs to the app server. Local rules are the default; optional OpenAI interpretation requires explicit consent and the patient reviews proposed criteria before searching. The model never receives cabinet records or rankings. No patient account, health profile database or application request logging is created. Infrastructure may retain operational logs independently of the application.
 
-Common French/English keywords become criteria the user can review. Complex wording, negation, or unsupported needs may be misunderstood. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles rank last; there is no universal accessibility score or live availability lookup. The optional location lookup uses IGN separately from the needs description; distances use imported coordinates and remain straight-line estimates.
+Common French/English needs become criteria the user can review. Wheelchair width is never assumed. Matching documented criteria rank first and known obstacles are excluded from the finder list; unknowns stay visible. There is no universal accessibility score or live availability lookup. Distances use imported coordinates and remain straight-line estimates.
 
 The export omits individual confirmation dates. Populated fields are declared, not photo-verified or patient-confirmed. Missing information stays unknown, and contradictory entrance declarations are flagged. Door width describes the entrance; the documented internal route stops at reception. Transfer suitability, the consultation room, and the rest of the route remain questions for the practice.
 
-104 source records include a validated HTTPS Doctolib link. These links open externally. The app does not log in, read patient records, query appointment slots, book appointments, or join calls. A declared criterion is not a guarantee of access.
+Validated HTTPS Doctolib links from Accès Libre open externally when present. The app does not log in, read patient records, query appointment slots, book appointments, or join calls. A declared criterion is not a guarantee of access.
 
 ## Following the appointment
 
@@ -49,15 +50,15 @@ On the patient pages, conversation text stays in page memory until clear or page
 
 The patient interface currently uses device voices only. The backend retains `/api/voice-config` and `/api/speech` for optional ElevenLabs use; these endpoints are not wired into the current composer. They require a server-side `ELEVENLABS_API_KEY`, explicit text-transfer consent, and a valid voice configuration. `.env.example` includes the requested public voice ID. Never commit real credentials. Provider processing and account charges apply if the API is enabled; tests use a stubbed provider.
 
-## AI agent and MCP
+## Finder agent
 
-The standard app exposes three read-only MCP tools at `/mcp`: `search_practices`, `get_practice_accessibility`, and `create_visit_briefing`.
+`/cabinets` is one stateful finder (session needs, specialty, place). The UI keeps a single current request: a correction replaces the previous turn; **Nouvelle conversation** clears everything. Simple accessibility phrases search immediately; mixed requests (profession or quartier) ask for confirmation first. Local rules translate the patient’s sentence. Optional OpenAI extraction remains available server-side for other callers, but the patient finder does not send descriptions to OpenAI. Search and ranking stay deterministic on Accès Libre data.
 
-The [local consultation prototype](prototype/README.md) adds six tools for fictional sessions. Start it with `npm run dev:companion`, then open http://127.0.0.1:4180/consultation. The pairing controls and prerecorded `/mock-call` are developer checks, separate from the patient path.
+## MCP and consultation tools
 
-[Connect Codex or another MCP host](mcp/README.md) using `node mcp/server.mjs`. The official SDK adapter exposes all nine tools and the `accescompanion_communication` prompt. The host supplies the model; the website does not run a background LLM. Pairing does not start capture or speech. Spoken proposals require browser approval, and correcting a caption expires pending proposals. Real patient conversations cannot be shared through this prototype.
+The app still exposes three read-only MCP tools at `/mcp`: `search_practices`, `get_practice_accessibility`, and `create_visit_briefing`.
 
-The hosted Site retains the standard app's three search tools until a separately reviewed deployment changes it. Local code changes do not deploy the Site.
+The [local consultation prototype](prototype/README.md) adds fictional session tools for developers. It is separate from the patient finder. Connect a host with `node mcp/server.mjs` if needed.
 
 ## Checks
 
@@ -81,7 +82,8 @@ Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` to a 
 ## Source layout and deployment
 
 - `src/core.mjs`: need parsing, evidence rules, ranking, and briefing.
-- `src/index.html`, `src/search.html`, `src/search.js`: homepage and practice search.
+- `src/index.html`, `src/home.js`, `src/assistant.*`: AccèsCheck homepage and accompanied search.
+- `src/finder.html`, `src/finder.js`, `src/agents/finder.mjs`: `/cabinets` finder chat over Accès Libre.
 - `src/consultation.html`, `src/companion.js`: consultation interface and browser speech/capture lifecycle.
 - `src/handler.mjs`, `src/speech.mjs`: HTTP/MCP routes and optional voice API.
 - `prototype/`: fictional call and local in-memory MCP bridge.

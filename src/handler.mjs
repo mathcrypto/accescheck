@@ -1,7 +1,7 @@
 import { practiceTools, runPracticeTool, practiceSummary } from './practice-tools.mjs';
 import { createPracticeStore, DataUnavailable } from './practice-store.mjs';
 import { speechConfig, generateSpeech } from './speech.mjs';
-import { aiConfiguration, interpretNeeds } from './agents/needs-agent.mjs';
+import { finderConfig, runFinder } from './agents/finder.mjs';
 import { findPractices, geocode } from './discovery.mjs';
 
 const headers = {
@@ -112,7 +112,7 @@ export function createHandler({ home, searchPage, consultationPage, assistantPag
         if (request.method === 'GET' && url.pathname === '/api/voice-config')
           return json(speechConfig(env));
         if (request.method === 'GET' && url.pathname === '/api/ai-config')
-          return json(aiConfiguration(env));
+          return json(finderConfig(env));
         if (request.method === 'GET' && url.pathname === '/api/practice') {
           const practice = await practiceSummary(env.DB, url.searchParams.get('id'));
           return practice ? json(practice) : json({ error: 'Établissement introuvable.' }, 404);
@@ -127,7 +127,7 @@ export function createHandler({ home, searchPage, consultationPage, assistantPag
         const body = await readJson(request, 12000);
         if (url.pathname === '/api/locations')
           return json({ locations: await geocode(body.query) });
-        if (url.pathname === '/api/interpret') return json(await interpretNeeds(body, env));
+        if (url.pathname === '/api/agent') return json(await runFinder(body, env));
         if (url.pathname === '/api/discover') return json(await findPractices(env.DB, body));
         if (url.pathname === '/api/speech') return generateSpeech(body, env);
         if (url.pathname === '/mcp') {
