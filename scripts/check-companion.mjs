@@ -89,11 +89,14 @@ try {
   assert.match(await page.locator('#micText').textContent(), /actif/);
   await page.evaluate(() => window.__emit('Prenez le temps de poser vos questions.'));
   assert.equal(await page.locator('.message').count(), 1);
-  assert.match(await page.locator('.message .meta').textContent(), /locuteur non identifié/);
+  assert.match(await page.locator('.message .meta').textContent(), /^Parole/);
+  assert.ok(await page.locator('.message.captured').count());
   await page.evaluate(() => window.__emit('Parole provisoire', false));
   assert.equal(await page.locator('#interim').textContent(), 'Parole provisoire');
   await page.locator('#reply').fill('Je voudrais une explication.');
   await page.locator('#speakReply').click();
+  assert.equal(await page.locator('.message.patient').count(), 1);
+  assert.match(await page.locator('.message.patient .who').textContent(), /Vous · écrit/);
   assert.equal(await page.evaluate(() => window.__recognition.aborted), true);
   assert.equal(await page.locator('#interim').textContent(), '');
   assert.equal(await page.evaluate(() => window.__spoken.at(-1)), 'Je voudrais une explication.');

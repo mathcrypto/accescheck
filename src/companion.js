@@ -206,14 +206,18 @@ function render() {
     const article = document.createElement('div');
     article.id = 'message-' + m.id;
     article.tabIndex = -1;
-    article.className = 'message' + (m.speaker === 'patient' ? ' patient' : '');
+    const role =
+      m.speaker === 'patient' ? 'patient' : m.speaker === 'doctor' ? 'doctor' : 'captured';
+    article.className = 'message ' + role;
     const meta = document.createElement('div');
     meta.className = 'meta';
     const label = document.createElement('span');
+    label.className = 'who';
     label.textContent =
       speakerLabel(m.speaker) + (m.corrected ? ' · corrigé' : '') + (m.demo ? ' · fictif' : '');
     const edit = document.createElement('button');
     edit.className = 'edit';
+    edit.type = 'button';
     edit.dataset.messageId = m.id;
     edit.textContent = 'Corriger';
     edit.setAttribute('aria-label', 'Corriger : ' + m.text.slice(0, 45));
@@ -226,6 +230,7 @@ function render() {
     };
     meta.append(label, edit);
     const text = document.createElement('p');
+    text.className = 'say';
     text.textContent = m.text;
     article.append(meta, text);
     log.append(article);

@@ -21,7 +21,7 @@ test('draft preserves exact words rather than generating medical claims', () => 
   const text = 'Je prends cinq milligrammes, à confirmer.';
   const d = buildDraft([{ speaker: 'captured', text }]);
   assert.ok(d.includes(text));
-  assert.ok(d.includes('locuteur non identifié'));
+  assert.ok(d.includes('Parole'));
   assert.ok(d.includes('sans interprétation'));
   assert.ok(!d.includes('Diagnostic :'));
 });
@@ -29,6 +29,7 @@ test('draft carries fiction and correction provenance', () => {
   const d = buildDraft([{ speaker: 'patient', text: 'Exemple.', demo: true, corrected: true }]);
   assert.ok(d.startsWith('EXEMPLE FICTIF'));
   assert.ok(d.includes('corrigé'));
+  assert.ok(d.includes('Vous · écrit'));
   assert.equal(buildDraft([]), '');
 });
 test('message validation rejects empty or excessive input', () => {
@@ -40,7 +41,9 @@ test('denied mic and unavailable services have actionable fallbacks', () => {
   assert.match(speechError('not-allowed'), /refusé/);
   assert.match(speechError('network'), /Aucun redémarrage automatique/);
   assert.match(speechError('language-not-supported'), /pack local/);
-  assert.equal(speakerLabel('captured'), 'Parole captée · locuteur non identifié');
+  assert.equal(speakerLabel('captured'), 'Parole');
+  assert.equal(speakerLabel('patient'), 'Vous · écrit');
+  assert.equal(speakerLabel('doctor'), 'Soignant · écrit');
 });
 test('companion has no persistent storage or audio recording code', () => {
   const code = readFileSync('src/companion.js', 'utf8');
