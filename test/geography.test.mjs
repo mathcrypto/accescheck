@@ -1,8 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { geocodePlace } from '../src/geography.mjs';
-import { extractPlaceQuery, geocodeQueryFor } from '../src/agents/finder.mjs';
-import { runDialogue } from '../src/agents/dialogue.mjs';
 import { createTestDatabase } from './helpers/database.mjs';
 const features = {
   lyon: {
@@ -62,16 +60,6 @@ const transport = async (url) => {
     features[q.includes('lyon') ? 'lyon' : q.includes('paris') ? 'paris' : 'marseille'];
   return Response.json({ features: [wrong, feature, { ...feature }] });
 };
-test('local syntax preserves explicit districts without assuming Paris', () => {
-  for (const [prompt, expected] of [
-    ['Un dentiste à Lyon 3e', 'lyon 3e'],
-    ['Généraliste à Marseille 8e', 'marseille 8e'],
-    ['Paris 14e', 'paris 14e'],
-  ])
-    assert.equal(extractPlaceQuery(prompt).toLowerCase(), expected);
-  assert.equal(extractPlaceQuery('dans le 14e'), '');
-  assert.equal(geocodeQueryFor('Bastille'), 'Bastille');
-});
 test('structured IGN retains administrative metadata and rejects out-of-context homonyms and duplicates', async () => {
   for (const [city, district, key] of [
     ['Lyon', 3, 'lyon'],
@@ -129,30 +117,6 @@ test('ambiguous communes retain distinct commune codes and context for clarifica
     async () => Response.json({ features: [...records, wrong] }),
   );
   assert.deepEqual(new Set(result.map((place) => place.cityCode)), new Set(['93066', '97411']));
-});
-test('Lyon prompt and a place correction preserve the requested geographic scope', async () => {
-  const db = await createTestDatabase();
-  try {
-    const first = await runDialogue(
-      { message: 'Un dentiste à Lyon 3e', consent: false },
-      { DB: db },
-      transport,
-    );
-    assert.equal(first.state.placeQuery.toLowerCase(), 'lyon 3e');
-    assert.equal(first.state.locationChoices.length, 1);
-    assert.equal(first.state.locationChoices[0].cityCode, '69383');
-    const corrected = await runDialogue(
-      { message: 'Finalement à Marseille 8e', state: first.state, consent: false },
-      { DB: db },
-      transport,
-    );
-    assert.equal(corrected.state.placeQuery.toLowerCase(), 'marseille 8e');
-    assert.equal(corrected.state.origin, null);
-    assert.equal(corrected.state.locationChoices[0].cityCode, '13208');
-    assert.equal(corrected.results, null);
-  } finally {
-    db.close();
-  }
 });
 test('district-constrained practice search excludes closer records outside that district', async () => {
   const { fixtures } = await import('./helpers/database.mjs');

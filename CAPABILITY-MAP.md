@@ -14,7 +14,7 @@ L’objectif est de remplacer « Ma recherche accompagnée » et les formulaires
 - Confirmé par l’utilisateur : l’agent OpenAI doit pouvoir rechercher des avis provenant de plusieurs sources. Aucun fournisseur unique n’est choisi.
 - Hypothèse à relire : conserver l’introduction avec la photo, puis le chat à la place du formulaire actuel. La page de consultation reste disponible après la sélection d’un cabinet.
 - Proposition : le chat s’ouvre dans la zone de recherche de l’accueil ; les anciennes routes de recherche mènent au même parcours. Le texte saisi reste en mémoire et ne transite pas dans une URL.
-- Réutiliser le finder, Accès Libre et le géocodage IGN existants. Les critères confirmés commandent une recherche déterministe ; le modèle ne fabrique ni cabinet ni preuve d’accessibilité.
+- Réutiliser le finder, Accès Libre et le géocodage IGN existants. L’agent choisit sa recherche et ses questions. Le serveur applique les contraintes confirmées, valide les sources et classe les données ; le modèle ne fabrique ni cabinet ni preuve d’accessibilité.
 
 ## Carte des fonctionnalités proposée
 
@@ -77,7 +77,7 @@ La note d’un cabinet ne sera pas attribuée à un médecin qui y exerce sans c
 
 La documentation OpenAI permet de rechercher sur le web avec l’outil `web_search` de la Responses API et d’obtenir des citations. Les références affichées doivent être visibles et cliquables. Cela fournit une base technique pour une recherche multi-source ; cela ne garantit pas la disponibilité de tous les avis d’une plateforme. [OpenAI Docs — Web search](https://developers.openai.com/api/docs/guides/tools-web-search)
 
-Le déploiement public actuel transmet uniquement la base de praticiens au handler ; ses fonctions OpenAI sont désactivées. Le lot de dialogue devra prévoir la configuration serveur du modèle et l’accord pour envoyer une description de besoins à OpenAI, avec un parcours utilisable en cas d’indisponibilité. Le pont fictif de consultation reste séparé de cette nouvelle recherche patient.
+Le handler public transmet la configuration OpenAI côté serveur. L’accord porte sur la demande complète, le lieu et le contexte de conversation. Le pont fictif de consultation reste séparé. Sans fournisseur ou sans accord, aucun parcours à règles ne se fait passer pour un agent : l’annuaire public est proposé explicitement.
 
 Les appels de réputation utiliseront l’identité publique du praticien/cabinet, pas la description de santé du patient. Les contenus des sites et avis restent des données externes non fiables. Une source consultée peut être inaccessible, partielle ou insuffisante : l’agent doit le signaler, et la recherche principale reste utilisable.
 

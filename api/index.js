@@ -4,7 +4,7 @@ import { openSqlite } from '../storage/sqlite.mjs';
 
 export function createVercelHandler(
   database,
-  { OPENAI_API_KEY, OPENAI_MODEL, OPENAI_REVIEW_MODEL } = {},
+  { OPENAI_API_KEY, OPENAI_MODEL, OPENAI_REVIEW_MODEL, OPENAI_SEARCH_MODEL } = {},
 ) {
   return {
     fetch(request) {
@@ -13,6 +13,7 @@ export function createVercelHandler(
         OPENAI_API_KEY,
         OPENAI_MODEL,
         OPENAI_REVIEW_MODEL,
+        OPENAI_SEARCH_MODEL,
       });
     },
   };
@@ -29,6 +30,7 @@ export default {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY,
         OPENAI_MODEL: process.env.OPENAI_MODEL,
         OPENAI_REVIEW_MODEL: process.env.OPENAI_REVIEW_MODEL,
+        OPENAI_SEARCH_MODEL: process.env.OPENAI_SEARCH_MODEL,
       },
     );
     return application.fetch(request);

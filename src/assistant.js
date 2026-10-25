@@ -8,6 +8,7 @@ let lastInput = null;
 let lastLabel = '';
 let reviewJob = null;
 let reviewsAvailable = false;
+let directoryMode = false;
 const reviewCache = new Map();
 function node(tag, text, className = '') {
   const element = document.createElement(tag);
@@ -46,12 +47,36 @@ function actions(bubble, values) {
   for (const value of values) {
     const button = node('button', value.label, 'secondary');
     button.type = 'button';
-    button.onclick = () => (value.id === 'clear' ? $('clear').click() : ask({ action: value.id }));
+    button.onclick = () => {
+      if (value.id === 'clear') return $('clear').click();
+      if (value.id === 'consent') {
+        $('consent').checked = true;
+        return ask(lastInput, lastLabel);
+      }
+      return ask({ action: value.id });
+    };
     group.append(button);
   }
   bubble.append(group);
   return group;
 }
+function question(bubble, question) {
+  if (question.text && bubble.querySelector('.say')?.textContent !== question.text)
+    bubble.append(node('p', question.text, 'question-text'));
+  bubble.dataset.question = question.id;
+  const choices = actions(
+    bubble,
+    question.options.map((option) => ({ id: option.value, label: option.label })),
+  );
+  [...choices.children].forEach((button, index) => {
+    const option = question.options[index];
+    button.onclick = () => {
+      if (option.value === '__free__') return $('description').focus();
+      ask({ answer: { field: question.id, value: option.value } }, option.label);
+    };
+  });
+}
+
 function working(active, text = '') {
   $('agentActivity').hidden = !active;
   document.body.classList.toggle('agent-working', active);
@@ -82,7 +107,12 @@ async function ask(input, choiceLabel = '') {
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
-      body: JSON.stringify({ ...input, state, consent: $('consent').checked }),
+      body: JSON.stringify({
+        ...input,
+        state,
+        consent: $('consent').checked,
+        reviewConsent: $('reviewConsent').checked,
+      }),
       signal: active.signal,
     });
     const data = await readChatResponse(response, (event) => {
@@ -95,6 +125,9 @@ async function ask(input, choiceLabel = '') {
     });
     if (active !== controller) return;
     state = data.state;
+    for (const review of data.reviews || []) reviewCache.set(review.practiceId, review);
+    while (reviewCache.size > 50) reviewCache.delete(reviewCache.keys().next().value);
+    directoryMode = data.mode === 'directory';
     const showingResults = Boolean(data.results);
     if (showingResults) {
       streamed?.remove();
@@ -104,7 +137,9 @@ async function ask(input, choiceLabel = '') {
       setResultsMode(true, data.summary || '');
       $('resultsSection').hidden = false;
       $('results').replaceChildren(
-        ...result.results.map((practice) => practiceCard(practice, result.origin, state.notes)),
+        ...result.results.map((practice) =>
+          practiceCard(practice, result.origin, state?.notes || []),
+        ),
       );
       const page = result.page;
       const pages = [];
@@ -114,10 +149,12 @@ async function ask(input, choiceLabel = '') {
       const navigation = actions($('pagination'), pages);
       [...navigation.children].forEach(
         (button, index) =>
-          (button.onclick = () => ask({ action: 'page', page: Number(pages[index].id) })),
+          (button.onclick = () =>
+            ask({ action: directoryMode ? 'directory' : 'page', page: Number(pages[index].id) })),
       );
       $('resultsSummary').textContent =
         (data.reply ? data.reply + ' ' : '') +
+        (data.notice ? data.notice + ' ' : '') +
         result.total +
         ' fiche(s) · page ' +
         result.page +
@@ -130,30 +167,22 @@ async function ask(input, choiceLabel = '') {
         ' obstacle(s) connu(s) exclu(s). Distances depuis votre adresse, aucun itinéraire vérifié.';
       $('chatStatus').textContent = '';
       $('resultsTitle').focus({ preventScroll: true });
-      $('resultsSection').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      if (data.question) {
+        question(turn(data.reply), data.question);
+        $('chatFold').open = true;
+      }
+      $('resultsSection').scrollIntoView({
+        block: 'start',
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+      });
     } else {
       setResultsMode(false);
       const bubble = streamed || turn('');
       bubble.querySelector('.say').textContent =
         (data.question ? '' : data.summary ? data.summary + '\n\n' : '') + data.reply;
       if (data.notice) bubble.append(node('p', data.notice, 'hint'));
-      if (data.question) {
-        bubble.dataset.question = data.question.id;
-        const choices = actions(
-          bubble,
-          data.question.options.map((option) => ({ id: option.value, label: option.label })),
-        );
-        [...choices.children].forEach((button, index) => {
-          const value = data.question.options[index].value;
-          button.onclick = () => {
-            if (value === '__free__') {
-              $('description').focus();
-              return;
-            }
-            ask({ answer: { field: data.question.id, value } }, data.question.options[index].label);
-          };
-        });
-      } else actions(bubble, data.actions || []);
+      if (data.question) question(bubble, data.question);
+      else actions(bubble, data.actions || []);
       $('chatStatus').textContent = '';
       const history = $('chatHistory');
       history.scrollTop +=
@@ -163,6 +192,12 @@ async function ask(input, choiceLabel = '') {
     if (active !== controller || error.name === 'AbortError') return;
     $('chatStatus').textContent = error.message;
     retry(input, error.message);
+    actions(
+      turn(
+        'Vous pouvez aussi consulter les fiches publiques sans interprétation de votre demande.',
+      ),
+      [{ id: 'directory', label: 'Consulter l’annuaire public' }],
+    );
   } finally {
     if (active === controller) {
       $('thread').setAttribute('aria-busy', 'false');
@@ -225,7 +260,7 @@ fetch('/api/ai-config')
     $('consent').disabled = !config.available;
     $('aiStatus').textContent = config.available
       ? 'OpenAI disponible avec votre accord.'
-      : 'OpenAI indisponible. La recherche locale fonctionne.';
+      : 'Agent indisponible. Annuaire public disponible en mode dégradé.';
   })
   .catch(() => {
     $('reviewConsent').disabled = true;
