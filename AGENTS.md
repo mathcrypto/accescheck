@@ -8,6 +8,8 @@ These instructions apply to this repository. It is a separate application from t
 2. For interface, copy, layout, or animation work, read [DESIGN.MD](DESIGN.MD).
 3. Keep the change within the user's request. Reuse existing code and browser primitives; do not add a framework or dependency for a small fix.
 
+For chat-only search, contextual questions, or review reputation work, read [CAPABILITY-MAP.md](CAPABILITY-MAP.md) for confirmed decisions, proposed module boundaries and open points.
+
 ## Source and boundaries
 
 - Edit `src/`, not generated `worker/` or `dist/`. `scripts/compile.mjs` bundles page templates, styles and browser scripts.
@@ -20,6 +22,7 @@ These instructions apply to this repository. It is a separate application from t
 ## Repository and parallel work
 
 - Keep one canonical repository in `dev-day/accescheck`, containing the frontend, backend, database tooling and MCP code together.
+- Each feature or bug fix gets its own branch from up-to-date `main`. Commit and push that branch, review the change, integrate the latest `main` and run the relevant checks before merging it back with a merge commit. Verify CI after publishing the merge. Keep `main` for reviewed integrations.
 - For parallel work, use a Git worktree and a dedicated branch per task under `dev-day/.worktrees/accescheck/<task>`. Use a separate preview port and local database for each active worktree. Keep the main preview on port 4180.
 - Before removing a finished worktree, verify that its branch is merged into `main`, its tracked and untracked source changes are saved, and its useful ignored artifacts are preserved in the canonical repository. Stop only that worktree's server, then use `git worktree remove` to clean up its directory and Git metadata.
 - Keep credentials in the canonical local configuration; create each worktree's required configuration deliberately without copying or committing secrets. Keep temporary worktrees only while their tasks are active.
