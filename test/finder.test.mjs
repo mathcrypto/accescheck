@@ -187,6 +187,8 @@ test('finder matches short specialty forms and autour-de places', async () => {
     assert.match(extractPlaceQuery('autour de Bastille'), /bastille/i);
     assert.match(extractPlaceQuery('près de République'), /republique/i);
     assert.equal(extractPlaceQuery('dans le 11e'), '');
+    assert.equal(extractPlaceQuery('Un dentiste à Lyon 3 km'), 'lyon');
+    assert.equal(extractPlaceQuery('Paris 11 km'), 'paris');
     for (const query of ['dentiste paris 11', 'paris 11th', 'paris 11eme'])
       assert.equal(extractPlaceQuery(query), 'paris 11e');
     assert.match(extractPlaceQuery('malentendant grenoble generaliste'), /grenoble/i);
@@ -228,6 +230,7 @@ test('Paris arrondissement prefers local postcode over banlieue completes', asyn
   assert.deepEqual(targetPostcodes('Paris 15e'), ['75015']);
   assert.deepEqual(targetPostcodes('paris 11'), ['75011']);
   assert.deepEqual(targetPostcodes('paris 11th'), ['75011']);
+  assert.deepEqual(targetPostcodes('Paris 11 km'), []);
   assert.deepEqual(targetPostcodes('bastille'), []);
   assert.equal(geocodeQueryFor('bastille'), 'bastille');
   assert.equal(geocodeQueryFor('Bastille Paris'), 'Bastille Paris');

@@ -149,7 +149,9 @@ function cleanPlace(value) {
 /** Keep the place the patient typed (landmark + arrondissement), not only the IGN city. */
 export function extractPlaceQuery(text) {
   const normalized = plain(text);
-  const district = normalized.match(/\b([a-z][a-z'-]{2,40})\s+(\d{1,2})(?:er|e(?:me)?|th)?\b/);
+  const district = normalized.match(
+    /\b([a-z][a-z'-]{2,40})\s+(\d{1,2})(?:er|e(?:me)?|th)?\b(?!\s*(?:km|m|metres?|kilometres?)\b)/,
+  );
   if (district && !PLACE_STOP.has(district[1])) {
     const context = normalized.match(/\b(?:autour|pres|a proximite)\s+de\s+([^,.!?]+)/);
     return context && context[1].includes(district[0])
@@ -259,8 +261,9 @@ export function targetPostcodes(placeQuery = '') {
   const explicit = text.match(/\b(\d{5})\b/);
   if (explicit) return [explicit[1]];
   const parisArr =
-    plainText.match(/\bparis\s+(\d{1,2})(?:\s*(?:er|e(?:me)?|th))?\b/) ||
-    plainText.match(/\bparis.*\b(\d{1,2})\s*e(?:r|me)?\s+arrondissement\b/);
+    plainText.match(
+      /\bparis\s+(\d{1,2})(?:\s*(?:er|e(?:me)?|th))?\b(?!\s*(?:km|m|metres?|kilometres?)\b)/,
+    ) || plainText.match(/\bparis.*\b(\d{1,2})\s*e(?:r|me)?\s+arrondissement\b/);
   if (parisArr) {
     const n = Number(parisArr[1]);
     if (n >= 1 && n <= 20) return [`75${String(n).padStart(3, '0')}`];
