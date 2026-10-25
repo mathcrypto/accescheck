@@ -158,6 +158,7 @@ async function ask(input, choiceLabel = '') {
       automaticReviews = result.page === 1 && $('reviewConsent').checked;
       setResultsMode(true, data.summary || '');
       $('resultsSection').hidden = false;
+      $('results').dataset.page = result.page;
       practices = rankByReputation(practices, reviewCache);
       $('results').replaceChildren(
         ...practices.map((practice) => practiceCard(practice, result.origin, state?.notes || [])),
@@ -303,7 +304,7 @@ $('clear').onclick = () => {
   reviewJob?.dispose();
   reviewJob = null;
   reviewCache.clear();
-  $('reviewConsent').checked = false;
+  $('reviewConsent').checked = reviewsAvailable;
   controller?.abort();
   controller = null;
   state = null;
@@ -341,6 +342,8 @@ fetch('/api/ai-config')
   .then((config) => {
     reviewsAvailable = config.available === true;
     $('reviewConsent').disabled = !reviewsAvailable;
+    // Only the cabinet's public identity is sent; the patient can still untick it.
+    $('reviewConsent').checked = reviewsAvailable;
     $('consent').disabled = !config.available;
     $('aiStatus').textContent = config.available
       ? 'OpenAI disponible avec votre accord.'

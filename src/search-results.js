@@ -50,7 +50,12 @@ export function practiceCard(practice, origin = null, notes = []) {
     identity,
     element(
       'span',
-      'status ' + (practice.needsConfirmation ? 'pending' : 'declared'),
+      'status ' +
+        (!practice.checks?.length
+          ? 'none'
+          : practice.needsConfirmation || notes.length
+            ? 'pending'
+            : 'declared'),
       !practice.checks?.length
         ? 'Accès non évalué'
         : practice.needsConfirmation || notes.length
