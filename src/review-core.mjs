@@ -125,7 +125,7 @@ export function summarizeReviews(sources) {
     else if (topic.negative) topic.assessment = 'difficultés rapportées';
     return topic;
   });
-  const available = reviews.length >= 3 && distinctSites >= 2;
+  const available = reviews.length >= 3;
   const score = available
     ? reviews.reduce((sum, record) => {
         const opinions = new Set([...record.themes.values()].flatMap((value) => [...value]));

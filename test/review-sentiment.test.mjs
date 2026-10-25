@@ -32,6 +32,18 @@ test('three identifiable reviews across two sites yield an explicitly limited so
   );
   assert.match(result.label, /favorables/);
 });
+test('three identifiable reviews from a single site such as Google are enough', () => {
+  const result = summarizeReviews([
+    source('https://www.google.com/maps/place/cabinet', [
+      observation('a'),
+      observation('b', 'ecoute'),
+      observation('c', 'attente'),
+    ]),
+  ]);
+  assert.equal(result.status, 'available');
+  assert.equal(result.distinctSites, 1);
+  assert.match(result.label, /favorables/);
+});
 test('ratings and unattributed doctor reviews cannot stand in for individual establishment evidence', () => {
   const result = summarizeReviews([
     source('https://avis.exemple.fr/cabinet', [], { rating: 5, reviewCount: 100 }),
