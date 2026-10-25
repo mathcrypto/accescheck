@@ -60,7 +60,7 @@ function actions(bubble, values) {
       if (value.id === 'clear') return $('clear').click();
       if (value.id === 'consent') {
         $('consent').checked = true;
-        return ask(lastInput, lastLabel);
+        return ask(lastInput, lastLabel, false);
       }
       return ask({ action: value.id });
     };
@@ -103,11 +103,12 @@ function revealTurn(bubble) {
 function retry(input, text) {
   const bubble = turn(text);
   const choices = actions(bubble, [{ id: 'retry', label: 'Réessayer' }]);
-  choices.firstElementChild.onclick = () => ask(input, lastLabel);
+  choices.firstElementChild.onclick = () => ask(input, lastLabel, false);
   revealTurn(bubble);
 }
 
-async function ask(input, choiceLabel = '') {
+// Replays (consent, retry) resend the last request without echoing the user's bubble again.
+async function ask(input, choiceLabel = '', echo = true) {
   reviewJob?.dispose();
   reviewJob = null;
   controller?.abort();
@@ -123,7 +124,7 @@ async function ask(input, choiceLabel = '') {
   let practices = null;
   let automaticReviews = false;
   $('thread').setAttribute('aria-busy', 'true');
-  if (input.message || choiceLabel) turn(input.message || choiceLabel, 'user');
+  if (echo && (input.message || choiceLabel)) turn(input.message || choiceLabel, 'user');
   working(true, 'Envoi de la demande');
   try {
     const response = await fetch('/api/chat', {
