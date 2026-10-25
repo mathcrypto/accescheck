@@ -41,14 +41,6 @@ function render(content, data) {
         'hint',
       ),
     );
-    if (report.unidentifiedCount)
-      content.append(
-        node(
-          'p',
-          `${report.unidentifiedCount} extrait(s) sans référence individuelle écarté(s) du ressenti général.`,
-          'hint',
-        ),
-      );
     const details = node('details');
     details.append(node('summary', 'Accueil, écoute, attente et organisation'));
     for (const topic of report.topics) {

@@ -146,3 +146,11 @@ test('the same sourced web request supplies a conservative theme synthesis and p
     result.sources.find((source) => source.entityType === 'practitioner').observations.length === 0,
   );
 });
+test('a differently formatted address still matches the same name, street and postcode', async () => {
+  const [street, rest] = fixtures[0].address.split(/(?=\b\d{5}\b)/);
+  const sources = [
+    reviewSource(fixtures[0], { entityAddress: street.toUpperCase() + ', ' + rest + ', FR' }),
+  ];
+  const result = await collectReviewSources(body, env, async () => reviewResponse(sources));
+  assert.equal(result.sources[0].match, 'matched');
+});
