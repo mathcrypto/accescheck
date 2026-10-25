@@ -28,9 +28,9 @@ Do not add decorative gradients, large rounded cards, extra accent colors, overs
 - Start with the hospital photo and a brief pitch. The fixed glass header stays visible while scrolling toward the writing field.
 - Below the photo, keep one chat composer. Ask one missing detail at a time, with short choices, free text and an unknown option. Hide previous choices after answering and show the selected answer in the conversation.
 - Keep a short editable recap and one confirmation action before search. No parallel criteria, location or specialty form.
-- Mark request and answer turns clearly. Place confirmed cabinet results in a separate panel below the conversation, not inside message bubbles. Keep the composer available; fold the conversation when results appear. Preserve keyboard access to the history.
+- Keep a central conversation column with plain text, without message backgrounds, borders or bubbles. Mark request and answer turns clearly. Place confirmed cabinet results in a separate panel below the conversation, not inside message bubbles. Keep the composer available; fold the conversation when results appear. Preserve keyboard access to the history.
 - Results distinguish declared matches, unknowns and known obstacles, with source/date and qualified straight-line distance. Open consultation in a new tab, retaining the search in memory.
-- During actual work, show the shared six-arm red SVG at 20 px with a gentle glow/pulse and a text status. Stop/retry stays available. Provider names appear only when a request actually starts. Reduced motion and pause keep the icon static.
+- During actual work, place activity at the next response position inside the conversation, above the composer; review activity belongs beside the results. Show the shared six-arm red SVG at 20 px with a gentle glow/pulse and a text status. Stop/retry stays available. Provider names appear only when a request actually starts. Reduced motion and pause keep the icon static.
 - Reference supplied by the user: https://github.com/RomaGab/2026-mistral-llm-x-law-hackathon-in-paris-2 — central writing area, real preparation steps and a small animated brand mark. Reuse AccèsCheck components and colors.
 
 ### Consultation

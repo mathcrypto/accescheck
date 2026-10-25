@@ -78,6 +78,16 @@ try {
       'static',
       'The composer must follow the conversation instead of floating over it',
     );
+    for (const message of await page.locator('.bubble').all()) {
+      assert.deepEqual(
+        await message.evaluate((el) => {
+          const style = getComputedStyle(el);
+          return { background: style.backgroundColor, border: style.borderTopWidth };
+        }),
+        { background: 'rgba(0, 0, 0, 0)', border: '0px' },
+        'Conversation messages have no bubble background or border',
+      );
+    }
     const latest = page.locator('.bubble.agent').last();
     const bounds = await latest.boundingBox();
     const historyHeight = await page.locator('#chatHistory').evaluate((el) => el.clientHeight);
