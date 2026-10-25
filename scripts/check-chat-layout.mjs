@@ -50,7 +50,7 @@ try {
           reply: unsafeReply
             ? '### <img src=x onerror=alert(1)>\n\n- **<script>alert(1)</script>** : texte\n\n3. <a href=javascript:alert(1)>Lien</a>'
             : showResults
-              ? 'Aucun cabinet ne correspond à cette recherche.'
+              ? '### Résultats\n\n- **Entrée** : déclarée\n- **Largeur** : inconnue'
               : '### Informations à préciser\n\n- **Entrée** : sans marche demandée\n- **Largeur** : non précisée\n\n1. Choisissez le lieu.\n2. Confirmez les critères.',
           question:
             showResults || unsafeReply
@@ -138,6 +138,8 @@ try {
       () => document.getElementById('thread').getAttribute('aria-busy') === 'false',
     );
     assert.equal(await page.locator('#resultsCriteria li').count(), 4);
+    assert.equal(await page.locator('#resultsSummary ul > li').count(), 2);
+    assert.equal(await page.locator('#resultsSummary strong').first().innerText(), 'Entrée');
     await page.locator('#chatFoldSummary').click();
     await page.locator('#descriptionForm').scrollIntoViewIfNeeded();
     const fold = await page.locator('#chatFold').boundingBox();

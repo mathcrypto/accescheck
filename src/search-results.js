@@ -110,7 +110,6 @@ export function practiceCard(practice, origin = null, notes = []) {
   for (const question of notes) {
     const text = question + ' : non documenté · à confirmer auprès du cabinet';
     facts.append(element('li', 'unknown', text));
-    highlights.append(element('li', 'unknown', text));
   }
   if (!practice.checks?.length && !notes.length)
     facts.append(
@@ -123,7 +122,11 @@ export function practiceCard(practice, origin = null, notes = []) {
   article.append(highlights);
   const details = element('details');
   details.append(
-    element('summary', '', 'Détails et provenance'),
+    element(
+      'summary',
+      '',
+      notes.length ? 'Détails · besoins à confirmer' : 'Détails et provenance',
+    ),
     element('p', 'hint', 'Identité individuelle non vérifiée.'),
     facts,
   );

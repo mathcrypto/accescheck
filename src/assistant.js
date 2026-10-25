@@ -173,13 +173,19 @@ async function ask(input, choiceLabel = '') {
           (button.onclick = () =>
             ask({ action: directoryMode ? 'directory' : 'page', page: Number(pages[index].id) })),
       );
-      $('resultsSummary').textContent =
-        (data.reply ? data.reply + ' ' : '') +
-        (data.notice ? data.notice + ' ' : '') +
-        result.total +
-        ' fiche(s) · page ' +
-        result.page +
-        '. Accessibilité, puis proximité, puis réputation si renseignée.';
+      renderMessage(
+        $('resultsSummary'),
+        [
+          data.reply,
+          data.notice,
+          result.total +
+            ' fiche(s) · page ' +
+            result.page +
+            '. Accessibilité, puis proximité, puis réputation si renseignée.',
+        ]
+          .filter(Boolean)
+          .join('\n\n'),
+      );
       $('dataset').textContent =
         'Accès Libre · export du ' +
         new Date(result.dataset.exportedAt).toLocaleDateString('fr-FR') +
