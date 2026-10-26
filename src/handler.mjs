@@ -6,6 +6,7 @@ import { collectReviewSources } from './agents/review-sources.mjs';
 import { summarizePage } from './agents/page-summary.mjs';
 import { chatResponse } from './agents/chat-response.mjs';
 import { findPractices, geocode } from './discovery.mjs';
+import { languagePreference } from './language.mjs';
 
 const headers = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -76,21 +77,51 @@ async function importRequest(request, env, path) {
   return json({ error: 'Route introuvable.' }, 404);
 }
 
-export function createHandler({ home, consultationPage, profilePage }) {
+export function createHandler({
+  home,
+  consultationPage,
+  profilePage,
+  homeEnglish,
+  consultationPageEnglish,
+  profilePageEnglish,
+  hospitalAsset,
+}) {
+  const hospitalBytes =
+    hospitalAsset && Uint8Array.from(atob(hospitalAsset.data), (value) => value.charCodeAt(0));
   return {
     async fetch(request, env = {}) {
       const url = new URL(request.url);
       try {
+        if (
+          ['GET', 'HEAD'].includes(request.method) &&
+          hospitalAsset &&
+          url.pathname === hospitalAsset.path
+        )
+          return new Response(request.method === 'HEAD' ? null : hospitalBytes, {
+            headers: {
+              'Content-Type': 'image/jpeg',
+              'Content-Length': String(hospitalBytes.length),
+              'Cache-Control': 'public, max-age=31536000, immutable',
+              'X-Content-Type-Options': 'nosniff',
+            },
+          });
+        const english = languagePreference(url, request.headers.get('cookie') || '') === 'en';
         if (
           request.method === 'GET' &&
           ['/', '/consultation', '/consultation/', '/profil', '/profil/'].includes(url.pathname)
         )
           return new Response(
             url.pathname === '/'
-              ? home
+              ? english
+                ? homeEnglish
+                : home
               : url.pathname.startsWith('/profil')
-                ? profilePage
-                : consultationPage,
+                ? english
+                  ? profilePageEnglish
+                  : profilePage
+                : english
+                  ? consultationPageEnglish
+                  : consultationPage,
             {
               headers: {
                 'Content-Type': 'text/html; charset=utf-8',
@@ -109,7 +140,7 @@ export function createHandler({ home, consultationPage, profilePage }) {
           return new Response(null, {
             status: 308,
             headers: {
-              Location: '/#recherche',
+              Location: english ? '/?lang=en#recherche' : '/#recherche',
               'Cache-Control': 'no-store',
               'Referrer-Policy': 'no-referrer',
             },
@@ -139,7 +170,7 @@ export function createHandler({ home, consultationPage, profilePage }) {
         if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
         const body = await readJson(request, url.pathname === '/api/chat' ? 64000 : 12000);
         if (url.pathname === '/api/locations')
-          return json({ locations: await geocode(body.query) });
+          return json({ locations: await geocode(body.query, fetch, body.lang) });
         if (url.pathname === '/api/reviews')
           return json(await collectReviewSources(body, env, fetch, request.signal));
         if (url.pathname === '/api/chat')
@@ -148,7 +179,8 @@ export function createHandler({ home, consultationPage, profilePage }) {
             : json(await runSearchAgent(body, env, fetch, { signal: request.signal }));
         if (url.pathname === '/api/agent')
           return json({ error: 'Utilisez le chat /api/chat avec consentement explicite.' }, 410);
-        if (url.pathname === '/api/discover') return json(await findPractices(env.DB, body));
+        if (url.pathname === '/api/discover')
+          return json(await findPractices(env.DB, body, body.lang));
         if (url.pathname === '/api/speech') return generateSpeech(body, env);
         if (url.pathname === '/api/page-summary')
           return json(await summarizePage(body, env, fetch, request.signal));

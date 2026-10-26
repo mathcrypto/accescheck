@@ -20,5 +20,5 @@ test('home preserves the photo and offers one search composer without parallel f
   assert.ok(!html.includes('id="searchForm"'));
   assert.ok(!html.includes('id="advancedSearch"'));
   assert.ok(!html.includes('Ma recherche accompagnée'));
-  assert.ok(html.includes('href="/consultation"'));
+  assert.ok(html.includes('href="/consultation?lang=fr"'));
 });

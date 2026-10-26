@@ -1,0 +1,119 @@
+{
+  "chat": {
+    "you": "You",
+    "showCriteria": "Show the conversation and criteria"
+  },
+  "actions": {
+    "retry": "Retry",
+    "directory": "Open the public directory",
+    "consent": "Accept and continue",
+    "confirm": "Confirm and search",
+    "typeAnswer": "Type my answer",
+    "unknown": "I don’t know"
+  },
+  "pagination": {
+    "previous": "← Previous",
+    "next": "Next results →"
+  },
+  "status": {
+    "sending": "Sending the request",
+    "directory": "Opening the public directory",
+    "geography": "IGN location lookup",
+    "searching": "Searching practices in Accès Libre",
+    "evidence": "Checking the card’s evidence",
+    "reviews": "Web search on the practice’s public identity",
+    "thinking": "The OpenAI agent is reviewing your request",
+    "largeText": "Larger text on. Conversation, choices and cards are bigger, with stronger contrast.",
+    "standardText": "Standard display restored.",
+    "summarising": "Preparing a summary of the page",
+    "cleared": "Conversation cleared.",
+    "reviewsStopped": "Review search stopped. The practices remain available.",
+    "stopped": "Search stopped.",
+    "resume": "You can resume this request or write a correction.",
+    "available": "OpenAI available with your consent.",
+    "unavailable": "Agent unavailable. Public directory available in fallback mode.",
+    "local": "Local search remains available."
+  },
+  "speech": {
+    "stop": "Stop reading",
+    "read": "Read the page"
+  },
+  "directory": {
+    "alternative": "You can also browse the public cards without your request being interpreted.",
+    "reply": "Public directory: no needs or location have been interpreted.",
+    "notice": "Fallback mode without an agent. Access needs still need to be checked on each card."
+  },
+  "consent": {
+    "required": "Your consent is needed to send your full request, the location and this conversation’s context to OpenAI. Avoid names and personal contact details.",
+    "unavailable": "The OpenAI agent is unavailable. You can browse the public directory in fallback mode."
+  },
+  "results": {
+    "reply": "Results for the confirmed search.",
+    "count": "{{total}} card(s) · page {{page}}. Accessibility first, then distance, then reputation when known.",
+    "dataset": "Accès Libre · export of {{date}}. {{excluded}} known obstacle(s) excluded. Distances from your address, no verified route.",
+    "accessLimit": "Accessibility information is declared; it does not guarantee access.",
+    "distanceLimit": "Distances are from the given address; no accessible route has been verified.",
+    "registrationLimit": "RPPS registration, sector, fees and Carte Vitale are not verified in this source."
+  },
+  "recap": {
+    "noProfession": "Any profession",
+    "noLocation": "No location constraint",
+    "noRadius": "No precise radius limit",
+    "title": "Your search",
+    "radius": "{{radius}} km as the crow flies",
+    "width": "Clear width ≥ {{width}} cm"
+  },
+  "confirmation": {
+    "required": "Check these criteria, then confirm to start the search. You can correct them in your message.",
+    "message": "I confirm exactly this summary: {{summary}}"
+  },
+  "errors": {
+    "expired": "Conversation expired or modified. Clear it to start again.",
+    "cardOrder": "Invalid card order. Refresh the search.",
+    "confirmBeforePage": "Confirm a search before changing page.",
+    "staleChoice": "This choice no longer matches the current question.",
+    "noProposal": "There is no proposal to confirm.",
+    "empty": "Write your request.",
+    "historyLimit": "This conversation has reached its limit. Clear it before a new search.",
+    "unknownTool": "Unknown tool.",
+    "invalidTool": "Invalid tool arguments.",
+    "locationLimit": "Too many locations considered. Ask for clarification.",
+    "alreadyConfirmed": "This search is already confirmed. Use search_practices with the confirmed proposal without preparing it again.",
+    "unverifiedLocation": "Location not verified by IGN.",
+    "radiusLocation": "A radius requires an IGN-verified location.",
+    "profession": "Profession missing from the catalogue.",
+    "width": "A width requires the wide entrance criterion.",
+    "confirmBeforeSearch": "The patient must confirm this proposal before searching.",
+    "resultScope": "Only consult a card from the verified results.",
+    "reviewScope": "Reviews for this card require a request using its own button.",
+    "reviewConsent": "Separate consent is needed to check reviews.",
+    "reviewLimit": "Web search limit reached for this turn.",
+    "contextSize": "The context is too large. Narrow down your search.",
+    "contextLimit": "Search context limit reached. Narrow down your request.",
+    "unreachable": "The agent cannot be reached. Retry or open the public directory.",
+    "rateLimit": "OpenAI limit reached. Retry later or open the public directory.",
+    "unavailable": "The OpenAI agent is unavailable. Retry or open the public directory.",
+    "incomplete": "Incomplete agent reply. Please retry your request.",
+    "toolLimit": "Tool limit reached. Narrow down your search.",
+    "unverifiedReply": "The agent’s reply could not be verified. Please retry.",
+    "unexecuted": "The agent did not run the confirmed search. Retry to run the same search.",
+    "searchLimit": "Search limit reached. Narrow down your request; no further search was started.",
+    "invalidInput": "Invalid request. Write no more than 2,000 characters.",
+    "service": "Service unavailable. Please retry.",
+    "streamStopped": "Search interrupted.",
+    "responseSize": "Response too large.",
+    "streamIncomplete": "Response interrupted. Please retry your request.",
+    "invalidCriteria": "Invalid search criteria.",
+    "confirmCriteria": "Confirm your criteria before searching.",
+    "origin": "Invalid starting point.",
+    "district": "An IGN district and postcode are required.",
+    "radius": "Invalid search radius.",
+    "missingOrigin": "Choose a starting point before limiting the distance.",
+    "page": "Invalid page.",
+    "specialty": "Invalid specialty.",
+    "geographyUnavailable": "The IGN location search is unavailable.",
+    "geographyResponse": "The IGN geographic response is invalid.",
+    "locationInput": "Invalid structured location. Specify the municipality and, if needed, the district.",
+    "addressRequired": "An address or neighbourhood is required."
+  }
+}

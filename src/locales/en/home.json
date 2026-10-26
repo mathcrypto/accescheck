@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "AccèsCheck · Prepare your appointment",
+    "description": "Describe your needs, confirm your criteria and prepare your medical appointment."
+  },
+  "skip": "Go to search",
+  "photo": {
+    "alt": "Glass facade of a hospital behind tree branches.",
+    "credit": "Illustration photo ·"
+  },
+  "hero": {
+    "eyebrow": "Before your appointment",
+    "title": "Find a practice that fits your needs.",
+    "description": "Describe your access needs. Compare practice information and prepare the questions to ask them.",
+    "profileNote": "Your access profile is created directly from this conversation."
+  },
+  "chat": {
+    "region": "Practice search chat",
+    "title": "What do you need for your appointment?",
+    "history": "Search conversation",
+    "thread": "Messages",
+    "stop": "Stop",
+    "message": "Your message",
+    "placeholder": "A dentist in Lyon, step-free entrance…",
+    "send": "Send my message"
+  },
+  "profile": {
+    "savedLabel": "Saved profile",
+    "savedTitle": "Your access needs are already here.",
+    "use": "Use my profile",
+    "manage": "View or delete my profile",
+    "offerTitle": "Profile extracted from your request",
+    "correctionHelp": "Correct the criteria in the chat before saving them if necessary.",
+    "consent": "I confirm these needs and agree to keep them on this device for 30 days.",
+    "privacy": "This browser keeps only the criteria and width. Other people using this device can see them.",
+    "save": "Save my access profile"
+  },
+  "actions": {
+    "clear": "Clear all",
+    "largerText": "Larger text",
+    "read": "Read the page"
+  },
+  "assistance": {
+    "title": "OpenAI assistance",
+    "privacy": "Local search remains available. With your consent, your needs messages and, for “Read the page”, the visible text to summarise are sent to OpenAI. Conversation history is not saved. Only profile criteria can be kept on this device with separate consent. Do not give your name or contact details.",
+    "consent": "I agree to send my request, the location and this conversation’s context to OpenAI.",
+    "reviewsConsent": "Add public reviews to the first three cards (OpenAI).",
+    "reviewsHelp": "Only the practice’s public identity is used. Further cards are enriched on request.",
+    "checking": "Checking the agent…"
+  },
+  "results": {
+    "eyebrow": "Results · outside the conversation",
+    "title": "Information for your visit",
+    "priority": "Your criteria first. Distance second.",
+    "provenance": "Sources: Accès Libre for practices; IGN for addresses. Declared facts stay visible with their origin."
+  },
+  "footer": {
+    "search": "Find a practice"
+  },
+  "motion": {
+    "pause": "Pause animations",
+    "resume": "Resume animations"
+  }
+}

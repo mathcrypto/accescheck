@@ -1,5 +1,7 @@
 import { criteria } from './core.mjs';
+import { getTranslator } from './i18n-core.mjs';
 
+const t = getTranslator('fr');
 export const profileKey = 'accescheck.access-profile.v1';
 export const profileLifetime = 30 * 24 * 60 * 60 * 1000;
 
@@ -21,13 +23,12 @@ export function accessProfile(value) {
         !value.keys.includes('width'))) ||
     (value.fictional !== undefined && typeof value.fictional !== 'boolean')
   )
-    throw new Error('Vérifiez les critères du profil et la largeur mesurée, entre 40 et 200 cm.');
+    throw new Error(t('profile.errors.invalid'));
   return { keys: [...value.keys], minWidth: value.minWidth, fictional: value.fictional === true };
 }
 
 export function saveProfile(storage, value, consent, now = Date.now()) {
-  if (consent !== true)
-    throw new Error('Votre accord est nécessaire pour conserver ce profil sur cet appareil.');
+  if (consent !== true) throw new Error(t('profile.errors.consent'));
   const profile = {
     ...accessProfile(value),
     version: 1,
@@ -70,18 +71,16 @@ export function readProfile(storage, now = Date.now()) {
   }
 }
 
-export function profileDescription(value) {
+export function profileDescription(value, t = getTranslator('fr')) {
   const profile = accessProfile({
     keys: value.keys,
     minWidth: value.minWidth,
     fictional: value.fictional,
   });
   return [
-    profile.fictional
-      ? 'Exemple fictif à tester, pas mes besoins réels.'
-      : 'Pour ma recherche, voici mes besoins d’accès à vérifier :',
-    ...profile.keys.map((key) => criteria[key].label),
-    ...(profile.minWidth !== null ? [`Passage utile d’au moins ${profile.minWidth} cm.`] : []),
-    'Demandez-moi la profession et le lieu pour cette nouvelle recherche.',
+    profile.fictional ? t('profile.reuse.fictional') : t('profile.reuse.intro'),
+    ...profile.keys.map((key) => t(`criteria.${key}`)),
+    ...(profile.minWidth !== null ? [t('profile.reuse.width', { width: profile.minWidth })] : []),
+    t('profile.reuse.askLocation'),
   ].join('\n');
 }

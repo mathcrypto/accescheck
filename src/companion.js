@@ -7,7 +7,7 @@ import {
   supportsCallAudio,
 } from './companion-core.mjs';
 import { collectVisibleText, speakEdge, stopSpeechPlayback } from './page-speech.js';
-import { applyLanguage, lang, translate } from './i18n.js';
+import { applyLanguage, lang, t } from './i18n.js';
 let readController = null;
 const $ = (id) => document.getElementById(id);
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -33,19 +33,20 @@ let sharedStream = null,
   captionFatal = false,
   silentRestarts = 0;
 const status = (text, error = false) => {
-  $('status').textContent = translate(text);
+  $('status').textContent = text;
   $('status').classList.toggle('error', error);
   const feedback = document.querySelector('dialog[open] .dialog-status');
   if (feedback) {
-    feedback.textContent = translate(text);
+    feedback.textContent = text;
     feedback.hidden = !text;
     feedback.classList.toggle('error', error);
   }
 };
 function micState(text, active = false) {
-  if (sharedStream && text === 'Microphone coupé') text = 'Son d’onglet connecté · en pause';
+  if (sharedStream && text === t('consultation.status.microphoneOff'))
+    text = t('consultation.status.tabPaused');
   $('micText').textContent = text;
-  document.title = translate(active ? '● Sous-titres — AccèsCheck' : 'AccèsCheck — L’échange');
+  document.title = active ? t('consultation.titleActive') : t('consultation.title');
   $('micState').classList.toggle('recording', active);
   $('pauseCaptions').disabled = !active && !starting;
   $('startCaptions').disabled = !Recognition || active || starting || speaking;
@@ -55,16 +56,12 @@ function invalidateNotes() {
     stopSpeech();
     $('reviewed').checked = false;
     $('readNotes').disabled = true;
-    $('notesWarning').textContent =
-      'L’échange a changé. Vérifiez ou actualisez vos notes avant de les écouter.';
+    $('notesWarning').textContent = t('consultation.notes.changed');
   }
 }
 function captionHint(text) {
   const note = document.querySelector('#empty p');
-  if (note)
-    note.textContent =
-      text ||
-      'Démarrez les sous-titres après l’accord des personnes présentes, ou écrivez votre réponse.';
+  if (note) note.textContent = text || t('consultation.captions.emptyReady');
 }
 function stopCallMonitor() {
   if (callMeterTimer) {
@@ -113,21 +110,11 @@ function hearSharedCall(stream) {
       if (rms > 0.012) heardCallAudio = true;
       if (!listening || messages.length || Date.now() - began < 3500) return;
       if (!heardCallAudio) {
-        captionHint(
-          'Votre propre microphone n’est pas inclus dans le son de l’onglet. Seule la voix des autres participants, jouée par l’appel, peut devenir un sous-titre.',
-        );
-        status(
-          'Aucun son ne sort de l’onglet. Votre propre microphone n’est pas inclus dans le son partagé.',
-          true,
-        );
+        captionHint(t('consultation.connection.ownMicrophoneHelp'));
+        status(t('consultation.connection.silent'), true);
       } else if ($('recognitionMode').value === 'local') {
-        captionHint(
-          'Du son arrive, mais le mode sur cet appareil ne transcrit pas cet onglet. Ouvrez les réglages et choisissez le service vocal du navigateur.',
-        );
-        status(
-          'Du son arrive de l’onglet, sans parole reconnue. Choisissez « Service vocal du navigateur », acceptez, puis relancez les sous-titres.',
-          true,
-        );
+        captionHint(t('consultation.connection.localStalledHelp'));
+        status(t('consultation.connection.localStalled'), true);
       }
     }, 400);
     context.resume?.();
@@ -148,7 +135,9 @@ let pageReading = false;
 function setPageReading(active) {
   pageReading = active;
   if ($('readPage')) {
-    $('readPage').textContent = active ? 'Arrêter la lecture' : 'Lire la page';
+    $('readPage').textContent = active
+      ? t('consultation.actions.stopReading')
+      : t('consultation.actions.readPage');
     $('readPage').setAttribute('aria-pressed', String(active));
   }
   refreshSpeechControls?.();
@@ -207,14 +196,14 @@ function pauseCaptions(announce = true, disconnect = true) {
   } catch {}
   if (disconnect) releaseSharedAudio();
   $('interim').textContent = '';
-  micState('Microphone coupé');
-  if (announce) status('Sous-titres en pause. La capture audio est arrêtée.');
+  micState(t('consultation.status.microphoneOff'));
+  if (announce) status(t('consultation.status.paused'));
 }
 function render() {
   const log = $('transcript');
   log.replaceChildren();
   $('empty').hidden = messages.length > 0;
-  $('demoLabel').textContent = demoActive ? 'EXEMPLE FICTIF · Aucune voix réelle captée.' : '';
+  $('demoLabel').textContent = demoActive ? t('consultation.example.label') : '';
   for (const m of messages) {
     const article = document.createElement('div');
     article.id = 'message-' + m.id;
@@ -227,13 +216,15 @@ function render() {
     const label = document.createElement('span');
     label.className = 'who';
     label.textContent =
-      speakerLabel(m.speaker) + (m.corrected ? ' · corrigé' : '') + (m.demo ? ' · fictif' : '');
+      speakerLabel(m.speaker, lang) +
+      (m.corrected ? t('consultation.metadata.corrected') : '') +
+      (m.demo ? t('consultation.metadata.fictional') : '');
     const edit = document.createElement('button');
     edit.className = 'edit';
     edit.type = 'button';
     edit.dataset.messageId = m.id;
-    edit.textContent = 'Corriger';
-    edit.setAttribute('aria-label', translate('Corriger une phrase'));
+    edit.textContent = t('consultation.actions.correct');
+    edit.setAttribute('aria-label', t('consultation.edit.title'));
     edit.onclick = () => {
       editingId = m.id;
       $('editText').value = m.text;
@@ -251,20 +242,18 @@ function render() {
   $('captionScroll').scrollTop = $('captionScroll').scrollHeight;
 }
 function append(text, speaker, demo = false) {
-  const value = validateMessage(text);
+  const value = validateMessage(text, lang);
   if (
     messages.length >= 150 ||
     messages.reduce((n, m) => n + m.text.length, 0) + value.length > 20000
   )
-    throw new Error(
-      'La session a atteint sa limite. Copiez vos notes, puis effacez la session pour continuer.',
-    );
+    throw new Error(t('consultation.errors.sessionLimit'));
   invalidateNotes();
   messages.push({ id: nextId++, text: value, speaker, demo, corrected: false });
   render();
 }
 function checkDemo() {
-  if (demoActive) throw new Error('Effacez l’exemple fictif avant de commencer un échange réel.');
+  if (demoActive) throw new Error(t('consultation.errors.clearExample'));
 }
 function showLatestMessage() {
   tab('conversation');
@@ -328,7 +317,9 @@ function refreshSpeechControls() {
   $('quickVoiceTest').disabled = false;
   if ($('readPage')) {
     $('readPage').disabled = false;
-    $('readPage').textContent = pageReading ? 'Arrêter la lecture' : 'Lire la page';
+    $('readPage').textContent = pageReading
+      ? t('consultation.actions.stopReading')
+      : t('consultation.actions.readPage');
     $('readPage').setAttribute('aria-pressed', String(pageReading));
   }
   $('readNotes').disabled = !$('reviewed').checked || !$('notes').value.trim();
@@ -336,36 +327,33 @@ function refreshSpeechControls() {
 async function speak(text, { announce = false } = {}) {
   const value = String(text || '').trim();
   if (!value) {
-    status('Écrivez un texte avant de le faire lire.', true);
+    status(t('consultation.errors.speechEmpty'), true);
     return false;
   }
   pauseCaptions(false, false);
   stopSpeechPlayback();
   speaking = true;
-  micState('Microphone coupé');
+  micState(t('consultation.status.microphoneOff'));
   try {
     await speakEdge(value, {
       lang,
       onEnd: () => {
         speaking = false;
         setPageReading(false);
-        micState('Microphone coupé');
+        micState(t('consultation.status.microphoneOff'));
       },
       onError: () => {
         speaking = false;
         setPageReading(false);
-        micState('Microphone coupé');
+        micState(t('consultation.status.microphoneOff'));
       },
     });
-    if (announce)
-      status(
-        'Lecture vocale activée. Les sous-titres sont en pause ; relancez-les ensuite si nécessaire.',
-      );
+    if (announce) status(t('consultation.status.reading'));
     return true;
   } catch (error) {
     speaking = false;
-    micState('Microphone coupé');
-    status(error.message || 'La lecture vocale est indisponible.', true);
+    micState(t('consultation.status.microphoneOff'));
+    status(error.message || t('consultation.errors.speechUnavailable'), true);
     return false;
   }
 }
@@ -376,20 +364,12 @@ async function startCaptions() {
       sessionPlatform !== 'office' &&
       (!sharedStream || sharedStream.getAudioTracks()[0]?.readyState !== 'live')
     )
-      throw new Error(
-        'Connectez d’abord le son de l’onglet de votre appel. Le microphone ne remplace pas le son d’une visioconférence.',
-      );
-    if (!Recognition)
-      throw new Error(
-        'Ce navigateur ne propose pas de reconnaissance vocale. Utilisez la saisie manuelle.',
-      );
-    if (!$('consent').checked)
-      throw new Error('Confirmez l’accord des personnes présentes avant d’activer le microphone.');
+      throw new Error(t('consultation.errors.connectFirst'));
+    if (!Recognition) throw new Error(t('consultation.errors.recognitionUnavailable'));
+    if (!$('consent').checked) throw new Error(t('consultation.errors.microphoneConsent'));
     const local = $('recognitionMode').value === 'local';
     if (!local && !$('remoteConsent').checked)
-      throw new Error(
-        'Acceptez explicitement le traitement audio par le service du navigateur, ou gardez le mode local.',
-      );
+      throw new Error(t('consultation.errors.remoteConsent'));
     stopSpeech();
     const token = ++generation;
     captionFatal = false;
@@ -402,16 +382,13 @@ async function startCaptions() {
       previous?.abort();
     } catch {}
     starting = true;
-    micState('Vérification du service…');
+    micState(t('consultation.status.checkingService'));
     const r = new Recognition();
     r.lang = 'fr-FR';
     r.interimResults = true;
     r.maxAlternatives = 1;
     if (local) {
-      if (!('processLocally' in r))
-        throw new Error(
-          'La reconnaissance sur cet appareil n’est pas prise en charge. Aucun audio n’a été envoyé. Utilisez la saisie manuelle ou choisissez le service du navigateur.',
-        );
+      if (!('processLocally' in r)) throw new Error(t('consultation.errors.localUnsupported'));
       r.processLocally = true;
       if (typeof Recognition.available === 'function') {
         const available = await Recognition.available({ langs: ['fr-FR'], processLocally: true });
@@ -424,8 +401,8 @@ async function startCaptions() {
           if (!$('settingsDialog').open) $('settingsDialog').showModal();
           throw new Error(
             available === 'unavailable'
-              ? 'Aucun pack français local compatible. Aucun envoi vers un service distant.'
-              : 'Le pack français doit être installé avant de démarrer les sous-titres.',
+              ? t('consultation.errors.frenchUnavailable')
+              : t('consultation.errors.frenchRequired'),
           );
         }
       }
@@ -442,13 +419,17 @@ async function startCaptions() {
       local &&
       silentRestarts >= 1 &&
       !messages.some((m) => m.speaker === 'captured' && !m.demo);
-    const stalledCopy =
-      'Le mode sur cet appareil n’écrit aucune phrase. Cliquez sur « Écrire avec le service vocal du navigateur », juste sous ce message.';
+    const stalledCopy = t('consultation.status.localStalled');
     r.onstart = () => {
       if (recognition !== r) return;
       starting = false;
       listening = true;
-      micState(sharedStream ? 'Son de l’onglet actif' : 'Microphone actif', true);
+      micState(
+        sharedStream
+          ? t('consultation.status.tabActive')
+          : t('consultation.status.microphoneActive'),
+        true,
+      );
       updateConnection();
       if (local) armCaptionWatch(r, token);
       if (localStalled()) {
@@ -458,17 +439,14 @@ async function startCaptions() {
         return;
       }
       offerBrowserSpeech(false);
-      if (sharedStream)
-        captionHint(
-          'Votre propre microphone n’est pas sous-titré. Seule la voix des autres, jouée dans l’onglet de l’appel, peut s’afficher ici.',
-        );
+      if (sharedStream) captionHint(t('consultation.connection.ownMicrophoneCaptions'));
       status(
         sharedStream
-          ? 'Sous-titres de l’onglet partagé. Votre propre microphone n’y est pas inclus.'
-          : 'Microphone actif' +
+          ? t('consultation.status.tabCaptions')
+          : t('consultation.status.microphoneActive') +
               (local
-                ? ' · une phrase à la fois, sur cet appareil.'
-                : ' · traitement par le service vocal du navigateur.'),
+                ? t('consultation.status.localSuffix')
+                : t('consultation.status.remoteSuffix')),
       );
     };
     r.onresult = (e) => {
@@ -498,7 +476,7 @@ async function startCaptions() {
       if ((e.error === 'no-speech' || e.error === 'aborted') && keepCaptionSession()) return;
       captionFatal = true;
       pauseCaptions(false, false);
-      status(speechError(e.error), true);
+      status(speechError(e.error, lang), true);
     };
     r.onend = () => {
       if (recognition !== r) return;
@@ -508,12 +486,14 @@ async function startCaptions() {
         starting = false;
         listening = false;
         $('interim').textContent = '';
-        micState(sharedStream ? 'Son d’onglet connecté · en pause' : 'Microphone coupé');
+        micState(
+          sharedStream
+            ? t('consultation.status.tabPaused')
+            : t('consultation.status.microphoneOff'),
+        );
         updateConnection();
         status(
-          sharedStream
-            ? 'Les sous-titres se sont arrêtés. Le son de l’appel reste audible ici. Cliquez sur « Démarrer les sous-titres ».'
-            : 'L’écoute s’est arrêtée. Relancez les sous-titres pour reprendre ; aucun redémarrage automatique.',
+          sharedStream ? t('consultation.status.tabStopped') : t('consultation.status.stopped'),
         );
         return;
       }
@@ -521,7 +501,12 @@ async function startCaptions() {
       starting = false;
       if (messages.some((m) => m.speaker === 'captured' && !m.demo)) silentRestarts = 0;
       else silentRestarts++;
-      micState(sharedStream ? 'Son de l’onglet actif' : 'Microphone actif', true);
+      micState(
+        sharedStream
+          ? t('consultation.status.tabActive')
+          : t('consultation.status.microphoneActive'),
+        true,
+      );
       updateConnection();
       if (localStalled()) {
         offerBrowserSpeech(true);
@@ -530,8 +515,8 @@ async function startCaptions() {
       } else
         status(
           sessionPlatform === 'office'
-            ? 'Microphone du cabinet ouvert. Les sous-titres reprennent dès qu’une phrase est entendue.'
-            : 'En attente de parole dans l’onglet. L’écoute reprend sur le même son.',
+            ? t('consultation.status.officeWaiting')
+            : t('consultation.status.tabWaiting'),
         );
       const retryToken = token;
       captionRetry = setTimeout(() => {
@@ -544,10 +529,7 @@ async function startCaptions() {
         } catch {
           captionFatal = true;
           pauseCaptions(false, false);
-          status(
-            'La reprise des sous-titres a échoué. Cliquez sur « Démarrer les sous-titres ».',
-            true,
-          );
+          status(t('consultation.errors.captionResume'), true);
         }
       }, 400);
     };
@@ -555,7 +537,7 @@ async function startCaptions() {
     else r.start();
   } catch (error) {
     pauseCaptions(false, false);
-    status(error.message || 'Le service vocal est indisponible.', true);
+    status(error.message || t('consultation.errors.serviceUnavailable'), true);
   }
 }
 $('startCaptions').onclick = startCaptions;
@@ -566,8 +548,7 @@ $('useBrowserSpeech').onclick = () => {
   $('recognitionMode').value = 'browser';
   $('remoteConsentLabel').hidden = false;
   $('remoteConsent').checked = true;
-  $('recognitionHelp').textContent =
-    'Ce mode peut transmettre l’audio au fournisseur du navigateur. AccèsCheck ne reçoit pas cet audio. Son traitement dépend du navigateur.';
+  $('recognitionHelp').textContent = t('consultation.settings.remoteHelp');
   startCaptions();
 };
 $('recognitionMode').onchange = () => {
@@ -577,9 +558,9 @@ $('recognitionMode').onchange = () => {
   $('remoteConsent').checked = false;
   $('installLanguage').hidden = true;
   $('recognitionHelp').textContent = remote
-    ? 'Ce mode peut transmettre l’audio au fournisseur du navigateur. AccèsCheck ne reçoit pas cet audio. Son traitement dépend du navigateur.'
-    : 'Aucun envoi audio via AccèsCheck. Le mode local nécessite un navigateur et un pack français compatibles.';
-  status('Mode modifié. Le microphone reste coupé.');
+    ? t('consultation.settings.remoteHelp')
+    : t('consultation.settings.localChangedHelp');
+  status(t('consultation.status.modeChanged'));
 };
 $('consent').onchange = () => {
   if (!$('consent').checked) pauseCaptions();
@@ -591,12 +572,13 @@ $('installLanguage').onclick = async () => {
   const b = $('installLanguage');
   b.disabled = true;
   try {
-    if (typeof Recognition?.install !== 'function') throw new Error('Installation indisponible.');
-    status('Téléchargement du pack français. Aucun microphone activé.');
+    if (typeof Recognition?.install !== 'function')
+      throw new Error(t('consultation.errors.installUnavailable'));
+    status(t('consultation.status.installingFrench'));
     const ok = await Recognition.install({ langs: ['fr-FR'], processLocally: true });
-    if (!ok) throw new Error('Le pack français n’a pas pu être installé.');
+    if (!ok) throw new Error(t('consultation.errors.installFrench'));
     b.hidden = true;
-    status('Pack installé. Vous pouvez démarrer les sous-titres.');
+    status(t('consultation.status.frenchInstalled'));
   } catch (e) {
     status(e.message, true);
   } finally {
@@ -609,7 +591,7 @@ $('showReply').onclick = () => {
     append($('reply').value, 'patient');
     $('reply').value = '';
     showLatestMessage();
-    status('Message affiché. Aucun son n’a été joué.');
+    status(t('consultation.status.replyShown'));
   } catch (e) {
     status(e.message, true);
   }
@@ -617,7 +599,7 @@ $('showReply').onclick = () => {
 $('speakReply').onclick = async () => {
   try {
     checkDemo();
-    const text = validateMessage($('reply').value);
+    const text = validateMessage($('reply').value, lang);
     append(text, 'patient');
     showLatestMessage();
     if (await speak(text)) $('reply').value = '';
@@ -625,12 +607,12 @@ $('speakReply').onclick = async () => {
     status(e.message, true);
   }
 };
-document.querySelectorAll('[data-phrase]').forEach(
+document.querySelectorAll('[data-phrase-key]').forEach(
   (b) =>
     (b.onclick = () => {
-      $('reply').value = translate(b.dataset.phrase);
+      $('reply').value = t(b.dataset.phraseKey);
       $('reply').focus();
-      status('Phrase préparée. Choisissez « Afficher » ou « Lire ma réponse ».');
+      status(t('consultation.status.phrasePrepared'));
     }),
 );
 $('manualToggle').onclick = () => {
@@ -645,7 +627,7 @@ $('addDoctor').onclick = () => {
     $('manualDoctor').value = '';
     $('manualDialog').close();
     showLatestMessage();
-    status('Phrase du soignant ajoutée manuellement.');
+    status(t('consultation.status.clinicianAdded'));
   } catch (e) {
     status(e.message, true);
   }
@@ -654,22 +636,10 @@ $('loadDemo').onclick = () => {
   pauseCaptions(false);
   stopSpeech();
   demoActive = true;
-  append(
-    translate('Bonjour. Qu’aimeriez-vous aborder pendant cette consultation ?'),
-    'doctor',
-    true,
-  );
-  append(translate('Pouvez-vous parler plus lentement ? Je lis les sous-titres.'), 'patient', true);
-  append(
-    translate(
-      'Bien sûr. Nous pouvons prendre le temps de lire et de corriger les phrases ensemble.',
-    ),
-    'doctor',
-    true,
-  );
-  status(
-    'Exemple fictif affiché. Aucun microphone activé. Effacez la session avant un échange réel.',
-  );
+  append(t('consultation.example.greeting'), 'doctor', true);
+  append(t('consultation.example.reply'), 'patient', true);
+  append(t('consultation.example.response'), 'doctor', true);
+  status(t('consultation.status.exampleLoaded'));
   showLatestMessage();
   $('settingsDialog').close();
 };
@@ -698,14 +668,12 @@ $('clearSession').onclick = () => {
   captionHint();
   render();
   refreshSpeechControls();
-  status(
-    'Session effacée. Le microphone est coupé ; les messages et notes ont été supprimés de cette page.',
-  );
+  status(t('consultation.status.cleared'));
   window.dispatchEvent(new Event('accescompanion:session-cleared'));
 };
 $('saveEdit').onclick = () => {
   try {
-    const text = validateMessage($('editText').value);
+    const text = validateMessage($('editText').value, lang);
     const m = messages.find((m) => m.id === editingId);
     if (m) {
       m.text = text;
@@ -716,7 +684,7 @@ $('saveEdit').onclick = () => {
     $('editText').value = '';
     $('editDialog').close();
     $('transcript').querySelector(`[data-message-id="${editingId}"]`)?.focus();
-    status('Phrase corrigée. Vérifiez le sens avec la personne qui l’a prononcée.');
+    status(t('consultation.status.corrected'));
   } catch (e) {
     status(e.message, true);
   }
@@ -726,7 +694,7 @@ function tab(name) {
   const notes = name === 'notes';
   if (notes) {
     pauseCaptions(false, false);
-    status('Sous-titres en pause pendant la relecture de vos notes.');
+    status(t('consultation.status.notesPaused'));
   }
   for (const [id, on] of [
     ['conversationTab', !notes],
@@ -751,23 +719,20 @@ document.querySelector('[role=tablist]').onkeydown = (e) => {
   }
 };
 function draft() {
-  const text = buildDraft(messages, translate);
+  const text = buildDraft(messages, lang);
   if (!text) {
-    $('notesWarning').textContent =
-      'Ajoutez une phrase à la conversation avant de préparer vos notes.';
+    $('notesWarning').textContent = t('consultation.notes.emptyDraft');
     return;
   }
   if (text.length > 24000) {
-    $('notesWarning').textContent =
-      'Cet échange est trop long pour le brouillon. Rédigez un récapitulatif dans le champ ci-dessous.';
+    $('notesWarning').textContent = t('consultation.notes.tooLong');
     return;
   }
   stopSpeech();
   $('notes').value = text;
   $('reviewed').checked = false;
   $('readNotes').disabled = true;
-  $('notesWarning').textContent =
-    'Brouillon copié mot pour mot. Corrigez les erreurs et résumez-le avec le soignant avant de le valider.';
+  $('notesWarning').textContent = t('consultation.notes.drafted');
 }
 $('draftNotes').onclick = () => {
   if ($('notes').value.trim() && messages.length) $('replaceDialog').showModal();
@@ -782,7 +747,7 @@ $('notes').oninput = () => {
   stopSpeech();
   $('reviewed').checked = false;
   $('readNotes').disabled = true;
-  $('notesWarning').textContent = 'Notes modifiées : relisez-les avant la lecture vocale.';
+  $('notesWarning').textContent = t('consultation.notes.edited');
 };
 $('reviewed').onchange = () => {
   refreshSpeechControls();
@@ -793,35 +758,30 @@ $('readNotes').onclick = () => {
 };
 $('copyNotes').onclick = async () => {
   if (!$('notes').value.trim()) {
-    $('notesWarning').textContent = 'Écrivez ou préparez vos notes avant de les copier.';
+    $('notesWarning').textContent = t('consultation.notes.emptyCopy');
     return;
   }
   try {
     await navigator.clipboard.writeText(
-      translate('NOTES PERSONNELLES ') +
-        translate($('reviewed').checked ? '— relues' : '— NON VALIDÉES') +
+      t('consultation.notes.copyHeading') +
+        ($('reviewed').checked
+          ? t('consultation.notes.reviewed')
+          : t('consultation.notes.unreviewed')) +
         '\n\n' +
         $('notes').value,
     );
-    $('notesWarning').textContent =
-      'Notes copiées à votre demande. Elles peuvent contenir des informations de santé.';
+    $('notesWarning').textContent = t('consultation.notes.copied');
   } catch {
-    $('notesWarning').textContent =
-      'Copie indisponible. Sélectionnez vos notes et copiez-les manuellement.';
+    $('notesWarning').textContent = t('consultation.notes.copyFailed');
   }
 };
-$('readGuide').onclick = () =>
-  speak(
-    translate(
-      'Vous êtes dans l’échange AccèsCheck. Le bouton Démarrer les sous-titres active l’écoute après votre accord. Dans Votre réponse, écrivez une phrase, puis choisissez Afficher ou Lire ma réponse. Le médecin entend cette voix seulement si l’appareil est près de lui, ou si le son de cette page est partagé dans l’appel. Cette lecture ne décrit pas votre environnement physique.',
-    ),
-  );
+$('readGuide').onclick = () => speak(t('consultation.speech.guide'));
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     stopSpeech();
     if (!sharedStream) {
       pauseCaptions(false);
-      status('La page a quitté le premier plan. Microphone et lecture arrêtés.');
+      status(t('consultation.status.background'));
     }
   } else if (callMonitor?.state === 'suspended') callMonitor.resume?.();
 });
@@ -829,9 +789,9 @@ window.addEventListener('pagehide', () => {
   $('clearSession').onclick();
 });
 $('supportInfo').textContent = Recognition
-  ? 'Le microphone ne démarre jamais automatiquement. En cas d’indisponibilité, utilisez « Saisir les paroles du soignant ».'
-  : 'Reconnaissance vocale indisponible dans ce navigateur. La saisie manuelle reste utilisable.';
-micState('Microphone coupé');
+  ? t('consultation.settings.supported')
+  : t('consultation.settings.unsupported');
+micState(t('consultation.status.microphoneOff'));
 refreshSpeechControls();
 
 function updateConnection() {
@@ -839,25 +799,25 @@ function updateConnection() {
   $('connectionBadge').classList.toggle('connected', connected);
   $('connectionBadge').textContent = connected
     ? listening
-      ? 'Son d’onglet · sous-titres actifs'
-      : 'Son d’onglet · prêt'
+      ? t('consultation.connection.captionsActive')
+      : t('consultation.connection.ready')
     : sessionPlatform === 'office'
-      ? 'Microphone de cet appareil'
-      : 'Son de l’appel non connecté';
+      ? t('consultation.connection.deviceMicrophone')
+      : t('consultation.connection.notConnected');
   $('callAudioStatus').textContent = connected
-    ? 'Vous entendez cet appel sur cette page. Laissez AccèsCheck ouvert à côté de la vidéo.'
+    ? t('consultation.connection.playing')
     : supportsCallAudio(navigator.userAgent, !!navigator.mediaDevices?.getDisplayMedia)
-      ? 'Aucun son d’appel connecté. Choisissez l’onglet de la vidéo, pas la fenêtre entière, et cochez « Partager l’audio de l’onglet ».'
-      : 'Le partage du son d’un onglet nécessite Chrome ou Edge récent sur ordinateur. La saisie manuelle reste disponible.';
+      ? t('consultation.connection.chooseTab')
+      : t('consultation.connection.unsupported');
   if ($('hearingStatus'))
     $('hearingStatus').textContent =
       sessionPlatform === 'office'
-        ? 'En cabinet, le médecin entend la voix de cet appareil s’il est près de vous.'
+        ? t('consultation.connection.officeHearing')
         : !connected
-          ? 'Le son de l’appel n’est pas connecté. Coller le lien ne suffit pas : cliquez sur « Connecter le son de l’appel », choisissez l’onglet Zoom ou Doctolib, et cochez « Partager l’audio de l’onglet ».'
+          ? t('consultation.connection.videoHearingDisconnected')
           : listening
-            ? 'Vous entendez l’appel sur cette page et les sous-titres sont actifs. Laissez cette page ouverte à côté de la vidéo.'
-            : 'L’appel est connecté et audible sur cette page. Démarrez les sous-titres pour afficher les paroles.';
+            ? t('consultation.connection.videoHearingActive')
+            : t('consultation.connection.videoHearingReady');
   $('connectCallAudio').disabled = !supportsCallAudio(
     navigator.userAgent,
     !!navigator.mediaDevices?.getDisplayMedia,
@@ -882,12 +842,12 @@ document.querySelectorAll('[data-platform]').forEach(
       updateCallLink();
       $('platformHelp').textContent =
         sessionPlatform === 'office'
-          ? 'Placez cet appareil entre vous et le médecin. Le microphone capte les voix dans la pièce.'
-          : 'Ouvrez ' +
-            (sessionPlatform === 'zoom' ? 'Zoom' : 'Doctolib') +
-            ' dans un autre onglet. Ici, choisissez cet onglet-là et cochez « Partager l’audio de l’onglet ». Ne choisissez pas la page AccèsCheck : elle n’a pas le son de l’appel.';
+          ? t('consultation.connection.officeHelp')
+          : t('consultation.connection.videoHelp', {
+              platform: sessionPlatform === 'zoom' ? 'Zoom' : 'Doctolib',
+            });
       updateConnection();
-      status('Mode de consultation modifié. Aucune capture audio active.');
+      status(t('consultation.status.platformChanged'));
     }),
 );
 $('callUrl').oninput = updateCallLink;
@@ -896,21 +856,20 @@ $('openCall').onclick = (e) => {
   if (!href) {
     e.preventDefault();
     status(
-      'Collez un lien HTTPS de ' +
-        (sessionPlatform === 'zoom' ? 'Zoom' : 'Doctolib') +
-        ' pour ouvrir votre rendez-vous.',
+      t('consultation.errors.callLink', {
+        platform: sessionPlatform === 'zoom' ? 'Zoom' : 'Doctolib',
+      }),
       true,
     );
-  } else status('Votre appel s’ouvre dans un autre onglet. Revenez ici pour connecter son audio.');
+  } else status(t('consultation.status.callOpened'));
 };
 $('connectCallAudio').onclick = async () => {
   let stream = null;
   try {
     checkDemo();
-    if (!$('consent').checked)
-      throw new Error('Confirmez l’accord des personnes présentes avant de partager le son.');
+    if (!$('consent').checked) throw new Error(t('consultation.errors.sharingConsent'));
     if (!supportsCallAudio(navigator.userAgent, !!navigator.mediaDevices?.getDisplayMedia))
-      throw new Error('Le partage du son nécessite Chrome ou Edge récent sur ordinateur.');
+      throw new Error(t('consultation.errors.sharingUnsupported'));
     pauseCaptions(false);
     const token = ++connectionGeneration;
     stream = await navigator.mediaDevices.getDisplayMedia({
@@ -927,35 +886,32 @@ $('connectCallAudio').onclick = async () => {
     const video = stream.getVideoTracks()[0];
     const audio = stream.getAudioTracks()[0];
     if (video?.getSettings().displaySurface !== 'browser')
-      throw new Error('Choisissez un onglet du navigateur, pas une fenêtre ou l’écran entier.');
+      throw new Error(t('consultation.errors.chooseBrowserTab'));
     if (!audio || audio.readyState !== 'live')
-      throw new Error('Aucun son partagé. Réessayez en cochant « Partager l’audio de l’onglet ».');
+      throw new Error(t('consultation.errors.noSharedAudio'));
     try {
       video.stop();
     } catch {}
-    if (audio.readyState !== 'live')
-      throw new Error(
-        'Le son de l’onglet s’est arrêté avec l’image. Réessayez en cochant « Partager l’audio de l’onglet ».',
-      );
+    if (audio.readyState !== 'live') throw new Error(t('consultation.errors.sharedAudioStopped'));
     sharedStream = stream;
     hearSharedCall(stream);
     audio.onended = () => {
       if (sharedStream !== stream) return;
       pauseCaptions(false);
-      status('Le partage a été arrêté. Aucun son d’appel n’est capté.');
+      status(t('consultation.status.sharingStopped'));
     };
     $('disconnectCallAudio').disabled = false;
     updateConnection();
-    micState('Son d’onglet connecté · en pause');
-    status('Son de l’appel connecté. Vous l’entendez sur cette page.');
+    micState(t('consultation.status.tabPaused'));
+    status(t('consultation.status.callConnected'));
     await startCaptions();
   } catch (e) {
     if (stream) stream.getTracks().forEach((t) => t.stop());
     releaseSharedAudio();
     status(
       e.name === 'NotAllowedError'
-        ? 'Partage annulé ou refusé. Aucun son d’appel connecté.'
-        : e.message || 'Le partage du son est indisponible.',
+        ? t('consultation.errors.sharingDenied')
+        : e.message || t('consultation.errors.sharingUnavailable'),
       true,
     );
   }
@@ -963,11 +919,11 @@ $('connectCallAudio').onclick = async () => {
 $('disconnectCallAudio').onclick = () => pauseCaptions();
 $('copyReplyForCall').onclick = async () => {
   try {
-    const text = validateMessage($('reply').value);
+    const text = validateMessage($('reply').value, lang);
     await navigator.clipboard.writeText(text);
-    status('Réponse copiée. Collez-la vous-même dans le chat de votre appel.');
+    status(t('consultation.status.replyCopied'));
   } catch (e) {
-    status(e.message || 'Copie indisponible. Sélectionnez votre réponse manuellement.', true);
+    status(e.message || t('consultation.errors.copyReply'), true);
   }
 };
 (async () => {
@@ -989,8 +945,7 @@ $('copyReplyForCall').onclick = async () => {
 })();
 updateConnection();
 
-$('quickVoiceTest').onclick = () =>
-  speak(translate('Bonjour. Vous pouvez faire lire vos messages pendant votre rendez-vous.'));
+$('quickVoiceTest').onclick = () => speak(t('consultation.speech.example'));
 
 function setVisionMode(on, announce = true) {
   const enabled = Boolean(on);
@@ -1000,11 +955,7 @@ function setVisionMode(on, announce = true) {
   if (toolbar) toolbar.checked = enabled;
   if (settings) settings.checked = enabled;
   if (announce)
-    status(
-      enabled
-        ? 'Texte agrandi activé. Les sous-titres et boutons sont plus grands, avec un contraste renforcé.'
-        : 'Affichage standard rétabli.',
-    );
+    status(enabled ? t('consultation.status.largerText') : t('consultation.status.standardText'));
 }
 
 $('visionMode').onchange = () => setVisionMode($('visionMode').checked);
@@ -1021,11 +972,7 @@ $('readPage').onclick = async () => {
       : collectVisibleText(['#status', '#practiceContext', '#transcript', '.chat-suggestions'], {
           maxChars: 4000,
         });
-  const script =
-    text ||
-    translate(
-      'Page AccèsCheck, échange de consultation. Aucun message n’est encore affiché. Démarrez les sous-titres ou écrivez une réponse.',
-    );
+  const script = text || t('consultation.speech.emptyPage');
   setPageReading(true);
   speaking = true;
   try {
@@ -1056,7 +1003,7 @@ window.accescompanionSession = Object.freeze({
   hasRealMessages: () => messages.some((message) => !message.demo),
   getFictionalMessages() {
     if (messages.some((message) => !message.demo)) {
-      throw new Error('Seuls les messages fictifs peuvent être partagés.');
+      throw new Error(t('consultation.errors.shareRealMessages'));
     }
     return messages.map((message) => ({ ...message }));
   },
@@ -1072,7 +1019,7 @@ window.accescompanionSession = Object.freeze({
   applyDraft(text) {
     if ($('notes').value.trim()) return false;
     if (typeof text !== 'string' || text.length > 24000) {
-      throw new Error('Brouillon invalide.');
+      throw new Error(t('consultation.errors.invalidDraft'));
     }
     tab('notes');
     $('settingsDialog').close();
@@ -1082,9 +1029,9 @@ window.accescompanionSession = Object.freeze({
   },
   async speakApprovedReply(text) {
     if (!demoActive || messages.some((message) => !message.demo)) {
-      throw new Error('La lecture MCP est réservée au test fictif.');
+      throw new Error(t('consultation.errors.realPlayback'));
     }
-    const value = validateMessage(text);
+    const value = validateMessage(text, lang);
     const played = await speak(value);
     if (played) {
       append(value, 'patient', true);

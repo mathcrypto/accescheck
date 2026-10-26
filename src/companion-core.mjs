@@ -1,51 +1,47 @@
-export const speakerLabel = (speaker) =>
-  ({
-    patient: 'Vous · écrit',
-    doctor: 'Soignant · écrit',
-    captured: 'Parole',
-  })[speaker] || 'Message';
-export function buildDraft(messages, translate = (text) => text) {
+import { getTranslator } from './i18n-core.mjs';
+
+export function speakerLabel(speaker, language = 'fr') {
+  const t = getTranslator(language);
+  const key = ['patient', 'doctor', 'captured'].includes(speaker) ? speaker : 'unknown';
+  return t('consultation.metadata.' + key);
+}
+export function buildDraft(messages, language = 'fr') {
   if (!messages.length) return '';
+  const t = getTranslator(language);
   const demo = messages.some((m) => m.demo);
   return (
-    (demo ? translate('EXEMPLE FICTIF — ne pas utiliser comme notes médicales.') + '\n\n' : '') +
-    translate('BROUILLON DE CONVERSATION — À RELIRE AVEC LE SOIGNANT') +
+    (demo ? t('consultation.draft.fictional') + '\n\n' : '') +
+    t('consultation.draft.title') +
     '\n' +
-    translate('Transcription non vérifiée, sans interprétation ni synthèse médicale.') +
+    t('consultation.draft.notice') +
     '\n\n' +
     messages
       .map(
         (m) =>
-          `${translate(speakerLabel(m.speaker) + (m.corrected ? ' · corrigé' : ''))}\n${m.text}`,
+          `${speakerLabel(m.speaker, language)}${m.corrected ? t('consultation.metadata.corrected') : ''}\n${m.text}`,
       )
       .join('\n\n')
   );
 }
-export function validateMessage(text) {
-  if (typeof text !== 'string' || !text.trim())
-    throw new Error('Écrivez un message avant de continuer.');
-  if (text.length > 4000) throw new Error('Limitez ce message à 4 000 caractères.');
+export function validateMessage(text, language = 'fr') {
+  const t = getTranslator(language);
+  if (typeof text !== 'string' || !text.trim()) throw new Error(t('consultation.validation.empty'));
+  if (text.length > 4000) throw new Error(t('consultation.validation.tooLong'));
   return text.trim();
 }
-export function speechError(code) {
-  return (
-    {
-      'not-allowed':
-        'L’accès au microphone a été refusé. Autorisez-le dans le navigateur, puis réessayez, ou utilisez la saisie manuelle.',
-      'service-not-allowed':
-        'Le service vocal n’est pas autorisé dans ce navigateur. Vous pouvez échanger par écrit.',
-      'audio-capture':
-        'Aucun microphone utilisable. Vérifiez votre appareil ou utilisez la saisie manuelle.',
-      network:
-        'Le service vocal est indisponible. Aucun redémarrage automatique : réessayez ou utilisez la saisie manuelle.',
-      'no-speech':
-        'Aucune parole détectée. Les sous-titres sont arrêtés ; vous pouvez les relancer.',
-      'language-not-supported':
-        'Le français n’est pas disponible dans ce mode. Installez le pack local si proposé, ou choisissez explicitement le service du navigateur.',
-      aborted: 'Les sous-titres sont arrêtés.',
-    }[code] ||
-    'La reconnaissance vocale s’est arrêtée. Vous pouvez réessayer ou saisir les paroles manuellement.'
-  );
+export function speechError(code, language = 'fr') {
+  const t = getTranslator(language);
+  const keys = {
+    'not-allowed': 'notAllowed',
+    'service-not-allowed': 'serviceNotAllowed',
+    'audio-capture': 'audioCapture',
+    network: 'network',
+    'no-speech': 'noSpeech',
+    'language-not-supported': 'languageNotSupported',
+    aborted: 'aborted',
+  };
+  const key = Object.hasOwn(keys, code) ? keys[code] : 'unknown';
+  return t('consultation.speechErrors.' + key);
 }
 export function safeCallUrl(value, platform) {
   try {

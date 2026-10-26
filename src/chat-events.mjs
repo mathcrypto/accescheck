@@ -1,8 +1,11 @@
+import { getTranslator } from './i18n-core.mjs';
+
 // Native stream consumption: https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams
-export async function readChatResponse(response, onEvent) {
+export async function readChatResponse(response, onEvent, language = 'fr') {
+  const t = getTranslator(language);
   if (!response.headers.get('content-type')?.includes('application/x-ndjson')) {
     const value = await response.json();
-    if (!response.ok) throw new Error(value.error || 'Service indisponible. Réessayez.');
+    if (!response.ok) throw new Error(value.error || t('search.errors.service'));
     return value;
   }
   const reader = response.body.getReader();
@@ -12,7 +15,7 @@ export async function readChatResponse(response, onEvent) {
   const consume = (line) => {
     if (!line.trim()) return;
     const event = JSON.parse(line);
-    if (event.type === 'error') throw new Error(event.message || 'Recherche interrompue.');
+    if (event.type === 'error') throw new Error(event.message || t('search.errors.streamStopped'));
     if (event.type === 'result') result = event.value;
     else if (['status', 'reply'].includes(event.type)) onEvent(event);
   };
@@ -20,7 +23,7 @@ export async function readChatResponse(response, onEvent) {
     while (true) {
       const { value, done } = await reader.read();
       pending += decoder.decode(value, { stream: !done });
-      if (pending.length > 1000000) throw new Error('Réponse trop volumineuse.');
+      if (pending.length > 1000000) throw new Error(t('search.errors.responseSize'));
       let end;
       while ((end = pending.indexOf('\n')) !== -1) {
         consume(pending.slice(0, end));
@@ -29,7 +32,7 @@ export async function readChatResponse(response, onEvent) {
       if (done) break;
     }
     consume(pending);
-    if (!result) throw new Error('Réponse interrompue. Réessayez votre demande.');
+    if (!result) throw new Error(t('search.errors.streamIncomplete'));
     return result;
   } finally {
     await reader.cancel().catch(() => {});

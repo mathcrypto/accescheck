@@ -1,0 +1,23 @@
+{
+  "language": "fr",
+  "menu": "Menu",
+  "nav": {
+    "brand": "AccèsCheck, accueil",
+    "label": "Navigation principale",
+    "home": "Accueil",
+    "describe": "Décrire mes besoins",
+    "consultation": "Pendant la visite",
+    "profile": "Mon profil d’accès"
+  },
+  "languageSwitch": {
+    "target": "en",
+    "label": "English"
+  },
+  "sources": "Sources :",
+  "speech": {
+    "otherCards": "Autres fiches non lues.",
+    "empty": "Aucun texte à lire.",
+    "unavailable": "La lecture vocale est indisponible.",
+    "invalid": "La lecture vocale n’a pas renvoyé un son lisible."
+  }
+}

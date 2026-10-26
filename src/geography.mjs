@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getTranslator } from './i18n-core.mjs';
 export const placeSchema = z
   .object({
     query: z.string().trim().min(1).max(200),
@@ -127,7 +128,7 @@ function locations(features, district) {
     })
     .slice(0, 5);
 }
-async function fetchFeatures(query, transport, filters = {}) {
+async function fetchFeatures(query, transport, filters, t) {
   const url = new URL('https://data.geopf.fr/geocodage/search');
   url.search = new URLSearchParams({
     q: query,
@@ -140,18 +141,16 @@ async function fetchFeatures(query, transport, filters = {}) {
     signal: AbortSignal.timeout(10000),
     redirect: 'error',
   });
-  if (!response.ok) throw new Error('La recherche de lieu IGN est indisponible.');
+  if (!response.ok) throw new Error(t('search.errors.geographyUnavailable'));
   const data = await response.json();
-  if (!Array.isArray(data.features)) throw new Error('La réponse géographique IGN est invalide.');
+  if (!Array.isArray(data.features)) throw new Error(t('search.errors.geographyResponse'));
   return data.features.slice(0, 10).filter((feature) => feature && typeof feature === 'object');
 }
 // IGN commune/postcode filters: https://adresse.data.gouv.fr/outils/api-doc/adresse
-export async function geocodePlace(value, transport = fetch) {
+export async function geocodePlace(value, transport = fetch, language = 'fr') {
+  const t = getTranslator(language);
   const parsed = placeSchema.safeParse(value);
-  if (!parsed.success)
-    throw new Error(
-      'Lieu structuré invalide. Précisez la commune et, si nécessaire, l’arrondissement.',
-    );
+  if (!parsed.success) throw new Error(t('search.errors.locationInput'));
   const place = parsed.data;
   if (!place.postcode && !place.cityCode)
     place.postcode = place.query.match(/\b\d{5}\b/)?.[0] || null;
@@ -164,7 +163,7 @@ export async function geocodePlace(value, transport = fetch) {
     ...(place.cityCode ? { citycode: place.cityCode } : {}),
   };
   const municipalities = (
-    await fetchFeatures(cityQuery, transport, { ...filters, type: 'municipality' })
+    await fetchFeatures(cityQuery, transport, { ...filters, type: 'municipality' }, t)
   ).filter((feature) => matches(feature, place, district, true));
   if (!municipalities.length) return [];
   const municipalityQuery = municipalities.some(
@@ -188,7 +187,7 @@ export async function geocodePlace(value, transport = fetch) {
     place.city && !containsPlace(place.query, place.city)
       ? place.query + ' ' + cityQuery
       : place.query;
-  const found = (await fetchFeatures(query, transport, filters)).filter(
+  const found = (await fetchFeatures(query, transport, filters, t)).filter(
     (feature) =>
       matches(feature, place, null) &&
       (district === null ||
@@ -198,8 +197,9 @@ export async function geocodePlace(value, transport = fetch) {
   );
   return locations(found, district);
 }
-export async function geocode(query, transport = fetch) {
+export async function geocode(query, transport = fetch, language = 'fr') {
+  const t = getTranslator(language);
   if (typeof query !== 'string' || query.trim().length < 3 || query.length > 200)
-    throw new Error('Adresse ou quartier requis.');
-  return geocodePlace({ query: query.trim(), kind: 'auto' }, transport);
+    throw new Error(t('search.errors.addressRequired'));
+  return geocodePlace({ query: query.trim(), kind: 'auto' }, transport, language);
 }

@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 function element(tag, className = '') {
   const node = document.createElement(tag);
   node.className = className;
@@ -54,7 +56,7 @@ export function renderMessage(container, text) {
 export function renderRecap(container, text) {
   container.replaceChildren();
   const title = element('h3');
-  title.textContent = 'Votre recherche';
+  title.textContent = t('search.recap.title');
   const list = element('ul');
   for (const line of new Set(
     text

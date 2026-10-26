@@ -1,5 +1,5 @@
 import { safeReviewUrl } from './review-core.mjs';
-import { locale } from './i18n.js';
+import { locale, t } from './i18n.js';
 const node = (tag, text = '', className = '') => {
   const item = document.createElement(tag);
   item.textContent = text;
@@ -13,14 +13,18 @@ function link(label, url) {
   item.href = safe;
   item.target = '_blank';
   item.rel = 'noopener noreferrer';
-  item.setAttribute('aria-label', label + ' (nouvel onglet)');
+  item.setAttribute('aria-label', t('reviews.newTab', { label }));
   return item;
 }
 function render(content, data) {
   content.replaceChildren(
     node(
       'p',
-      `${data.coverage.matchedSources} source(s) attribuable(s) · ${data.coverage.distinctSites} site(s). Consulté le ${new Date(data.checkedAt).toLocaleDateString(locale)}. Collecte partielle.`,
+      t('reviews.coverage', {
+        sources: data.coverage.matchedSources,
+        sites: data.coverage.distinctSites,
+        date: new Date(data.checkedAt).toLocaleDateString(locale),
+      }),
       'hint',
     ),
   );
@@ -34,23 +38,44 @@ function render(content, data) {
           : report.score < 0
             ? 'bad'
             : 'mixed';
-    content.prepend(node('p', report.label, 'review-sentiment ' + tone));
+    content.prepend(
+      node(
+        'p',
+        t(
+          `reviews.sentiment.${tone === 'none' ? 'insufficient' : tone === 'good' ? 'positive' : tone === 'bad' ? 'negative' : 'mixed'}`,
+        ),
+        'review-sentiment ' + tone,
+      ),
+    );
     content.append(
       node(
         'p',
-        `${report.sampleSize} avis identifiable(s) · ${report.distinctSites} site(s). Échantillon limité, sans garantie de représentativité.`,
+        t('reviews.sample', { count: report.sampleSize, sites: report.distinctSites }),
         'hint',
       ),
     );
     const details = node('details');
-    details.append(node('summary', 'Accueil, écoute, attente et organisation'));
+    details.append(node('summary', t('reviews.topicDetails')));
     for (const topic of report.topics) {
-      details.append(node('p', `${topic.label} : ${topic.assessment}`));
+      details.append(
+        node(
+          'p',
+          t(`reviews.topics.${topic.id}`) +
+            ' : ' +
+            t(
+              `reviews.assessment.${topic.mixed || (topic.positive && topic.negative) ? 'mixed' : topic.positive ? 'positive' : topic.negative ? 'negative' : 'unknown'}`,
+            ),
+        ),
+      );
       if (topic.positive + topic.negative + topic.mixed)
         details.append(
           node(
             'p',
-            `${topic.positive} favorable(s) · ${topic.negative} difficulté(s) · ${topic.mixed} partagé(s)`,
+            t('reviews.topicCounts', {
+              positive: topic.positive,
+              negative: topic.negative,
+              mixed: topic.mixed,
+            }),
             'hint',
           ),
         );
@@ -58,7 +83,10 @@ function render(content, data) {
       for (const example of topic.examples) {
         const item = node('li', example.text + ' ');
         item.append(
-          link('Source' + (example.publishedAt ? ' · ' + example.publishedAt : ''), example.url),
+          link(
+            t('reviews.source') + (example.publishedAt ? ' · ' + example.publishedAt : ''),
+            example.url,
+          ),
         );
         examples.append(item);
       }
@@ -66,44 +94,33 @@ function render(content, data) {
     }
     content.append(details);
   }
-  if (!data.sources.length)
-    content.append(
-      node(
-        'p',
-        'Aucun avis attribuable trouvé dans les pages consultées. Réputation non renseignée.',
-      ),
-    );
+  if (!data.sources.length) content.append(node('p', t('reviews.empty')));
   const sources = node('ul', '', 'review-sources');
   for (const source of data.sources) {
     const item = node('li');
     item.append(link(source.title || new URL(source.url).hostname, source.url));
-    const scope = {
-      matched: 'Établissement identifié',
-      different_scope: 'Avis d’un praticien ou périmètre différent · non attribué au cabinet',
-      ambiguous: 'Homonyme ou adresse ambiguë · non attribué',
-      unconfirmed: 'Identité à confirmer · non attribué',
-    }[source.match];
+    const scope = t(`reviews.scope.${source.match}`);
     item.append(node('p', scope, 'hint'));
     if (source.match === 'matched')
       item.append(
         node(
           'p',
           (source.rating === null
-            ? 'Note non renseignée'
+            ? t('reviews.ratingUnknown')
             : `${source.rating}/${source.ratingScale}`) +
             (source.reviewCount === null
-              ? ' · volume non renseigné'
-              : ` · ${source.reviewCount} avis sur ce site`) +
+              ? ' · ' + t('reviews.countUnknown')
+              : ' · ' + t('reviews.count', { count: source.reviewCount })) +
             (source.updatedAt
-              ? ` · mis à jour le ${source.updatedAt}`
-              : ' · date des données non renseignée'),
+              ? ' · ' + t('reviews.updated', { date: source.updatedAt })
+              : ' · ' + t('reviews.dateUnknown')),
         ),
       );
     sources.append(item);
   }
   content.append(sources);
   const consulted = node('details');
-  consulted.append(node('summary', 'Toutes les pages consultées'));
+  consulted.append(node('summary', t('reviews.consulted')));
   const list = node('ul');
   for (const source of data.consulted) {
     const item = node('li');
@@ -112,17 +129,14 @@ function render(content, data) {
   }
   consulted.append(
     list,
-    ...(
-      data.limitations || ['Les témoignages ne prouvent ni l’accessibilité ni la qualité clinique.']
-    ).map((text) => node('p', text, 'hint')),
+    ...(data.limitations || [t('reviews.disclaimer')]).map((text) => node('p', text, 'hint')),
   );
   content.append(consulted);
   // Only the sentiment stays visible; coverage and sources fold away to keep cards compact.
-  if (!data.summary)
-    content.prepend(node('p', 'Réputation non renseignée', 'review-sentiment none'));
+  if (!data.summary) content.prepend(node('p', t('reviews.unknown'), 'review-sentiment none'));
   const more = node('details', '', 'review-more');
   more.append(
-    node('summary', 'Détail des avis et sources'),
+    node('summary', t('reviews.details')),
     ...[...content.children].filter((child) => !child.classList.contains('review-sentiment')),
   );
   content.append(more);
@@ -147,8 +161,8 @@ export function mountReviewCards(
       if (entry.loading) {
         entry.loading = false;
         entry.button.disabled = !available;
-        entry.button.textContent = 'Rechercher les avis avec OpenAI';
-        entry.status.textContent = 'Recherche d’avis interrompue.';
+        entry.button.textContent = t('reviews.actions.search');
+        entry.status.textContent = t('reviews.status.stopped');
       }
     onActivity(false);
   }
@@ -158,14 +172,14 @@ export function mountReviewCards(
     );
     if (!card) continue;
     const section = node('section', '', 'review-info');
-    section.setAttribute('aria-label', 'Avis publics · ' + practice.name);
-    const heading = node('h4', 'Avis publics');
-    const status = node('p', 'Réputation non renseignée.', 'hint');
+    section.setAttribute('aria-label', t('reviews.headingLabel', { practice: practice.name }));
+    const heading = node('h4', t('reviews.heading'));
+    const status = node('p', t('reviews.unknown'), 'hint');
     status.setAttribute('role', 'status');
     const content = node('div', '', 'review-content');
     const button = node(
       'button',
-      available ? 'Rechercher les avis avec OpenAI' : 'Recherche d’avis indisponible',
+      available ? t('reviews.actions.search') : t('reviews.actions.unavailable'),
       'text-button review-button',
     );
     button.type = 'button';
@@ -185,7 +199,7 @@ export function mountReviewCards(
       if (disposed || batch !== generation || !card.isConnected) return;
       const controller = new AbortController();
       controllers.add(controller);
-      onActivity(true, 'Je consulte les avis publics');
+      onActivity(true, t('reviews.status.working'));
       try {
         const response = await fetch('/api/reviews', {
           method: 'POST',
@@ -194,7 +208,7 @@ export function mountReviewCards(
           signal: controller.signal,
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Avis indisponibles. Réessayez.');
+        if (!response.ok) throw new Error(t('reviews.errors.unavailable'));
         if (disposed || batch !== generation || !card.isConnected) return;
         cache.set(practice.id, result);
         if (cache.size > 50) cache.delete(cache.keys().next().value);
@@ -204,8 +218,8 @@ export function mountReviewCards(
         button.hidden = true;
       } catch (error) {
         if (!disposed && batch === generation && error.name !== 'AbortError') {
-          status.textContent = error.message;
-          button.textContent = 'Réessayer les avis';
+          status.textContent = t('reviews.errors.unavailable');
+          button.textContent = t('reviews.actions.retry');
         }
       } finally {
         controllers.delete(controller);
@@ -223,7 +237,7 @@ export function mountReviewCards(
       entry.loading = true;
       button.disabled = true;
       pending++;
-      status.textContent = 'Recherche d’avis demandée · identité publique uniquement.';
+      status.textContent = t('reviews.status.requested');
       queue = queue.then(() => load(batch));
     }
     button.onclick = schedule;

@@ -1,58 +1,52 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{common.language}}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#ffffff" />
-    <title>AccèsCheck — L’échange</title>
-    <meta
-      name="description"
-      content="Un espace de communication pendant votre consultation : sous-titres, réponses écrites et lecture vocale."
-    />
+    <title>{{consultation.title}}</title>
+    <meta name="description" content="{{consultation.description}}" />
     <style>
       /*PAGE_STYLE*/
     </style>
   </head>
   <body>
-    <a class="skip" href="#main">Aller à la conversation</a>
+    <a class="skip" href="#main">{{consultation.skip}}</a>
     <!--SITE_HEADER-->
     <main id="main" tabindex="-1">
       <div class="intro">
         <div class="intro-copy">
           <div class="intro-heading">
-            <h1>L’échange</h1>
+            <h1>{{consultation.heading}}</h1>
             <button class="subtle settings-trigger" id="openSettings" aria-haspopup="dialog">
-              Réglages
+              {{consultation.actions.settings}}
             </button>
           </div>
-          <div id="status" class="status" role="status">Microphone coupé. Vous pouvez écrire.</div>
+          <div id="status" class="status" role="status">{{consultation.status.ready}}</div>
           <div id="browserSpeechOffer" hidden>
             <button class="primary" id="useBrowserSpeech" type="button">
-              Écrire avec le service vocal du navigateur
+              {{consultation.actions.browserSpeech}}
             </button>
-            <p id="browserSpeechNote">
-              Ce bouton accepte que le service vocal du navigateur puisse envoyer l’audio à son
-              fournisseur. AccèsCheck ne reçoit pas cet audio.
-            </p>
+            <p id="browserSpeechNote">{{consultation.privacy.browserSpeechButton}}</p>
           </div>
           <div id="practiceContext" class="practice-context" hidden>
             <strong id="practiceName"></strong><span id="practiceAddress"></span
             ><a id="practiceDoctolib" target="_blank" rel="noopener noreferrer" hidden
-              >Fiche Doctolib ↗</a
+              >{{consultation.actions.practiceProfile}}</a
             >
           </div>
         </div>
       </div>
 
       <div class="workspace-toolbar">
-        <div class="tabs" role="tablist" aria-label="Espace de consultation">
+        <div class="tabs" role="tablist" aria-label="{{consultation.workspace.label}}">
           <button
             id="conversationTab"
             role="tab"
             aria-selected="true"
             aria-controls="conversationPanel"
           >
-            Conversation</button
+            {{consultation.tabs.conversation}}</button
           ><button
             id="notesTab"
             role="tab"
@@ -60,15 +54,19 @@
             aria-controls="notesPanel"
             tabindex="-1"
           >
-            Mon récapitulatif
+            {{consultation.tabs.notes}}
           </button>
         </div>
         <div class="workspace-actions">
           <label class="check-label vision-toggle"
-            ><input type="checkbox" id="visionMode" /><span>Texte agrandi</span></label
+            ><input type="checkbox" id="visionMode" /><span
+              >{{consultation.actions.largerText}}</span
+            ></label
           >
-          <button class="subtle" id="readPage" type="button">Lire la page</button>
-          <button class="subtle danger" id="clearSession">Effacer la session</button>
+          <button class="subtle" id="readPage" type="button">
+            {{consultation.actions.readPage}}
+          </button>
+          <button class="subtle danger" id="clearSession">{{consultation.actions.clear}}</button>
         </div>
       </div>
       <div class="layout">
@@ -77,40 +75,40 @@
             <div class="conversation">
               <div class="caption-bar">
                 <div class="caption-lead">
-                  <h2>Sous-titres à vérifier</h2>
+                  <h2>{{consultation.captions.title}}</h2>
                   <span class="mic-status" id="micState"
                     ><span class="indicator" aria-hidden="true"></span
-                    ><span id="micText">Microphone coupé</span
+                    ><span id="micText">{{consultation.status.microphoneOff}}</span
                     ><meter
                       id="audioMeter"
                       min="0"
                       max="100"
                       value="0"
                       hidden
-                      aria-label="Niveau du son reçu de l’onglet"
+                      aria-label="{{consultation.captions.audioLevel}}"
                     ></meter
                   ></span>
                 </div>
                 <div class="caption-controls">
                   <label class="check-label agreement"
                     ><input type="checkbox" id="consent" /><span
-                      >Les personnes présentes acceptent les sous-titres.</span
+                      >{{consultation.captions.consent}}</span
                     ></label
                   >
                   <div class="caption-actions">
                     <button
                       class="primary"
                       id="startCaptions"
-                      aria-label="Démarrer les sous-titres"
+                      aria-label="{{consultation.actions.startCaptions}}"
                     >
-                      Démarrer</button
+                      {{consultation.actions.start}}</button
                     ><button
                       class="secondary"
                       id="pauseCaptions"
-                      aria-label="Mettre les sous-titres en pause"
+                      aria-label="{{consultation.actions.pauseCaptions}}"
                       disabled
                     >
-                      Pause
+                      {{consultation.actions.pause}}
                     </button>
                   </div>
                 </div>
@@ -120,7 +118,7 @@
                 id="captionScroll"
                 tabindex="0"
                 role="region"
-                aria-label="Échange, à vérifier avec le soignant"
+                aria-label="{{consultation.captions.region}}"
               >
                 <div class="empty" id="empty">
                   <svg viewBox="0 0 120 90" fill="none" aria-hidden="true">
@@ -129,30 +127,30 @@
                     <path d="M42 34h28M42 44h17" stroke="#777" stroke-width="2" />
                     <path d="M73 58h25V40M78 69h12l10 9v-9" stroke="#777" stroke-width="2" />
                   </svg>
-                  <h3>Ce qui se dit</h3>
-                  <p>
-                    Démarrez les sous-titres après l’accord des personnes présentes, choisissez une
-                    phrase proposée, ou écrivez votre réponse.
-                  </p>
+                  <h3>{{consultation.captions.emptyTitle}}</h3>
+                  <p>{{consultation.captions.emptyHelp}}</p>
                 </div>
                 <div
                   id="transcript"
                   role="log"
-                  aria-label="Conversation transcrite, à vérifier"
+                  aria-label="{{consultation.captions.transcriptLabel}}"
                   aria-live="polite"
                   aria-relevant="additions text"
                 ></div>
                 <div id="interim" class="interim" aria-hidden="true"></div>
               </div>
-              <div class="chat-suggestions" aria-label="Phrases proposées">
-                <p class="suggestions-label">Pour répondre vite</p>
+              <div class="chat-suggestions" aria-label="{{consultation.phrases.label}}">
+                <p class="suggestions-label">{{consultation.phrases.title}}</p>
                 <div class="quick" id="phraseSuggestions">
-                  <button type="button" data-phrase="Pouvez-vous répéter, s’il vous plaît ?">
-                    Répétez, s’il vous plaît</button
-                  ><button type="button" data-phrase="J’ai une question.">J’ai une question</button
-                  ><button type="button" data-phrase="Pouvez-vous parler plus lentement ?">
-                    Plus lentement</button
-                  ><button type="button" data-phrase="J’ai besoin d’une pause.">Une pause</button>
+                  <button type="button" data-phrase-key="consultation.phrases.repeat">
+                    {{consultation.phrases.repeatLabel}}</button
+                  ><button type="button" data-phrase-key="consultation.phrases.question">
+                    {{consultation.phrases.questionLabel}}</button
+                  ><button type="button" data-phrase-key="consultation.phrases.slower">
+                    {{consultation.phrases.slowerLabel}}</button
+                  ><button type="button" data-phrase-key="consultation.phrases.break">
+                    {{consultation.phrases.breakLabel}}
+                  </button>
                 </div>
               </div>
             </div>
@@ -166,54 +164,48 @@
             aria-labelledby="notesTab"
             hidden
           >
-            <div class="eyebrow">À RELIRE ENSEMBLE</div>
-            <h2>Mon récapitulatif de la visite</h2>
-            <p>
-              Rédigez vos notes ou recopiez les phrases de l’échange. Le brouillon reprend les
-              messages mot pour mot : il ne produit pas de synthèse médicale par IA.
-            </p>
-            <button class="secondary" id="draftNotes">Créer un brouillon depuis l’échange</button>
+            <div class="eyebrow">{{consultation.notes.eyebrow}}</div>
+            <h2>{{consultation.notes.title}}</h2>
+            <p>{{consultation.notes.help}}</p>
+            <button class="secondary" id="draftNotes">{{consultation.actions.draft}}</button>
             <p id="notesWarning" role="status"></p>
-            <label for="notes">Mes notes, à vérifier avec le soignant</label
+            <label for="notes">{{consultation.notes.label}}</label
             ><textarea
               id="notes"
               maxlength="24000"
-              placeholder="Ce que nous avons discuté…\nLes consignes confirmées par le soignant…\nMes questions restantes…"
+              placeholder="{{consultation.notes.placeholder}}"
             ></textarea
             ><label class="check-label"
               ><input type="checkbox" id="reviewed" /><span
-                >J’ai relu ces notes et fait confirmer les éléments importants par le
-                soignant.</span
+                >{{consultation.notes.reviewConsent}}</span
               ></label
             >
             <div class="row">
-              <button class="primary" id="readNotes" disabled>Écouter mon récapitulatif</button
-              ><button class="secondary" id="copyNotes">Copier mes notes</button>
+              <button class="primary" id="readNotes" disabled>
+                {{consultation.actions.readNotes}}</button
+              ><button class="secondary" id="copyNotes">{{consultation.actions.copyNotes}}</button>
             </div>
-            <p class="notice">
-              Ces notes ne remplacent pas le compte rendu ou l’ordonnance du soignant. Le texte
-              reste dans cette page jusqu’à son effacement ou sa fermeture.
-            </p>
+            <p class="notice">{{consultation.notes.privacy}}</p>
           </section>
         </div>
-        <aside aria-label="Mes outils de communication">
+        <aside aria-label="{{consultation.reply.region}}">
           <section class="panel composer">
-            <h2>Votre réponse</h2>
+            <h2>{{consultation.reply.title}}</h2>
 
-            <label class="sr-only" for="reply">Mon message</label
+            <label class="sr-only" for="reply">{{consultation.reply.label}}</label
             ><textarea
               id="reply"
               maxlength="4000"
-              placeholder="Écrivez votre réponse ici…"
+              placeholder="{{consultation.reply.placeholder}}"
             ></textarea>
 
             <div class="composer-controls">
-              <button class="secondary" id="showReply">Afficher</button
-              ><button class="primary" id="speakReply">Lire ma réponse</button>
+              <button class="secondary" id="showReply">{{consultation.actions.showReply}}</button
+              ><button class="primary" id="speakReply">{{consultation.actions.speakReply}}</button>
             </div>
             <div class="composer-extras">
               <button class="subtle" id="manualToggle" aria-haspopup="dialog">
-                Saisir les paroles du soignant
+                {{consultation.actions.typeClinician}}
               </button>
             </div>
           </section>
@@ -222,42 +214,43 @@
     </main>
     <dialog id="settingsDialog" aria-labelledby="settingsTitle">
       <div class="dialog-heading">
-        <h2 id="settingsTitle">Réglages de l’échange</h2>
-        <button class="secondary" id="closeSettings">Fermer</button>
+        <h2 id="settingsTitle">{{consultation.settings.title}}</h2>
+        <button class="secondary" id="closeSettings">{{consultation.actions.close}}</button>
       </div>
       <p id="settingsStatus" class="status dialog-status" role="status" hidden></p>
-      <button class="subtle" id="loadDemo">Voir un exemple fictif, sans microphone</button>
+      <button class="subtle" id="loadDemo">{{consultation.actions.example}}</button>
       <section class="connection-hub" aria-labelledby="connectionTitle">
         <div class="hub-heading">
           <div>
-            <div class="eyebrow">LE LIEU</div>
-            <h2 id="connectionTitle">Où se passe le rendez-vous ?</h2>
+            <div class="eyebrow">{{consultation.connection.eyebrow}}</div>
+            <h2 id="connectionTitle">{{consultation.connection.title}}</h2>
           </div>
-          <span class="connection-badge" id="connectionBadge">Microphone de cet appareil</span>
+          <span class="connection-badge" id="connectionBadge"
+            >{{consultation.connection.deviceMicrophone}}</span
+          >
         </div>
 
-        <div class="platforms" role="group" aria-label="Lieu de la consultation">
-          <button class="platform" data-platform="office" aria-pressed="true">⌂ En cabinet</button
+        <div class="platforms" role="group" aria-label="{{consultation.connection.label}}">
+          <button class="platform" data-platform="office" aria-pressed="true">
+            {{consultation.connection.office}}</button
           ><button class="platform" data-platform="doctolib" aria-pressed="false">
-            <span class="platform-mark">D</span> Doctolib · vidéo</button
+            <span class="platform-mark">D</span> {{consultation.connection.doctolib}}</button
           ><button class="platform" data-platform="zoom" aria-pressed="false">
-            <span class="platform-mark zoom-mark">Z</span> Zoom · vidéo
+            <span class="platform-mark zoom-mark">Z</span> {{consultation.connection.zoom}}
           </button>
         </div>
-        <p id="platformHelp">
-          Placez cet appareil entre vous et le médecin. Le microphone capte les voix dans la pièce.
-        </p>
+        <p id="platformHelp">{{consultation.connection.officeHelp}}</p>
         <div id="videoSetup" hidden>
           <div class="call-link-row">
             <div>
-              <label for="callUrl">Lien personnel du rendez-vous reçu par e-mail ou SMS</label
+              <label for="callUrl">{{consultation.connection.linkLabel}}</label
               ><input
                 id="callUrl"
                 type="url"
                 autocomplete="off"
                 placeholder="https://…"
                 spellcheck="false"
-              /><small>Utilisé dans cette page uniquement ; jamais envoyé au serveur.</small>
+              /><small>{{consultation.connection.linkPrivacy}}</small>
             </div>
             <a
               id="openCall"
@@ -266,138 +259,116 @@
               target="_blank"
               rel="noopener noreferrer"
               aria-disabled="true"
-              >Ouvrir mon appel ↗</a
+              >{{consultation.actions.openCall}}</a
             >
           </div>
           <div class="row">
-            <button class="primary" id="connectCallAudio">Connecter le son de l’appel</button
-            ><button class="secondary" id="disconnectCallAudio" disabled>Déconnecter le son</button>
+            <button class="primary" id="connectCallAudio">
+              {{consultation.actions.connectAudio}}</button
+            ><button class="secondary" id="disconnectCallAudio" disabled>
+              {{consultation.actions.disconnectAudio}}
+            </button>
           </div>
-          <p id="callAudioStatus" role="status">Aucun son d’appel connecté.</p>
+          <p id="callAudioStatus" role="status">{{consultation.connection.disconnected}}</p>
           <details class="call-guide">
-            <summary>Comment partager le son et transmettre ma réponse ?</summary>
+            <summary>{{consultation.connection.guideTitle}}</summary>
             <ol class="call-steps">
               <li>
-                <b>Ouvrez votre appel</b
-                ><span>Connectez-vous sur Doctolib ou Zoom dans un autre onglet.</span>
+                <b>{{consultation.connection.guideOpen}}</b
+                ><span>{{consultation.connection.guideOpenHelp}}</span>
               </li>
               <li>
-                <b>Partagez le son de cet onglet</b
-                ><span
-                  >Choisissez l’onglet de l’appel et cochez « Partager l’audio » dans le
-                  navigateur.</span
-                >
+                <b>{{consultation.connection.guideShare}}</b
+                ><span>{{consultation.connection.guideShareHelp}}</span>
               </li>
               <li>
-                <b>Démarrez les sous-titres</b
-                ><span
-                  >Gardez AccèsCheck à côté de la vidéo, dans une autre fenêtre si possible.</span
-                >
+                <b>{{consultation.connection.guideCaptions}}</b
+                ><span>{{consultation.connection.guideCaptionsHelp}}</span>
               </li>
             </ol>
-            <p class="call-boundary">
-              L’appel reste sur sa plateforme. AccèsCheck ne rejoint pas la réunion à votre place.
-              Vos réponses parlées sortent de cet appareil : pour les transmettre au soignant,
-              utilisez le partage audio si votre plateforme le permet et vérifiez qu’il les entend.
-              Sinon, convenez d’un moyen écrit avec lui.
-            </p>
+            <p class="call-boundary">{{consultation.connection.boundary}}</p>
           </details>
           <button class="subtle" id="copyReplyForCall">
-            Copier ma réponse pour le chat de l’appel
+            {{consultation.actions.copyReplyForCall}}
           </button>
         </div>
       </section>
       <details id="moreOptions">
-        <summary>Réglages des sous-titres</summary>
+        <summary>{{consultation.settings.captions}}</summary>
         <section class="panel settings">
-          <h2>Réglages des sous-titres</h2>
-          <label for="recognitionMode">Traitement de la parole</label
+          <h2>{{consultation.settings.captions}}</h2>
+          <label for="recognitionMode">{{consultation.settings.processing}}</label
           ><select id="recognitionMode">
-            <option value="local">Sur cet appareil uniquement</option>
-            <option value="browser">Service vocal du navigateur</option>
+            <option value="local">{{consultation.settings.local}}</option>
+            <option value="browser">{{consultation.settings.browser}}</option>
           </select>
-          <p class="helper" id="recognitionHelp">
-            Aucun envoi audio via AccèsCheck. La reconnaissance locale nécessite un navigateur et un
-            pack français compatibles.
-          </p>
+          <p class="helper" id="recognitionHelp">{{consultation.settings.localHelp}}</p>
           <label class="check-label" id="remoteConsentLabel" hidden
             ><input type="checkbox" id="remoteConsent" /><span
-              >J’accepte que le service vocal du navigateur puisse envoyer l’audio à son
-              fournisseur. Les personnes présentes en sont informées.</span
+              >{{consultation.settings.remoteConsent}}</span
             ></label
           ><button class="subtle" id="installLanguage" hidden>
-            Télécharger le pack de français
+            {{consultation.actions.installFrench}}
           </button>
           <p class="helper" id="supportInfo"></p>
         </section>
       </details>
       <label class="check-label"
         ><input type="checkbox" id="visionModeSettings" /><span
-          >Texte agrandi et contraste renforcé (malvoyant)</span
+          >{{consultation.settings.largerText}}</span
         ></label
       >
-      <p class="helper">
-        Grossit les sous-titres et les boutons, renforce le contraste. Aucun réglage n’est
-        enregistré hors de cette page.
-      </p>
+      <p class="helper">{{consultation.settings.largerTextHelp}}</p>
       <div class="voice-inline">
-        <button class="subtle" id="quickVoiceTest">Écouter un exemple</button>
+        <button class="subtle" id="quickVoiceTest">{{consultation.actions.voiceExample}}</button>
       </div>
-      <p id="hearingStatus" class="hearing" role="status">
-        Le médecin n’entend pas encore votre réponse.
-      </p>
+      <p id="hearingStatus" class="hearing" role="status">{{consultation.status.notHeard}}</p>
       <p class="notice">
-        <strong>Les sous-titres peuvent contenir des erreurs.</strong> Cliquez sur « Corriger » si
-        nécessaire. Faites confirmer les noms de médicaments, les doses et les consignes par le
-        soignant. Aucun texte n’est une interprétation médicale.
+        <strong>{{consultation.privacy.captionErrors}}</strong>
+        {{consultation.privacy.checkInstructions}}
       </p>
-      <button class="guide" id="readGuide">Écouter les repères</button>
-      <p class="notice">
-        Aucun enregistrement audio ni conversation conservés. Quitter cette page efface l’échange.
-      </p>
+      <button class="guide" id="readGuide">{{consultation.actions.readGuide}}</button>
+      <p class="notice">{{consultation.privacy.session}}</p>
     </dialog>
     <dialog id="manualDialog" aria-labelledby="manualTitle">
-      <h2 id="manualTitle">Paroles du soignant</h2>
+      <h2 id="manualTitle">{{consultation.manual.title}}</h2>
       <p class="status dialog-status" role="status" hidden></p>
       <div id="manualForm">
-        <label for="manualDoctor">Paroles du soignant, saisies manuellement</label
-        ><textarea id="manualDoctor" maxlength="4000" placeholder="Saisir une phrase…"></textarea
-        ><button class="secondary" id="addDoctor">Ajouter à l’échange</button>
+        <label for="manualDoctor">{{consultation.manual.label}}</label
+        ><textarea
+          id="manualDoctor"
+          maxlength="4000"
+          placeholder="{{consultation.manual.placeholder}}"
+        ></textarea
+        ><button class="secondary" id="addDoctor">{{consultation.actions.addClinician}}</button>
       </div>
-      <button class="subtle" id="cancelManual">Annuler</button>
+      <button class="subtle" id="cancelManual">{{consultation.actions.cancel}}</button>
     </dialog>
     <dialog id="leaveDialog" aria-labelledby="leaveTitle" aria-describedby="leaveHelp">
-      <h2 id="leaveTitle">Quitter l’échange ?</h2>
-      <p id="leaveHelp">
-        Vos messages et notes seront effacés. Copiez vos notes si vous souhaitez les garder.
-      </p>
+      <h2 id="leaveTitle">{{consultation.leave.title}}</h2>
+      <p id="leaveHelp">{{consultation.leave.help}}</p>
       <div class="row">
-        <button class="primary" id="cancelLeave" autofocus>Rester ici</button
-        ><button class="secondary" id="confirmLeave">Quitter et effacer</button>
+        <button class="primary" id="cancelLeave" autofocus>{{consultation.actions.stay}}</button
+        ><button class="secondary" id="confirmLeave">{{consultation.actions.leave}}</button>
       </div>
     </dialog>
     <dialog id="editDialog" aria-labelledby="editTitle">
-      <h2 id="editTitle">Corriger une phrase</h2>
+      <h2 id="editTitle">{{consultation.edit.title}}</h2>
       <p class="status dialog-status" role="status" hidden></p>
-      <p>
-        Conservez le sens de ce qui a été dit. Demandez confirmation au soignant en cas de doute.
-      </p>
-      <label for="editText">Phrase corrigée</label
+      <p>{{consultation.edit.help}}</p>
+      <label for="editText">{{consultation.edit.label}}</label
       ><textarea id="editText" maxlength="4000"></textarea>
       <div class="row">
-        <button class="primary" id="saveEdit">Enregistrer la correction</button
-        ><button class="secondary" id="cancelEdit">Annuler</button>
+        <button class="primary" id="saveEdit">{{consultation.actions.saveEdit}}</button
+        ><button class="secondary" id="cancelEdit">{{consultation.actions.cancel}}</button>
       </div>
     </dialog>
     <dialog id="replaceDialog" aria-labelledby="replaceTitle">
-      <h2 id="replaceTitle">Remplacer mes notes ?</h2>
-      <p>
-        Vos notes actuelles seront remplacées par les phrases de la conversation. Elles ne sont pas
-        enregistrées ailleurs.
-      </p>
+      <h2 id="replaceTitle">{{consultation.replace.title}}</h2>
+      <p>{{consultation.replace.help}}</p>
       <div class="row">
-        <button class="primary" id="confirmDraft">Remplacer par le brouillon</button
-        ><button class="secondary" id="cancelDraft">Garder mes notes</button>
+        <button class="primary" id="confirmDraft">{{consultation.actions.replaceDraft}}</button
+        ><button class="secondary" id="cancelDraft">{{consultation.actions.keepNotes}}</button>
       </div>
     </dialog>
     <script>

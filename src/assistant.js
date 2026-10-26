@@ -1,5 +1,5 @@
 import { renderMessage, renderRecap } from './chat-content.js';
-import { lang, locale } from './i18n.js';
+import { lang, locale, t } from './i18n.js';
 import { rankByReputation } from './review-core.mjs';
 import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
@@ -25,7 +25,7 @@ function node(tag, text, className = '') {
 }
 function turn(text, who = 'agent') {
   const bubble = node('div', '', 'bubble ' + who);
-  bubble.append(node('p', who === 'user' ? 'Vous' : 'AccèsCheck', 'who'));
+  bubble.append(node('p', who === 'user' ? t('search.chat.you') : 'AccèsCheck', 'who'));
   const content = node(who === 'user' ? 'p' : 'div', '', 'say');
   if (who === 'user') content.textContent = text;
   else renderMessage(content, text);
@@ -38,7 +38,7 @@ function setResultsMode(on, summary = '') {
   $('chatFold').open = !on;
   $('chatFoldSummary').hidden = !on;
   if (on) {
-    $('chatFoldSummary').textContent = 'Voir la conversation et les critères';
+    $('chatFoldSummary').textContent = t('search.chat.showCriteria');
     $('resultsCriteria').hidden = !summary;
     if (summary) renderRecap($('resultsCriteria'), summary);
     else $('resultsCriteria').replaceChildren();
@@ -105,7 +105,7 @@ function revealTurn(bubble) {
 }
 function retry(input, text) {
   const bubble = turn(text);
-  const choices = actions(bubble, [{ id: 'retry', label: 'Réessayer' }]);
+  const choices = actions(bubble, [{ id: 'retry', label: t('search.actions.retry') }]);
   choices.firstElementChild.onclick = () => ask(input, lastLabel, false);
   revealTurn(bubble);
 }
@@ -129,7 +129,7 @@ async function ask(input, choiceLabel = '', echo = true) {
   let automaticReviews = false;
   $('thread').setAttribute('aria-busy', 'true');
   if (echo && (input.message || choiceLabel)) turn(input.message || choiceLabel, 'user');
-  working(true, 'Envoi de la demande');
+  working(true, t('search.status.sending'));
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -143,14 +143,18 @@ async function ask(input, choiceLabel = '', echo = true) {
       }),
       signal: active.signal,
     });
-    const data = await readChatResponse(response, (event) => {
-      if (active !== controller) return;
-      if (event.type === 'status') working(true, event.text);
-      if (event.type === 'reply') {
-        streamed ||= turn('');
-        streamed.querySelector('.say').append(document.createTextNode(event.delta));
-      }
-    });
+    const data = await readChatResponse(
+      response,
+      (event) => {
+        if (active !== controller) return;
+        if (event.type === 'status') working(true, event.text);
+        if (event.type === 'reply') {
+          streamed ||= turn('');
+          streamed.querySelector('.say').append(document.createTextNode(event.delta));
+        }
+      },
+      lang,
+    );
     if (active !== controller) return;
     state = data.state;
     if (data.mode === 'agent' && state?.proposal?.needs && !data.question)
@@ -173,9 +177,9 @@ async function ask(input, choiceLabel = '', echo = true) {
       );
       const page = result.page;
       const pages = [];
-      if (page > 1) pages.push({ label: '← Précédent', id: String(page - 1) });
+      if (page > 1) pages.push({ label: t('search.pagination.previous'), id: String(page - 1) });
       if (page * result.pageSize < result.total)
-        pages.push({ label: 'Résultats suivants →', id: String(page + 1) });
+        pages.push({ label: t('search.pagination.next'), id: String(page + 1) });
       const navigation = actions($('pagination'), pages);
       [...navigation.children].forEach(
         (button, index) =>
@@ -187,20 +191,15 @@ async function ask(input, choiceLabel = '', echo = true) {
         [
           data.reply,
           data.notice,
-          result.total +
-            ' fiche(s) · page ' +
-            result.page +
-            '. Accessibilité, puis proximité, puis réputation si renseignée.',
+          t('search.results.count', { total: result.total, page: result.page }),
         ]
           .filter(Boolean)
           .join('\n\n'),
       );
-      $('dataset').textContent =
-        'Accès Libre · export du ' +
-        new Date(result.dataset.exportedAt).toLocaleDateString(locale) +
-        '. ' +
-        result.counts.knownObstaclesExcluded +
-        ' obstacle(s) connu(s) exclu(s). Distances depuis votre adresse, aucun itinéraire vérifié.';
+      $('dataset').textContent = t('search.results.dataset', {
+        date: new Date(result.dataset.exportedAt).toLocaleDateString(locale),
+        excluded: result.counts.knownObstaclesExcluded,
+      });
       $('chatStatus').textContent = '';
       $('resultsTitle').focus({ preventScroll: true });
       if (data.question) {
@@ -230,12 +229,9 @@ async function ask(input, choiceLabel = '', echo = true) {
     if (active !== controller || error.name === 'AbortError') return;
     $('chatStatus').textContent = error.message;
     retry(input, error.message);
-    actions(
-      turn(
-        'Vous pouvez aussi consulter les fiches publiques sans interprétation de votre demande.',
-      ),
-      [{ id: 'directory', label: 'Consulter l’annuaire public' }],
-    );
+    actions(turn(t('search.directory.alternative')), [
+      { id: 'directory', label: t('search.actions.directory') },
+    ]);
   } finally {
     if (active === controller) {
       $('thread').setAttribute('aria-busy', 'false');
@@ -264,14 +260,14 @@ $('visionMode').onchange = () => {
   const enabled = $('visionMode').checked;
   document.body.classList.toggle('vision', enabled);
   $('chatStatus').textContent = enabled
-    ? 'Texte agrandi activé. Conversation, choix et fiches sont plus grands, avec un contraste renforcé.'
-    : 'Affichage standard rétabli.';
+    ? t('search.status.largeText')
+    : t('search.status.standardText');
 };
 function setPageReading(active) {
   pageReading = active;
   const button = $('readPage');
   if (!button) return;
-  button.textContent = active ? 'Arrêter la lecture' : 'Lire la page';
+  button.textContent = active ? t('search.speech.stop') : t('search.speech.read');
   button.setAttribute('aria-pressed', String(active));
 }
 $('readPage').onclick = async () => {
@@ -292,7 +288,7 @@ $('readPage').onclick = async () => {
     let spoken = text;
     // With OpenAI consent, read a short spoken summary; otherwise (or on failure) the full text.
     if ($('consent').checked && !$('consent').disabled) {
-      $('chatStatus').textContent = 'Je prépare un résumé de la page';
+      $('chatStatus').textContent = t('search.status.summarising');
       try {
         const response = await fetch('/api/page-summary', {
           method: 'POST',
@@ -347,13 +343,13 @@ $('clear').onclick = () => {
   $('descriptionForm').reset();
   $('consent').checked = false;
   clearResults();
-  $('chatStatus').textContent = 'Conversation effacée.';
+  $('chatStatus').textContent = t('search.status.cleared');
   $('description').focus();
 };
 $('stopSearch').onclick = () => {
   if (reviewJob) {
     reviewJob.stop();
-    $('chatStatus').textContent = 'Recherche d’avis interrompue. Les cabinets restent disponibles.';
+    $('chatStatus').textContent = t('search.status.reviewsStopped');
     $('description').focus();
     return;
   }
@@ -361,8 +357,8 @@ $('stopSearch').onclick = () => {
   controller = null;
   working(false);
   $('thread').setAttribute('aria-busy', 'false');
-  $('chatStatus').textContent = 'Recherche interrompue.';
-  if (lastInput) retry(lastInput, 'Vous pouvez reprendre cette demande ou écrire une correction.');
+  $('chatStatus').textContent = t('search.status.stopped');
+  if (lastInput) retry(lastInput, t('search.status.resume'));
   $('description').focus();
 };
 fetch('/api/ai-config')
@@ -374,11 +370,11 @@ fetch('/api/ai-config')
     $('reviewConsent').checked = reviewsAvailable;
     $('consent').disabled = !config.available;
     $('aiStatus').textContent = config.available
-      ? 'OpenAI disponible avec votre accord.'
-      : 'Agent indisponible. Annuaire public disponible en mode dégradé.';
+      ? t('search.status.available')
+      : t('search.status.unavailable');
   })
   .catch(() => {
     $('reviewConsent').disabled = true;
     $('consent').disabled = true;
-    $('aiStatus').textContent = 'La recherche locale reste disponible.';
+    $('aiStatus').textContent = t('search.status.local');
   });

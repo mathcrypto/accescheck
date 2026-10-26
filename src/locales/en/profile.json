@@ -1,0 +1,66 @@
+{
+  "title": "AccèsCheck · My access profile",
+  "skip": "Go to access profile",
+  "eyebrow": "For your next searches",
+  "heading": "Your access profile.",
+  "intro": "The agent extracts your needs directly from the “Describe my needs” conversation. You can then choose to save them from the chat for next time.",
+  "empty": {
+    "title": "Your profile starts in the search.",
+    "description": "Describe your needs in your own words. The agent suggests criteria to check, which you can choose to save on this device."
+  },
+  "actions": {
+    "describe": "Describe my needs",
+    "edit": "Edit through Describe my needs",
+    "delete": "Delete my profile",
+    "back": "Back to Describe my needs"
+  },
+  "saved": {
+    "eyebrow": "From your request",
+    "title": "The needs you have confirmed.",
+    "fictional": "Saved FICTIONAL EXAMPLE · does not represent your real needs.",
+    "real": "Criteria extracted from your request by the agent, then confirmed by you.",
+    "widthUnknown": "Minimum width unknown: no measurement assumed.",
+    "help": "On the home page, “Use my profile” prepares your request without sending it. Describe a correction in the chat to get a new profile to confirm.",
+    "width": "Confirmed minimum width: {{width}} cm.",
+    "expires": "Reusable in this browser until {{date}}."
+  },
+  "privacy": {
+    "title": "You stay in control.",
+    "storage": "Only the criteria and optional width are saved in this browser, with your separate consent. The request, conversation and location are not saved.",
+    "expiry": "The profile expires after 30 days and is deleted the next time it is read after expiry. There is no account or sync between devices. Other people using this browser can see it: avoid shared devices."
+  },
+  "disclaimer": "A confirmed profile does not guarantee that a practice is accessible.",
+  "status": {
+    "unavailable": "Browser storage is unavailable. You can still describe your needs without saving them.",
+    "deleted": "Profile deleted from this device.",
+    "deleteFailed": "Deletion failed. Check your browser storage settings.",
+    "saved": "Criteria saved for 30 days. The conversation and location are not saved.",
+    "saveFailed": "This browser could not save the profile. You can still search.",
+    "draft": "Your current message is kept. Send or clear it before using your profile.",
+    "prepared": "Profile prepared without sending. Check your OpenAI consent before sending the request."
+  },
+  "reuse": {
+    "fictional": "Fictional example for testing, not my real needs.",
+    "intro": "For my search, these are my access needs to check:",
+    "askLocation": "Ask me for the profession and location for this new search.",
+    "width": "Clear width of at least {{width}} cm."
+  },
+  "inline": {
+    "about": "Your access profile is created directly from this conversation.",
+    "savedTitle": "Saved profile",
+    "savedIntro": "Your access needs are already here.",
+    "reuse": "Use my profile",
+    "manage": "View or delete my profile",
+    "title": "Profile extracted from your request",
+    "correct": "Correct the criteria in the chat before saving them if necessary.",
+    "consent": "I confirm these needs and agree to keep them on this device for 30 days.",
+    "privacy": "This browser keeps only the criteria and width. Other people using this device can see them.",
+    "save": "Save my access profile"
+  },
+  "errors": {
+    "invalid": "Check the profile criteria and measured width, between 40 and 200 cm.",
+    "consent": "Your consent is required to save this profile on this device."
+  },
+  "fictionalPrefix": "FICTIONAL EXAMPLE · ",
+  "summaryWidth": "Clear width ≥ {{width}} cm"
+}

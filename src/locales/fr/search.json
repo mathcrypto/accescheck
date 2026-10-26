@@ -1,0 +1,119 @@
+{
+  "chat": {
+    "you": "Vous",
+    "showCriteria": "Voir la conversation et les critères"
+  },
+  "actions": {
+    "retry": "Réessayer",
+    "directory": "Consulter l’annuaire public",
+    "consent": "Accepter et poursuivre",
+    "confirm": "Confirmer et chercher",
+    "typeAnswer": "Saisir ma réponse",
+    "unknown": "Je ne sais pas"
+  },
+  "pagination": {
+    "previous": "← Précédent",
+    "next": "Résultats suivants →"
+  },
+  "status": {
+    "sending": "Envoi de la demande",
+    "directory": "Ouverture de l’annuaire public",
+    "geography": "Recherche géographique IGN",
+    "searching": "Recherche des cabinets dans Accès Libre",
+    "evidence": "Consultation des preuves de la fiche",
+    "reviews": "Recherche web sur l’identité publique du cabinet",
+    "thinking": "L’agent OpenAI examine votre demande",
+    "largeText": "Texte agrandi activé. Conversation, choix et fiches sont plus grands, avec un contraste renforcé.",
+    "standardText": "Affichage standard rétabli.",
+    "summarising": "Je prépare un résumé de la page",
+    "cleared": "Conversation effacée.",
+    "reviewsStopped": "Recherche d’avis interrompue. Les cabinets restent disponibles.",
+    "stopped": "Recherche interrompue.",
+    "resume": "Vous pouvez reprendre cette demande ou écrire une correction.",
+    "available": "OpenAI disponible avec votre accord.",
+    "unavailable": "Agent indisponible. Annuaire public disponible en mode dégradé.",
+    "local": "La recherche locale reste disponible."
+  },
+  "speech": {
+    "stop": "Arrêter la lecture",
+    "read": "Lire la page"
+  },
+  "directory": {
+    "alternative": "Vous pouvez aussi consulter les fiches publiques sans interprétation de votre demande.",
+    "reply": "Annuaire public : aucun besoin ni lieu n’a été interprété.",
+    "notice": "Mode dégradé sans agent. Les besoins d’accès restent à vérifier sur chaque fiche."
+  },
+  "consent": {
+    "required": "Votre accord est nécessaire pour envoyer votre demande complète, le lieu et le contexte de cette conversation à OpenAI. Évitez les noms et coordonnées personnels.",
+    "unavailable": "L’agent OpenAI est indisponible. Vous pouvez consulter l’annuaire public en mode dégradé."
+  },
+  "results": {
+    "reply": "Résultats de la recherche confirmée.",
+    "count": "{{total}} fiche(s) · page {{page}}. Accessibilité, puis proximité, puis réputation si renseignée.",
+    "dataset": "Accès Libre · export du {{date}}. {{excluded}} obstacle(s) connu(s) exclu(s). Distances depuis votre adresse, aucun itinéraire vérifié.",
+    "accessLimit": "Les informations d’accessibilité sont déclaratives ; elles ne garantissent pas l’accès.",
+    "distanceLimit": "Distances depuis l’adresse indiquée ; aucun itinéraire accessible n’est vérifié.",
+    "registrationLimit": "Inscription RPPS, secteur, tarifs et Carte Vitale non vérifiés dans cette source."
+  },
+  "recap": {
+    "noProfession": "Profession sans préférence",
+    "noLocation": "Sans contrainte géographique",
+    "noRadius": "Rayon sans limite précise",
+    "title": "Votre recherche",
+    "radius": "{{radius}} km à vol d’oiseau",
+    "width": "Passage ≥ {{width}} cm"
+  },
+  "confirmation": {
+    "required": "Vérifiez ces critères, puis confirmez pour lancer la recherche. Vous pouvez les corriger dans votre message.",
+    "message": "Je confirme exactement ce récapitulatif : {{summary}}"
+  },
+  "errors": {
+    "expired": "Conversation expirée ou modifiée. Effacez-la pour recommencer.",
+    "cardOrder": "Ordre des fiches invalide. Actualisez la recherche.",
+    "confirmBeforePage": "Confirmez une recherche avant de changer de page.",
+    "staleChoice": "Ce choix ne correspond plus à la question actuelle.",
+    "noProposal": "Aucune proposition à confirmer.",
+    "empty": "Écrivez votre demande.",
+    "historyLimit": "Cette conversation a atteint sa limite. Effacez-la avant une nouvelle recherche.",
+    "unknownTool": "Outil inconnu.",
+    "invalidTool": "Arguments de l’outil invalides.",
+    "locationLimit": "Trop de lieux étudiés. Demandez une précision.",
+    "alreadyConfirmed": "Cette recherche est déjà confirmée. Utilisez search_practices avec la proposition confirmée, sans la préparer à nouveau.",
+    "unverifiedLocation": "Lieu non vérifié par IGN.",
+    "radiusLocation": "Un rayon nécessite un point IGN vérifié.",
+    "profession": "Profession absente du catalogue.",
+    "width": "La largeur nécessite le critère passage large.",
+    "confirmBeforeSearch": "Le patient doit confirmer cette proposition avant la recherche.",
+    "resultScope": "Consultez uniquement une fiche issue des résultats vérifiés.",
+    "reviewScope": "Les avis de cette fiche nécessitent une demande depuis son bouton dédié.",
+    "reviewConsent": "Un accord distinct est nécessaire pour consulter les avis.",
+    "reviewLimit": "Limite de recherche web atteinte pour ce tour.",
+    "contextSize": "Contexte trop volumineux. Précisez votre recherche.",
+    "contextLimit": "Limite de contexte de recherche atteinte. Précisez votre demande.",
+    "unreachable": "L’agent est injoignable. Réessayez ou ouvrez l’annuaire public.",
+    "rateLimit": "Limite OpenAI atteinte. Réessayez plus tard ou ouvrez l’annuaire public.",
+    "unavailable": "L’agent OpenAI est indisponible. Réessayez ou ouvrez l’annuaire public.",
+    "incomplete": "Réponse de l’agent incomplète. Réessayez votre demande.",
+    "toolLimit": "Limite d’outils atteinte. Précisez votre recherche.",
+    "unverifiedReply": "La réponse de l’agent n’a pas pu être vérifiée. Réessayez.",
+    "unexecuted": "La recherche confirmée n’a pas été exécutée par l’agent. Réessayez pour lancer cette même recherche.",
+    "searchLimit": "Limite de recherche atteinte. Précisez votre demande ; aucune recherche supplémentaire n’a été lancée.",
+    "invalidInput": "Demande invalide. Écrivez au maximum 2 000 caractères.",
+    "service": "Service indisponible. Réessayez.",
+    "streamStopped": "Recherche interrompue.",
+    "responseSize": "Réponse trop volumineuse.",
+    "streamIncomplete": "Réponse interrompue. Réessayez votre demande.",
+    "invalidCriteria": "Critères de recherche invalides.",
+    "confirmCriteria": "Confirmez vos critères avant la recherche.",
+    "origin": "Point de départ invalide.",
+    "district": "Arrondissement et code postal IGN requis.",
+    "radius": "Rayon de recherche invalide.",
+    "missingOrigin": "Choisissez un point de départ avant de limiter la distance.",
+    "page": "Page invalide.",
+    "specialty": "Spécialité invalide.",
+    "geographyUnavailable": "La recherche de lieu IGN est indisponible.",
+    "geographyResponse": "La réponse géographique IGN est invalide.",
+    "locationInput": "Lieu structuré invalide. Précisez la commune et, si nécessaire, l’arrondissement.",
+    "addressRequired": "Adresse ou quartier requis."
+  }
+}

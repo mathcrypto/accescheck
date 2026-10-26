@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "AccèsCheck · Préparer votre rendez-vous",
+    "description": "Décrivez vos besoins, confirmez vos critères et préparez votre rendez-vous médical."
+  },
+  "skip": "Aller à la recherche",
+  "photo": {
+    "alt": "Façade vitrée d’un hôpital derrière des branches d’arbres.",
+    "credit": "Photo d’illustration ·"
+  },
+  "hero": {
+    "eyebrow": "Avant votre rendez-vous",
+    "title": "Trouvez un cabinet adapté à vos besoins.",
+    "description": "Décrivez vos besoins d’accès. Comparez les informations des cabinets et préparez les questions à leur poser.",
+    "profileNote": "Votre profil d’accès se crée directement à partir de cette conversation."
+  },
+  "chat": {
+    "region": "Chat de recherche de cabinet",
+    "title": "De quoi avez-vous besoin pour votre rendez-vous ?",
+    "history": "Conversation de recherche",
+    "thread": "Échanges",
+    "stop": "Interrompre",
+    "message": "Votre message",
+    "placeholder": "Un dentiste à Lyon, une entrée sans marche…",
+    "send": "Envoyer mon message"
+  },
+  "profile": {
+    "savedLabel": "Profil enregistré",
+    "savedTitle": "Vos besoins sont déjà là.",
+    "use": "Utiliser mon profil",
+    "manage": "Consulter ou supprimer mon profil",
+    "offerTitle": "Profil extrait de votre demande",
+    "correctionHelp": "Corrigez les critères dans le chat avant de les enregistrer si nécessaire.",
+    "consent": "Je confirme ces besoins et j’accepte de les garder sur cet appareil pendant 30 jours.",
+    "privacy": "Ce navigateur conserve uniquement les critères et la largeur. Les autres utilisateurs de cet appareil peuvent les voir.",
+    "save": "Enregistrer mon profil d’accès"
+  },
+  "actions": {
+    "clear": "Tout effacer",
+    "largerText": "Texte agrandi",
+    "read": "Lire la page"
+  },
+  "assistance": {
+    "title": "Assistance OpenAI",
+    "privacy": "La recherche locale reste disponible. Avec votre accord, les messages de besoins et, pour « Lire la page », le texte visible à résumer sont transmis à OpenAI. Aucun historique de conversation n’est conservé. Seuls les critères du profil peuvent être gardés sur cet appareil, après un accord distinct. Ne donnez pas votre nom ni vos coordonnées.",
+    "consent": "J’accepte l’envoi de ma demande, du lieu et du contexte de cette conversation à OpenAI.",
+    "reviewsConsent": "Enrichir les trois premières fiches avec des avis publics (OpenAI).",
+    "reviewsHelp": "Seule l’identité publique du cabinet est utilisée. Les fiches suivantes sont enrichies à la demande.",
+    "checking": "Vérification de l’agent…"
+  },
+  "results": {
+    "eyebrow": "Résultats · hors conversation",
+    "title": "Les informations pour votre visite",
+    "priority": "Vos critères d’abord. La proximité ensuite.",
+    "provenance": "Sources : Accès Libre pour les cabinets ; IGN pour les adresses. Les faits déclarés restent visibles avec leur provenance."
+  },
+  "footer": {
+    "search": "Chercher un cabinet"
+  },
+  "motion": {
+    "pause": "Mettre les animations en pause",
+    "resume": "Relancer les animations"
+  }
+}

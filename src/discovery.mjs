@@ -2,6 +2,7 @@ import { coordinates, geocode } from './geography.mjs';
 export { coordinates, geocode };
 import { assess, criteria, safeAccesLibre, safeDoctolib, safeWebsite } from './core.mjs';
 import { createPracticeStore } from './practice-store.mjs';
+import { getTranslator } from './i18n-core.mjs';
 
 export const criterionKeys = Object.keys(criteria);
 export function distanceKm(a, b) {
@@ -15,7 +16,8 @@ export function distanceKm(a, b) {
   return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(Math.max(0, 1 - h)));
 }
 
-export function validateRequirements(value) {
+export function validateRequirements(value, language = 'fr') {
+  const t = getTranslator(language);
   if (
     !value ||
     !Array.isArray(value.keys) ||
@@ -25,7 +27,7 @@ export function validateRequirements(value) {
     (value.minWidth !== null &&
       (!Number.isFinite(value.minWidth) || value.minWidth < 40 || value.minWidth > 200))
   )
-    throw new Error('Critères de recherche invalides.');
+    throw new Error(t('search.errors.invalidCriteria'));
   return { keys: value.keys, minWidth: value.minWidth };
 }
 
@@ -44,7 +46,8 @@ function sourceLocation(record) {
   return coordinates({ latitude: Number(source.latitude), longitude: Number(source.longitude) });
 }
 
-export async function findPractices(database, input) {
+export async function findPractices(database, input, language = 'fr') {
+  const t = getTranslator(language);
   if (
     !input ||
     input.confirmed !== true ||
@@ -61,8 +64,8 @@ export async function findPractices(database, input) {
         ].includes(key),
     )
   )
-    throw new Error('Confirmez vos critères avant la recherche.');
-  const needs = validateRequirements(input.needs);
+    throw new Error(t('search.errors.confirmCriteria'));
+  const needs = validateRequirements(input.needs, language);
   const origin =
     input.origin === null || input.origin === undefined ? null : coordinates(input.origin);
   if (
@@ -70,7 +73,7 @@ export async function findPractices(database, input) {
     input.origin !== undefined &&
     (!origin || typeof input.origin.label !== 'string' || input.origin.label.length > 250)
   )
-    throw new Error('Point de départ invalide.');
+    throw new Error(t('search.errors.origin'));
   const district = input.origin?.district ?? null;
   if (
     district !== null &&
@@ -79,20 +82,19 @@ export async function findPractices(database, input) {
       district > 20 ||
       !/^\d{5}$/.test(input.origin.postcode))
   )
-    throw new Error('Arrondissement et code postal IGN requis.');
+    throw new Error(t('search.errors.district'));
   const districtPostcode = district === null ? null : input.origin.postcode;
   const radius = input.radiusKm ?? null;
   if (radius !== null && (!Number.isFinite(radius) || radius < 0.1 || radius > 50))
-    throw new Error('Rayon de recherche invalide.');
-  if (radius !== null && !origin)
-    throw new Error('Choisissez un point de départ avant de limiter la distance.');
+    throw new Error(t('search.errors.radius'));
+  if (radius !== null && !origin) throw new Error(t('search.errors.missingOrigin'));
   const page = input.page ?? 1;
-  if (!Number.isInteger(page) || page < 1 || page > 10000) throw new Error('Page invalide.');
+  if (!Number.isInteger(page) || page < 1 || page > 10000) throw new Error(t('search.errors.page'));
   const store = createPracticeStore(database);
   const catalog = await store.catalog();
   const specialty = input.specialty || '';
   if (typeof specialty !== 'string' || (specialty && !catalog.specialties.includes(specialty)))
-    throw new Error('Spécialité invalide.');
+    throw new Error(t('search.errors.specialty'));
   const { records, dataset } = await store.candidates({ specialty }, true);
   let obstacles = 0;
   let outsideRadius = 0;
@@ -170,9 +172,9 @@ export async function findPractices(database, input) {
       declaredMatches: candidates.filter((practice) => !practice.needsConfirmation).length,
     },
     limitations: [
-      'Les informations d’accessibilité sont déclaratives ; elles ne garantissent pas l’accès.',
-      'Distances depuis l’adresse indiquée ; aucun itinéraire accessible n’est vérifié.',
-      'Inscription RPPS, secteur, tarifs et Carte Vitale non vérifiés dans cette source.',
+      t('search.results.accessLimit'),
+      t('search.results.distanceLimit'),
+      t('search.results.registrationLimit'),
     ],
   };
 }

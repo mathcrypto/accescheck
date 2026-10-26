@@ -1,0 +1,50 @@
+{
+  "newTab": "{{label}} (nouvel onglet)",
+  "unknown": "Inconnu",
+  "yes": "Oui",
+  "no": "Non",
+  "practiceType": "Cabinet ou établissement",
+  "status": {
+    "none": "Accès non évalué",
+    "pending": "À confirmer",
+    "declared": "Critères documentés"
+  },
+  "distanceUnknown": "Distance non calculée",
+  "distance": "{{distance}} km de votre adresse",
+  "approximateOrigin": "depuis le centre du lieu choisi",
+  "trust": {
+    "declared": "Déclaré",
+    "unknown": "Inconnu",
+    "stale": "Ancien",
+    "contradictory": "Contradictoire",
+    "photo": "Appuyé par une photo",
+    "patient": "Confirmé par des patients"
+  },
+  "evidence": {
+    "stale": "Ancien · à confirmer",
+    "contradictory": "Contradictoire · à confirmer"
+  },
+  "dateUnknown": "date non renseignée",
+  "noteUnknown": "{{question}} : non documenté · à confirmer auprès du cabinet",
+  "emptyChecks": "Aucun besoin d’accès comparé. Consultez les informations déclarées avant votre visite.",
+  "detailsNeeds": "Détails · besoins à confirmer",
+  "details": "Détails et provenance",
+  "identityUnknown": "Identité individuelle non vérifiée.",
+  "source": "Source : {{source}}. Les dates absentes restent non renseignées. Une déclaration n’est pas une garantie d’accès.",
+  "registration": "Inscription RPPS : non vérifiée. Secteur, tarifs et Carte Vitale : non renseignés dans cette source. Aucune note globale n’est calculée.",
+  "links": {
+    "accessible": "Fiche Accès Libre ↗",
+    "doctolib": "Fiche Doctolib ↗",
+    "lookup": "Chercher sur Doctolib ↗",
+    "lookupLabel": "Chercher la fiche Doctolib de ce cabinet sur Google (nouvel onglet)",
+    "lookupHelp": "Aucun profil Doctolib dans la source : le lien cherche la fiche via Google, sans garantie.",
+    "prepare": "Préparer ↗",
+    "prepareTitle": "Préparer l’échange",
+    "prepareLabel": "Préparer l’échange (nouvel onglet, votre recherche reste ouverte)"
+  },
+  "specialties": {
+    "generalPractitioner": "Médecin généraliste",
+    "dentist": "Dentiste, chirurgien dentiste",
+    "physiotherapist": "Kinésithérapeute"
+  }
+}

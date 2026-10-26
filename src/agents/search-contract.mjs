@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { criterionKeys } from '../discovery.mjs';
+import { getTranslator } from '../i18n-core.mjs';
 export const chatInputSchema = z
   .object({
     message: z.string().trim().min(1).max(2000).optional(),
@@ -19,7 +20,7 @@ export const chatInputSchema = z
   .refine((value) => value.message || value.answer || value.action);
 export function chatInput(body) {
   const parsed = chatInputSchema.safeParse(body);
-  if (!parsed.success) throw new Error('Demande invalide. Écrivez au maximum 2 000 caractères.');
+  if (!parsed.success) throw new Error(getTranslator(body?.lang)('search.errors.invalidInput'));
   return parsed.data;
 }
 export const answerSchema = z

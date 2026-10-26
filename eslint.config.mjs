@@ -34,6 +34,7 @@ export default defineConfig([
       'src/profile.js',
       'src/profile-home.js',
       'src/i18n.js',
+      'src/language-bootstrap.js',
       'src/ambient.js',
       'scripts/live-reload-client.js',
       'prototype/client.js',

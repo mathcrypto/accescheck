@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { resources, getTranslator, hasTranslation } from '../src/i18n-core.mjs';
+import { localizeTemplate } from '../scripts/localize-template.mjs';
+import { languagePreference } from '../src/language.mjs';
 
 const store = new Map();
 globalThis.location = { search: '?lang=en', href: 'http://localhost/?lang=en' };
@@ -7,70 +10,76 @@ globalThis.localStorage = {
   getItem: (key) => store.get(key) ?? null,
   setItem: (key, value) => store.set(key, value),
 };
-const { lang, translate } = await import('../src/i18n.js');
-
-test('?lang=en selects English and is remembered', () => {
+const { lang, t } = await import('../src/i18n.js');
+function flatten(value, prefix = '') {
+  return Object.entries(value).flatMap(([key, item]) => {
+    assert.match(key, /^[a-zA-Z][a-zA-Z0-9_]*$/, 'Translation keys are semantic identifiers');
+    const path = prefix ? prefix + '.' + key : key;
+    if (typeof item === 'object' && item !== null) return flatten(item, path);
+    assert.equal(typeof item, 'string', path);
+    assert.ok(item.trim(), path);
+    return [path];
+  });
+}
+test('FR and EN JSON resources contain the same complete semantic keys', () => {
+  const fr = flatten(resources.fr.translation).sort();
+  const en = flatten(resources.en.translation).sort();
+  assert.ok(fr.length > 400);
+  assert.deepEqual(en, fr);
+  for (const key of fr) {
+    assert.equal(hasTranslation(key, 'fr'), true, key);
+    assert.equal(hasTranslation(key, 'en'), true, key);
+  }
+});
+test('explicit language selects English and is remembered', () => {
   assert.equal(lang, 'en');
   assert.equal(store.get('lang'), 'en');
+  assert.equal(t('profile.actions.delete'), 'Delete my profile');
 });
-test('composed card and result texts are translated phrase by phrase', () => {
+test('interpolation uses named values and never rewrites their contents', () => {
+  assert.equal(t('profile.saved.width', { width: 95 }), 'Confirmed minimum width: 95 cm.');
+  const raw = 'Vous Oui <b>Entrée sans marche</b>';
+  assert.equal(t('results.newTab', { label: raw }), raw + ' (new tab)');
+  assert.equal(getTranslator('fr')('profile.actions.delete'), 'Supprimer mon profil');
+});
+test('source templates resolve explicit keys and escape HTML at rendering boundary', () => {
   assert.equal(
-    translate('Entrée sans marche : Oui · Déclaré'),
-    'Step-free entrance : Yes · Declared',
+    localizeTemplate('<h1>{{home.hero.title}}</h1>', 'en'),
+    '<h1>Find a practice that fits your needs.</h1>',
   );
-  assert.equal(translate('0,8 km de votre adresse'), '0,8 km from your address');
   assert.equal(
-    translate(
-      '34 fiche(s) · page 1. Accessibilité, puis proximité, puis réputation si renseignée.',
-    ),
-    '34 card(s) · page 1. Accessibility first, then distance, then reputation when known.',
+    localizeTemplate('<p>Votre texte libre ne change pas.</p>', 'en'),
+    '<p>Votre texte libre ne change pas.</p>',
   );
+  assert.throws(() => localizeTemplate('{{home.missingKey}}', 'en'), /Missing en translation/);
 });
-test('single words only change as whole words, and unknown text is left alone', () => {
-  assert.equal(translate('Nonce Ouistreham'), 'Nonce Ouistreham');
-  assert.equal(translate('Cabinet Lumière'), 'Cabinet Lumière');
-});
-test('a sentence wrapped over several lines in the HTML source still matches', () => {
+test('language precedence is explicit URL, saved preference cookie, then default', () => {
   assert.equal(
-    translate('Trouvez un cabinet\n        adapté à vos besoins.'),
-    'Find a practice that fits your needs.',
+    languagePreference(new URL('https://example.com/?lang=en'), 'accescheck_lang=fr'),
+    'en',
+  );
+  assert.equal(
+    languagePreference(new URL('https://example.com/'), 'other=1; accescheck_lang=en'),
+    'en',
+  );
+  assert.equal(
+    languagePreference(new URL('https://example.com/?lang=bad'), 'accescheck_lang=bad'),
+    null,
   );
 });
-test('profile management and reusable request labels are translated', () => {
-  assert.equal(translate('Votre profil d’accès.'), 'Your access profile.');
-  assert.equal(translate('Largeur minimale confirmée : 95 cm.'), 'Confirmed minimum width: 95 cm.');
-  assert.equal(translate('Passage ≥ 95 cm'), 'Clear width ≥ 95 cm');
-  assert.equal(translate('Profil supprimé de cet appareil.'), 'Profile deleted from this device.');
-});
-test('an explicit language still works when browser storage is refused', async () => {
+test('explicit language still works when browser storage is refused', async () => {
   const previous = globalThis.localStorage;
   globalThis.localStorage = {
     getItem() {
-      throw new Error('Storage refused');
+      throw new Error('Refused');
     },
     setItem() {
-      throw new Error('Storage refused');
+      throw new Error('Refused');
     },
   };
   try {
-    const isolated = await import('../src/i18n.js?storage-refused');
-    assert.equal(isolated.lang, 'en');
+    assert.equal((await import('../src/i18n.js?storage-refused')).lang, 'en');
   } finally {
     globalThis.localStorage = previous;
   }
-});
-test('directory fallback notices, consent and geographic warnings are translated', () => {
-  assert.equal(
-    translate('Annuaire public : aucun besoin ni lieu n’a été interprété.'),
-    'Public directory: no needs or location have been interpreted.',
-  );
-  assert.equal(
-    translate('Mode dégradé sans agent. Les besoins d’accès restent à vérifier sur chaque fiche.'),
-    'Fallback mode without an agent. Access needs still need to be checked on each card.',
-  );
-  assert.equal(
-    translate('Évitez les noms et coordonnées personnels.'),
-    'Avoid names and personal contact details.',
-  );
-  assert.equal(translate('Lieu non vérifié par IGN.'), 'Location not verified by IGN.');
 });

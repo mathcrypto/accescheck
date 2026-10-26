@@ -35,7 +35,7 @@ async function context(options = {}, controlledChat = true) {
             type: 'result',
             value: {
               mode: 'agent',
-              reply: 'Vérifiez ces critères.',
+              reply: 'Check these criteria.',
               summary: 'Entrée sans marche',
               state: { proposal: { needs: { keys: ['stepFree', 'width'], minWidth: 95 } } },
               actions: [],
@@ -154,7 +154,7 @@ try {
   await page.locator('.menu a').filter({ hasText: 'During the visit' }).click();
   await page.waitForLoadState();
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
-  await page.locator('[data-phrase]').first().click();
+  await page.locator('[data-phrase-key]').first().click();
   assert.equal(await page.locator('#reply').inputValue(), 'Could you repeat that, please?');
   await page.locator('#reply').fill(raw);
   await page.locator('#showReply').click();
@@ -274,7 +274,7 @@ try {
           type: 'result',
           value: {
             mode: 'agent',
-            reply: 'Résultats de la recherche confirmée.',
+            reply: 'Results for the confirmed search.',
             state: { notes: ['Demander un échange écrit.'] },
             results: result,
             actions: [],
