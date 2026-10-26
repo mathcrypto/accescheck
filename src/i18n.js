@@ -22,6 +22,7 @@ export function setLang(value) {
 }
 
 const en = {
+  'EXEMPLE FICTIF · ': 'FICTIONAL EXAMPLE · ',
   'Votre profil d’accès se crée directement à partir de cette conversation.':
     'Your access profile is created directly from this conversation.',
   'Vos besoins sont déjà là.': 'Your access needs are already here.',

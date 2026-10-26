@@ -9,6 +9,16 @@ import { criteria } from './core.mjs';
 const $ = (id) => document.getElementById(id);
 let candidate = null;
 let stored = null;
+let draftRevision = 0;
+let fictionalContext = false;
+export function profileRevision() {
+  return draftRevision;
+}
+export function resetProfileContext() {
+  fictionalContext = false;
+  draftRevision++;
+  offerProfile(null);
+}
 function refresh() {
   try {
     stored = readProfile(localStorage);
@@ -22,16 +32,21 @@ function refresh() {
       stored.keys.map((key) => criteria[key].label).join(' · ') +
       (stored.minWidth !== null ? ` · Passage ≥ ${stored.minWidth} cm` : '');
 }
-export function offerProfile(value) {
+export function offerProfile(value, revision = draftRevision) {
   candidate = null;
   $('profileOffer').hidden = true;
   $('profileInlineConsent').checked = false;
   $('saveInlineProfile').disabled = true;
   $('profileInlineStatus').textContent = '';
-  if (!value) return;
+  if (!value || revision !== draftRevision) return;
   try {
-    candidate = accessProfile({ keys: value.keys, minWidth: value.minWidth });
+    candidate = accessProfile({
+      keys: value.keys,
+      minWidth: value.minWidth,
+      fictional: fictionalContext,
+    });
     $('profileOfferSummary').textContent =
+      (candidate.fictional ? 'EXEMPLE FICTIF · ' : '') +
       candidate.keys.map((key) => criteria[key].label).join(' · ') +
       (candidate.minWidth !== null ? ` · Passage ≥ ${candidate.minWidth} cm` : '');
     $('profileOffer').hidden = false;
@@ -64,6 +79,8 @@ $('reuseProfile').addEventListener('click', () => {
       'Votre message en cours est conservé. Affichez-le ou effacez-le avant de reprendre le profil.';
     return;
   }
+  draftRevision++;
+  fictionalContext ||= stored.fictional;
   offerProfile(null);
   $('description').value = profileDescription(stored);
   $('description').focus();
@@ -73,5 +90,8 @@ $('reuseProfile').addEventListener('click', () => {
 window.addEventListener('storage', (event) => {
   if (event.key === profileKey || event.key === null) refresh();
 });
-$('description').addEventListener('input', () => offerProfile(null));
+$('description').addEventListener('input', () => {
+  draftRevision++;
+  offerProfile(null);
+});
 refresh();

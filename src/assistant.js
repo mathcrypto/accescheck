@@ -5,7 +5,7 @@ import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
 import { practiceCard } from './search-results.js';
 import { collectVisibleText, speakEdge, stopSpeechPlayback } from './page-speech.js';
-import { offerProfile } from './profile-home.js';
+import { offerProfile, profileRevision, resetProfileContext } from './profile-home.js';
 let readController = null;
 const $ = (id) => document.getElementById(id);
 let state = null;
@@ -112,6 +112,7 @@ function retry(input, text) {
 
 // Replays (consent, retry) resend the last request without echoing the user's bubble again.
 async function ask(input, choiceLabel = '', echo = true) {
+  const requestedProfileRevision = profileRevision();
   reviewJob?.dispose();
   reviewJob = null;
   controller?.abort();
@@ -153,7 +154,7 @@ async function ask(input, choiceLabel = '', echo = true) {
     if (active !== controller) return;
     state = data.state;
     if (data.mode === 'agent' && state?.proposal?.needs && !data.question)
-      offerProfile(state.proposal.needs);
+      offerProfile(state.proposal.needs, requestedProfileRevision);
     for (const review of data.reviews || []) reviewCache.set(review.practiceId, review);
     while (reviewCache.size > 50) reviewCache.delete(reviewCache.keys().next().value);
     directoryMode = data.mode === 'directory';
@@ -327,6 +328,7 @@ $('descriptionForm').onsubmit = (event) => {
   ask({ message });
 };
 $('clear').onclick = () => {
+  resetProfileContext();
   reviewJob?.dispose();
   reviewJob = null;
   reviewCache.clear();

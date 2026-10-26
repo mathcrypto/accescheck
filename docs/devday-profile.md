@@ -29,6 +29,7 @@ Le profil n’est pas chiffré par l’application. Toute personne utilisant ce 
 - `npm run check` : format, lint, tests, build et validation de l’artefact.
 - `python3 -m unittest discover -s test -p 'test_*.py'`.
 - `scripts/check-profile.mjs` : demande ordinaire dans le chat, correction invalidant l’offre précédente, sauvegarde explicite, rechargement, reprise sans envoi, absence de conversation persistée, suppression, corruption, expiration, stockage refusé, gestion vide et stockée aux largeurs 320/390/768/1440.
+- `scripts/check-profile-regressions.mjs` : correction d’un brouillon pendant une réponse différée, même après effacement du brouillon ; maintien du marqueur fictif après reprise et nouvel enregistrement ; réinitialisation après « Tout effacer ».
 
 Les réponses de l’agent sont contrôlées dans les tests automatiques. Ces tests ne font aucun appel IA payant et n’utilisent pas de données de santé réelles.
 
@@ -41,3 +42,16 @@ Avec une demande synthétique de dentiste à Lyon 3e, rayon 3 km, entrée et tra
 Trois requêtes POST `/api/chat` ont été émises au total : un premier essai dont le lecteur de corps streaming CDP a échoué malgré une réponse de l’application correcte, puis les deux demandes du parcours complet observées via le DOM. Ce nombre ne représente pas le nombre d’appels au modèle : une requête chat peut en effectuer plusieurs, et leur nombre n’a pas été mesuré. Aucun autre POST n’a été émis et aucune erreur JavaScript n’a été observée.
 
 Le rapport et les captures sans données personnelles réelles de ce scénario fictif sont conservés localement dans `output/profile-live/`. Ils ne contiennent ni clé, en-tête d’autorisation, état signé ou historique brut. Le profil créé pendant le test a été effacé et le navigateur isolé fermé. Ce contrôle ponctuel ne constitue pas une évaluation générale du modèle ; aucun appel live n’est intégré à `npm test`.
+
+## Revue et parcours complet avant fusion
+
+Le 26 octobre 2026, l’utilisateur a validé cette variante et demandé une revue par agents, un parcours Playwright complet et la fusion. La revue suit le skill `code-review`, avec deux agents indépendants et la base figée `dc36c32`.
+
+- **Standards** : une réponse arrivée après modification du brouillon pouvait réafficher l’ancien profil. Une révision du brouillon capturée au départ de la demande invalide maintenant cette offre, même si le brouillon a ensuite été vidé. Verdict après correction : **approve**, aucun blocage restant.
+- **Spec** : la réutilisation d’un ancien exemple pouvait perdre sa provenance fictive après une nouvelle réponse. Cette provenance est maintenant conservée jusqu’à l’effacement explicite de la conversation, et visible dans l’offre. Verdict après correction : **approve**, aucun blocage restant.
+
+Les deux défauts ont été reproduits par le nouveau script Playwright avant modification, puis vérifiés corrigés. Les validations finales passent : 174 tests Node, 4 tests Python, format, lint, build et validation d’artefact. L’audit des dépendances de production ne signale aucune vulnérabilité à cette date. Les tests utilisant des serveurs locaux ont été exécutés hors des restrictions de sandbox après reproduction de l’erreur `listen EPERM`.
+
+Le parcours Playwright réel, sur HTTPS et sans interception réseau, a effectué deux messages synthétiques (90 puis 95 cm) et un clic de confirmation, soit trois POST `/api/chat` ; le nombre d’appels internes au modèle n’a pas été mesuré. Il a vérifié dix fiches Accès Libre, leurs inconnues et provenance, puis ouvert une consultation depuis une vraie fiche en conservant l’onglet de recherche. Deux tours de dialogue fictifs saisis au clavier ont permis de vérifier les notes relues et copiées avec accord, la correction et son focus, l’invalidation de la relecture, l’annulation de sortie et l’effacement. Le rechargement, la reprise à 95 cm sans envoi ni consentement automatique, puis la suppression du profil ont réussi.
+
+La correction a ponctuellement affiché « Lieu non vérifié par IGN » ; la confirmation suivante a néanmoins abouti. Aucun cabinet ne confirmait les trois besoins : les trajets et largeurs inconnus sont restés à confirmer, et 27 obstacles connus ont été exclus. Aucune erreur JavaScript ; seul un 404 de favicon déjà présent a été observé. Aucun microphone, audio ou rendez-vous n’a été déclenché. Rapport et captures : `output/profile-merge-journey/`, fichiers locaux ignorés par Git.
