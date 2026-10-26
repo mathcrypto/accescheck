@@ -3,6 +3,7 @@ import { createPracticeStore, DataUnavailable } from './practice-store.mjs';
 import { speechConfig, generateSpeech } from './speech.mjs';
 import { searchConfig, runSearchAgent } from './agents/search-agent.mjs';
 import { collectReviewSources } from './agents/review-sources.mjs';
+import { summarizePage } from './agents/page-summary.mjs';
 import { chatResponse } from './agents/chat-response.mjs';
 import { findPractices, geocode } from './discovery.mjs';
 
@@ -142,6 +143,8 @@ export function createHandler({ home, consultationPage }) {
           return json({ error: 'Utilisez le chat /api/chat avec consentement explicite.' }, 410);
         if (url.pathname === '/api/discover') return json(await findPractices(env.DB, body));
         if (url.pathname === '/api/speech') return generateSpeech(body, env);
+        if (url.pathname === '/api/page-summary')
+          return json(await summarizePage(body, env, fetch, request.signal));
         if (url.pathname === '/mcp') {
           if (
             !body ||

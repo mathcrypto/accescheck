@@ -282,7 +282,25 @@ $('readPage').onclick = async () => {
   setPageReading(true);
   try {
     readController = new AbortController();
-    await speakEdge(text, {
+    let spoken = text;
+    // With OpenAI consent, read a short spoken summary; otherwise (or on failure) the full text.
+    if ($('consent').checked && !$('consent').disabled) {
+      $('chatStatus').textContent = 'Je prépare un résumé de la page';
+      try {
+        const response = await fetch('/api/page-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, consent: true }),
+          signal: readController.signal,
+        });
+        const data = await response.json();
+        if (response.ok) spoken = data.summary;
+      } catch (error) {
+        if (error.name === 'AbortError') throw error;
+      }
+      $('chatStatus').textContent = '';
+    }
+    await speakEdge(spoken, {
       signal: readController.signal,
       onEnd: () => setPageReading(false),
       onError: () => setPageReading(false),
