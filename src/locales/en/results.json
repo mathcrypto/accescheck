@@ -1,0 +1,50 @@
+{
+  "newTab": "{{label}} (new tab)",
+  "unknown": "Unknown",
+  "yes": "Yes",
+  "no": "No",
+  "practiceType": "Practice or facility",
+  "status": {
+    "none": "Access not assessed",
+    "pending": "To be confirmed",
+    "declared": "Criteria documented"
+  },
+  "distanceUnknown": "Distance not calculated",
+  "distance": "{{distance}} km from your address",
+  "approximateOrigin": "from the centre of the chosen place",
+  "trust": {
+    "declared": "Declared",
+    "unknown": "Unknown",
+    "stale": "Old",
+    "contradictory": "Contradictory",
+    "photo": "Backed by a photo",
+    "patient": "Confirmed by patients"
+  },
+  "evidence": {
+    "stale": "Old · to be confirmed",
+    "contradictory": "Contradictory · to be confirmed"
+  },
+  "dateUnknown": "date not given",
+  "noteUnknown": "{{question}} : undocumented · check with the practice",
+  "emptyChecks": "No access need compared. Check the declared information before your visit.",
+  "detailsNeeds": "Details · needs to confirm",
+  "details": "Details and origin",
+  "identityUnknown": "Individual identity not verified.",
+  "source": "Source: {{source}}. Missing dates stay unknown. A declaration is not a guarantee of access.",
+  "registration": "RPPS registration: not verified. Sector, fees and Carte Vitale: not given in this source. No overall score is calculated.",
+  "links": {
+    "accessible": "Accès Libre card ↗",
+    "doctolib": "Doctolib profile ↗",
+    "lookup": "Search on Doctolib ↗",
+    "lookupLabel": "Search Google for this practice’s Doctolib page (new tab)",
+    "lookupHelp": "No Doctolib profile in the source: the link searches for it via Google, without guarantee.",
+    "prepare": "Prepare ↗",
+    "prepareTitle": "Prepare the conversation",
+    "prepareLabel": "Prepare the conversation (new tab, your search stays open)"
+  },
+  "specialties": {
+    "generalPractitioner": "General practitioner",
+    "dentist": "Dentist, dental surgeon",
+    "physiotherapist": "Physiotherapist"
+  }
+}

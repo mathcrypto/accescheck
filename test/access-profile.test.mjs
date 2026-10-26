@@ -9,6 +9,7 @@ import {
   profileDescription,
 } from '../src/profile-core.mjs';
 import { createHandler } from '../src/handler.mjs';
+import { getTranslator } from '../src/i18n-core.mjs';
 
 const needs = { keys: ['stepFree', 'width'], minWidth: 90 };
 const storage = () => {
@@ -71,6 +72,36 @@ test('fictional profiles stay fictional and reuse contains no private conversati
   assert.match(profileDescription({ ...needs, fictional: true }), /fictif/);
   assert.match(profileDescription(needs), /90 cm/);
   assert.match(profileDescription(needs), /profession et le lieu/);
+});
+test('profile reuse uses semantic keys and interpolates the confirmed width', () => {
+  const values = {
+    'profile.reuse.intro': 'My access needs:',
+    'criteria.stepFree': 'Step-free entrance',
+    'criteria.width': 'Entrance door width',
+    'profile.reuse.width': 'At least 90 cm.',
+    'profile.reuse.askLocation': 'Ask for the profession and location.',
+  };
+  const description = profileDescription(needs, (key, parameters) => {
+    if (key === 'profile.reuse.width') assert.equal(parameters.width, 90);
+    assert.ok(Object.hasOwn(values, key), key);
+    return values[key];
+  });
+  assert.equal(
+    description,
+    'My access needs:\nStep-free entrance\nEntrance door width\nAt least 90 cm.\nAsk for the profession and location.',
+  );
+});
+test('the saved profile creates a fully English request without changing its criteria', () => {
+  const description = profileDescription(needs, getTranslator('en'));
+  assert.match(description, /^For my search/);
+  assert.match(description, /Step-free entrance\nEntrance door width/);
+  assert.match(description, /Clear width of at least 90 cm/);
+  assert.match(description, /profession and location/);
+  assert.match(
+    profileDescription({ ...needs, fictional: true }, getTranslator('en')),
+    /^Fictional example for testing, not my real needs/,
+  );
+  assert.deepEqual(needs, { keys: ['stepFree', 'width'], minWidth: 90 });
 });
 test('profile management is read-only and the separate extraction endpoint does not exist', async () => {
   const handler = createHandler({

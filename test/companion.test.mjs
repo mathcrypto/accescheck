@@ -13,9 +13,16 @@ test('companion is served on both route forms without caching', async () => {
     assert.ok(html.includes('Mon récapitulatif'));
     assert.ok(html.includes('id="consent"'));
     assert.ok(!html.includes('/*COMPANION_SCRIPT*/'));
-    const code = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-    new vm.Script(code);
+    for (const [, code] of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) new vm.Script(code);
   }
+});
+test('the English consultation response is localised before browser scripts run', async () => {
+  const response = await worker.fetch(new Request('https://example.com/consultation?lang=en'));
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.equal(html.match(/<h1>([^<]+)<\/h1>/)?.[1], 'The conversation');
+  assert.match(html, /id="clearSession"[^>]*>\s*Clear the session\s*</);
+  assert.ok(!html.includes('{{consultation.'));
 });
 test('draft preserves exact words rather than generating medical claims', () => {
   const text = 'Je prends cinq milligrammes, à confirmer.';
@@ -34,15 +41,12 @@ test('draft carries fiction and correction provenance', () => {
 });
 test('draft translates its own labels without rewriting the conversation', () => {
   const text = 'Vous · écrit, corrigé : Non. Mon récapitulatif.';
-  const seen = [];
-  const draft = buildDraft([{ speaker: 'patient', text, demo: true, corrected: true }], (value) => {
-    seen.push(value);
-    return 'EN[' + value + ']';
-  });
-  assert.ok(draft.startsWith('EN[EXEMPLE FICTIF'));
-  assert.ok(draft.includes('EN[Vous · écrit · corrigé]'));
+  const draft = buildDraft([{ speaker: 'patient', text, demo: true, corrected: true }], 'en');
+  assert.ok(draft.startsWith('FICTIONAL EXAMPLE'));
+  assert.ok(draft.includes('You · typed · corrected'));
   assert.ok(draft.endsWith('\n' + text));
-  assert.ok(!seen.some((value) => value.includes(text)));
+  assert.ok(draft.includes('without interpretation or medical summary'));
+  assert.equal(buildDraft([], 'en'), '');
 });
 test('message validation rejects empty or excessive input', () => {
   for (const text of ['', '   ', null, 'a'.repeat(4001)])
@@ -56,6 +60,16 @@ test('denied mic and unavailable services have actionable fallbacks', () => {
   assert.equal(speakerLabel('captured'), 'Parole');
   assert.equal(speakerLabel('patient'), 'Vous · écrit');
   assert.equal(speakerLabel('doctor'), 'Soignant · écrit');
+  assert.equal(speakerLabel('patient', 'en'), 'You · typed');
+  assert.equal(speakerLabel('doctor', 'en'), 'Clinician · typed');
+  assert.equal(speakerLabel('unknown', 'en'), 'Message');
+  assert.equal(speakerLabel('constructor', 'en'), 'Message');
+  assert.match(speechError('not-allowed', 'en'), /Microphone access was denied/);
+  assert.match(speechError('language-not-supported', 'en'), /French is not available/);
+  assert.match(speechError('unknown', 'en'), /Speech recognition has stopped/);
+  assert.equal(speechError('constructor', 'en'), speechError('unknown', 'en'));
+  assert.throws(() => validateMessage('', 'en'), /Type a message/);
+  assert.throws(() => validateMessage('a'.repeat(4001), 'en'), /4,000 characters/);
 });
 test('companion has no persistent storage or audio recording code', () => {
   const code = readFileSync('src/companion.js', 'utf8');

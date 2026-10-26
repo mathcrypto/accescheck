@@ -1,0 +1,66 @@
+{
+  "title": "AccèsCheck · Mon profil d’accès",
+  "skip": "Aller au profil d’accès",
+  "eyebrow": "Pour vos prochaines recherches",
+  "heading": "Votre profil d’accès.",
+  "intro": "L’agent extrait vos besoins directement dans la conversation « Décrire mes besoins ». Vous choisissez ensuite de les conserver depuis le chat pour la prochaine fois.",
+  "empty": {
+    "title": "Votre profil se crée dans la recherche.",
+    "description": "Décrivez vos besoins avec vos mots. L’agent vous propose des critères à vérifier, puis un enregistrement facultatif sur cet appareil."
+  },
+  "actions": {
+    "describe": "Décrire mes besoins",
+    "edit": "Modifier via Décrire mes besoins",
+    "delete": "Supprimer mon profil",
+    "back": "Revenir à Décrire mes besoins"
+  },
+  "saved": {
+    "eyebrow": "À partir de votre demande",
+    "title": "Les besoins que vous avez confirmés.",
+    "fictional": "EXEMPLE FICTIF conservé · ne représente pas vos besoins réels.",
+    "real": "Critères extraits par l’agent de votre demande, puis confirmés par vous.",
+    "widthUnknown": "Largeur minimale non renseignée : aucune mesure supposée.",
+    "help": "Sur l’accueil, « Utiliser mon profil » prépare votre demande sans l’envoyer. Décrivez une correction dans le chat pour obtenir un nouveau profil à confirmer.",
+    "width": "Largeur minimale confirmée : {{width}} cm.",
+    "expires": "Réutilisable sur ce navigateur jusqu’au {{date}}."
+  },
+  "privacy": {
+    "title": "Vous gardez la main.",
+    "storage": "Seuls les critères et la largeur éventuelle sont conservés dans ce navigateur, après votre accord distinct. Ni la demande, ni la conversation, ni le lieu ne sont enregistrés.",
+    "expiry": "Le profil expire après 30 jours et est supprimé à la prochaine lecture après expiration. Aucun compte ni synchronisation entre appareils. Les autres utilisateurs de ce navigateur peuvent le voir : évitez un appareil partagé."
+  },
+  "disclaimer": "Un profil confirmé ne garantit pas l’accessibilité d’un cabinet.",
+  "status": {
+    "unavailable": "La mémoire de ce navigateur est indisponible. Vous pouvez continuer à décrire vos besoins sans les conserver.",
+    "deleted": "Profil supprimé de cet appareil.",
+    "deleteFailed": "La suppression a échoué. Vérifiez les réglages de stockage du navigateur.",
+    "saved": "Critères enregistrés pour 30 jours. La conversation et le lieu ne sont pas conservés.",
+    "saveFailed": "Ce navigateur refuse l’enregistrement du profil. Votre recherche reste utilisable.",
+    "draft": "Votre message en cours est conservé. Affichez-le ou effacez-le avant de reprendre le profil.",
+    "prepared": "Profil préparé, sans envoi. Vérifiez votre accord OpenAI avant d’envoyer la demande."
+  },
+  "reuse": {
+    "fictional": "Exemple fictif à tester, pas mes besoins réels.",
+    "intro": "Pour ma recherche, voici mes besoins d’accès à vérifier :",
+    "askLocation": "Demandez-moi la profession et le lieu pour cette nouvelle recherche.",
+    "width": "Passage utile d’au moins {{width}} cm."
+  },
+  "inline": {
+    "about": "Votre profil d’accès se crée directement à partir de cette conversation.",
+    "savedTitle": "Profil enregistré",
+    "savedIntro": "Vos besoins sont déjà là.",
+    "reuse": "Utiliser mon profil",
+    "manage": "Consulter ou supprimer mon profil",
+    "title": "Profil extrait de votre demande",
+    "correct": "Corrigez les critères dans le chat avant de les enregistrer si nécessaire.",
+    "consent": "Je confirme ces besoins et j’accepte de les garder sur cet appareil pendant 30 jours.",
+    "privacy": "Ce navigateur conserve uniquement les critères et la largeur. Les autres utilisateurs de cet appareil peuvent les voir.",
+    "save": "Enregistrer mon profil d’accès"
+  },
+  "errors": {
+    "invalid": "Vérifiez les critères du profil et la largeur mesurée, entre 40 et 200 cm.",
+    "consent": "Votre accord est nécessaire pour conserver ce profil sur cet appareil."
+  },
+  "fictionalPrefix": "EXEMPLE FICTIF · ",
+  "summaryWidth": "Passage ≥ {{width}} cm"
+}

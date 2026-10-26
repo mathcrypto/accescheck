@@ -1,4 +1,4 @@
-import { applyLanguage } from './i18n.js';
+import { applyLanguage, t } from './i18n.js';
 import './assistant.js';
 import './ambient.js';
 
@@ -8,7 +8,7 @@ const motionButton = document.getElementById('pauseMotion');
 motionButton.addEventListener('click', () => {
   const paused = document.body.classList.toggle('motion-paused');
   motionButton.setAttribute('aria-pressed', String(paused));
-  motionButton.textContent = paused ? 'Relancer les animations' : 'Mettre les animations en pause';
+  motionButton.textContent = t(paused ? 'home.motion.resume' : 'home.motion.pause');
 });
 
 document.querySelector('.intro-link').addEventListener('click', () => {

@@ -1,0 +1,23 @@
+{
+  "language": "en",
+  "menu": "Menu",
+  "nav": {
+    "brand": "AccèsCheck, home",
+    "label": "Main navigation",
+    "home": "Home",
+    "describe": "Describe my needs",
+    "consultation": "During the visit",
+    "profile": "My access profile"
+  },
+  "languageSwitch": {
+    "target": "fr",
+    "label": "Français"
+  },
+  "sources": "Sources:",
+  "speech": {
+    "otherCards": "Other cards were not read.",
+    "empty": "There is no text to read.",
+    "unavailable": "Spoken playback is unavailable.",
+    "invalid": "Spoken playback did not return playable audio."
+  }
+}

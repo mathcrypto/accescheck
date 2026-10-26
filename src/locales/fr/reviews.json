@@ -1,0 +1,57 @@
+{
+  "newTab": "{{label}} (nouvel onglet)",
+  "coverage": "{{sources}} source(s) attribuable(s) · {{sites}} site(s). Consulté le {{date}}. Collecte partielle.",
+  "sample": "{{count}} avis identifiable(s) · {{sites}} site(s). Échantillon limité, sans garantie de représentativité.",
+  "topicDetails": "Accueil, écoute, attente et organisation",
+  "topicCounts": "{{positive}} favorable(s) · {{negative}} difficulté(s) · {{mixed}} partagé(s)",
+  "source": "Source",
+  "empty": "Aucun avis attribuable trouvé dans les pages consultées. Réputation non renseignée.",
+  "scope": {
+    "matched": "Établissement identifié",
+    "different_scope": "Avis d’un praticien ou périmètre différent · non attribué au cabinet",
+    "ambiguous": "Homonyme ou adresse ambiguë · non attribué",
+    "unconfirmed": "Identité à confirmer · non attribué"
+  },
+  "ratingUnknown": "Note non renseignée",
+  "countUnknown": "volume non renseigné",
+  "count": "{{count}} avis sur ce site",
+  "updated": "mis à jour le {{date}}",
+  "dateUnknown": "date des données non renseignée",
+  "consulted": "Toutes les pages consultées",
+  "disclaimer": "Les témoignages ne prouvent ni l’accessibilité ni la qualité clinique.",
+  "unknown": "Réputation non renseignée",
+  "details": "Détail des avis et sources",
+  "actions": {
+    "search": "Rechercher les avis avec OpenAI",
+    "unavailable": "Recherche d’avis indisponible",
+    "retry": "Réessayer les avis"
+  },
+  "status": {
+    "stopped": "Recherche d’avis interrompue.",
+    "working": "Je consulte les avis publics",
+    "requested": "Recherche d’avis demandée · identité publique uniquement."
+  },
+  "errors": {
+    "unavailable": "Avis indisponibles. Réessayez."
+  },
+  "heading": "Avis publics",
+  "headingLabel": "Avis publics · {{practice}}",
+  "sentiment": {
+    "insufficient": "Avis insuffisants pour un ressenti général",
+    "positive": "Retours consultés plutôt favorables",
+    "negative": "Difficultés dans les retours consultés",
+    "mixed": "Retours consultés partagés"
+  },
+  "topics": {
+    "accueil": "Accueil",
+    "ecoute": "Écoute",
+    "attente": "Attente",
+    "organisation": "Organisation"
+  },
+  "assessment": {
+    "unknown": "non renseigné",
+    "positive": "retours favorables",
+    "negative": "difficultés rapportées",
+    "mixed": "contrasté"
+  }
+}

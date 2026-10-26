@@ -47,3 +47,18 @@ test('supports ordinary JSON errors and legacy JSON responses', async () => {
     /Indisponible/,
   );
 });
+
+test('English fallback errors preserve server messages and translate only protocol labels', async () => {
+  await assert.rejects(
+    readChatResponse(Response.json({}, { status: 503 }), () => {}, 'en'),
+    /Service unavailable\. Please retry\./,
+  );
+  await assert.rejects(
+    readChatResponse(stream(''), () => {}, 'en'),
+    /Response interrupted\. Please retry your request\./,
+  );
+  await assert.rejects(
+    readChatResponse(stream('{"type":"error","message":"Cabinet Oui"}\n'), () => {}, 'en'),
+    /Cabinet Oui/,
+  );
+});

@@ -1,0 +1,57 @@
+{
+  "newTab": "{{label}} (new tab)",
+  "coverage": "{{sources}} attributable source(s) · {{sites}} site(s). Checked on {{date}}. Partial collection.",
+  "sample": "{{count}} identifiable review(s) · {{sites}} site(s). Limited sample, not guaranteed to be representative.",
+  "topicDetails": "Welcome, listening, waiting and organisation",
+  "topicCounts": "{{positive}} positive · {{negative}} negative · {{mixed}} mixed",
+  "source": "Source",
+  "empty": "No attributable review found in the pages checked. Reputation unknown.",
+  "scope": {
+    "matched": "Facility identified",
+    "different_scope": "Practitioner review or different scope · not attributed to the practice",
+    "ambiguous": "Same name or ambiguous address · not attributed",
+    "unconfirmed": "Identity to be confirmed · not attributed"
+  },
+  "ratingUnknown": "Rating unknown",
+  "countUnknown": "volume unknown",
+  "count": "{{count}} reviews on this site",
+  "updated": "updated on {{date}}",
+  "dateUnknown": "data date unknown",
+  "consulted": "All pages checked",
+  "disclaimer": "Testimonials prove neither accessibility nor clinical quality.",
+  "unknown": "Reputation unknown",
+  "details": "Review details and sources",
+  "actions": {
+    "search": "Find reviews with OpenAI",
+    "unavailable": "Review search unavailable",
+    "retry": "Retry reviews"
+  },
+  "status": {
+    "stopped": "Review search stopped.",
+    "working": "Checking public reviews",
+    "requested": "Review search requested · public identity only."
+  },
+  "errors": {
+    "unavailable": "Reviews unavailable. Please retry."
+  },
+  "heading": "Public reviews",
+  "headingLabel": "Public reviews · {{practice}}",
+  "sentiment": {
+    "insufficient": "Not enough reviews for an overall impression",
+    "positive": "Reviews mostly positive",
+    "negative": "Reviews report difficulties",
+    "mixed": "Mixed reviews"
+  },
+  "topics": {
+    "accueil": "Welcome",
+    "ecoute": "Listening",
+    "attente": "Waiting",
+    "organisation": "Organisation"
+  },
+  "assessment": {
+    "unknown": "unknown",
+    "positive": "positive feedback",
+    "negative": "difficulties reported",
+    "mixed": "mixed"
+  }
+}

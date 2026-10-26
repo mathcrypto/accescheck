@@ -844,3 +844,134 @@ test('re-preparing the same search after execution preserves results even if the
   assert.equal(result.state.proposal.id, prepared.state.proposal.id);
   assert.equal(result.actions.length, 0);
 });
+
+test('English search localises consent, directory and signed proposal UI without rewriting user text', async () => {
+  const noProvider = () => {
+    throw Error('No provider expected');
+  };
+  const consent = await runSearchAgent(
+    { message: 'Cabinet Oui, Lyon', lang: 'en' },
+    env,
+    noProvider,
+  );
+  assert.match(consent.reply, /^Your consent is needed/);
+  assert.equal(consent.actions[0].label, 'Accept and continue');
+  const unavailable = await runSearchAgent(
+    { message: 'Cabinet Oui', lang: 'en' },
+    { DB: db },
+    noProvider,
+  );
+  assert.match(unavailable.reply, /^The OpenAI agent is unavailable/);
+  const events = [];
+  const directory = await runSearchAgent(
+    { action: 'directory', lang: 'en' },
+    { DB: db },
+    noProvider,
+    { emit: (event) => events.push(event) },
+  );
+  assert.equal(directory.reply, 'Public directory: no needs or location have been interpreted.');
+  assert.match(directory.notice, /^Fallback mode/);
+  assert.equal(events[0].text, 'Opening the public directory');
+  let round = 0;
+  const raw = 'Cabinet Oui, diagnostic sans traduction, Lyon';
+  const result = await runSearchAgent(
+    { message: raw, lang: 'en', consent: true },
+    env,
+    async (_url, options) => {
+      const body = JSON.parse(options.body);
+      assert.equal(body.input.find((item) => item.role === 'user').content, raw);
+      assert.equal(
+        JSON.parse(body.input.find((item) => item.role === 'developer').content).verifiedContext
+          .language,
+        'en',
+      );
+      return round++ === 0
+        ? call('prepare_search', {
+            locationRef: null,
+            specialty: null,
+            needs: { keys: ['stepFree', 'width'], minWidth: 95 },
+            radiusKm: null,
+            notes: ['Demander au Cabinet Oui.'],
+          })
+        : complete({ reply: 'Controlled answer.', question: null });
+    },
+  );
+  assert.match(result.reply, /^Check these criteria/);
+  assert.equal(result.actions[0].label, 'Confirm and search');
+  assert.match(result.summary, /Any profession\nNo location constraint\nNo precise radius limit/);
+  assert.match(result.summary, /Step-free entrance/);
+  assert.match(result.summary, /Clear width ≥ 95 cm/);
+  assert.match(result.summary, /Demander au Cabinet Oui\./);
+  await assert.rejects(
+    runSearchAgent(
+      { message: 'x', consent: true, lang: 'en', state: { signature: 'invalid' } },
+      env,
+      noProvider,
+    ),
+    /Conversation expired or modified/,
+  );
+});
+
+test('English question controls and confirmed pagination are localised without another model call', async () => {
+  const question = await runSearchAgent(
+    { message: 'A clinician', consent: true, lang: 'en' },
+    env,
+    async () =>
+      complete({
+        reply: 'Which profession?',
+        question: { id: 'profession', text: 'Which?', options: [] },
+      }),
+  );
+  assert.deepEqual(
+    question.question.options.map((option) => option.label),
+    ['Type my answer', 'I don’t know'],
+  );
+  let step = 0;
+  const prepared = await runSearchAgent(
+    { message: 'Anywhere', consent: true, lang: 'en' },
+    env,
+    async () =>
+      step++ === 0
+        ? call('prepare_search', confirmationProposal)
+        : complete({ reply: 'Ready.', question: null }),
+  );
+  step = 0;
+  const confirmed = await runSearchAgent(
+    { action: 'confirm', state: prepared.state, consent: true, lang: 'en' },
+    env,
+    async () =>
+      step++ === 0
+        ? call('search_practices', { proposalId: prepared.state.proposal.id })
+        : complete({ reply: 'Results.', question: null }),
+  );
+  const page = await runSearchAgent(
+    { action: 'page', page: 1, state: confirmed.state, consent: true, lang: 'en' },
+    env,
+    () => {
+      throw Error('Pagination must not call the provider');
+    },
+  );
+  assert.equal(page.reply, 'Results for the confirmed search.');
+  assert.match(page.summary, /^Any profession/);
+  await assert.rejects(
+    runSearchAgent({ message: 'x'.repeat(2001), lang: 'en' }, env),
+    /Invalid request\. Write no more than 2,000 characters\./,
+  );
+});
+
+test('English geography and criteria failures retain the same validation boundaries', async () => {
+  const { geocodePlace } = await import('../src/geography.mjs');
+  const { findPractices, validateRequirements } = await import('../src/discovery.mjs');
+  assert.throws(
+    () => validateRequirements({ keys: ['stepFree', 'stepFree'], minWidth: null }, 'en'),
+    /Invalid search criteria/,
+  );
+  await assert.rejects(
+    findPractices(db, { confirmed: false }, 'en'),
+    /Confirm your criteria before searching/,
+  );
+  await assert.rejects(
+    geocodePlace({ query: 'Lyon' }, async () => new Response('', { status: 503 }), 'en'),
+    /The IGN location search is unavailable/,
+  );
+});

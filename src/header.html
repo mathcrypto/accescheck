@@ -1,5 +1,5 @@
 <header class="site-header">
-  <a class="brand" href="/" aria-label="AccèsCheck, accueil"
+  <a class="brand" href="/?lang={{common.language}}" aria-label="{{common.nav.brand}}"
     ><span class="brand-mark" aria-hidden="true"
       ><svg viewBox="0 0 64 64" fill="none">
         <path
@@ -10,12 +10,19 @@
     ><span>AccèsCheck</span></a
   >
   <details class="menu">
-    <summary>Menu</summary>
-    <nav aria-label="Navigation principale">
-      <a href="/">Accueil</a><a href="/#recherche">Décrire mes besoins</a
-      ><a href="/consultation">Pendant la visite</a>
-      <a href="/profil">Mon profil d’accès</a>
-      <a id="langSwitch" href="?lang=en" lang="en" hreflang="en">English</a>
+    <summary>{{common.menu}}</summary>
+    <nav aria-label="{{common.nav.label}}">
+      <a href="/?lang={{common.language}}">{{common.nav.home}}</a
+      ><a href="/?lang={{common.language}}#recherche">{{common.nav.describe}}</a
+      ><a href="/consultation?lang={{common.language}}">{{common.nav.consultation}}</a>
+      <a href="/profil?lang={{common.language}}">{{common.nav.profile}}</a>
+      <a
+        id="langSwitch"
+        href="?lang={{common.languageSwitch.target}}"
+        lang="{{common.languageSwitch.target}}"
+        hreflang="{{common.languageSwitch.target}}"
+        >{{common.languageSwitch.label}}</a
+      >
       <!--HOME_CONTROLS-->
     </nav>
   </details>

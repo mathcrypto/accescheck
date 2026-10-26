@@ -1,4 +1,6 @@
 /** Microsoft Edge neural TTS helpers (via /api/speech). */
+import { getTranslator } from './i18n-core.mjs';
+import { t } from './i18n.js';
 
 export function collectVisibleText(selectors, { maxChars = 4000, cardLimit = 3 } = {}) {
   const parts = [];
@@ -17,7 +19,7 @@ export function collectVisibleText(selectors, { maxChars = 4000, cardLimit = 3 }
           .filter(Boolean)
           .join('. ');
         if (cards.length < node.querySelectorAll('.practice-card').length)
-          text += '. Autres fiches non lues.';
+          text += '. ' + t('common.speech.otherCards');
       } else text = node.innerText.replace(/\s+/g, ' ').trim();
       if (text) parts.push(text);
     }
@@ -44,8 +46,9 @@ export function stopSpeechPlayback() {
 
 /** Microsoft Edge neural TTS. Clicking Lire is the user action that sends text to Microsoft. */
 export async function speakEdge(text, { signal, onEnd, onError, lang = 'fr' } = {}) {
+  const translate = getTranslator(lang);
   const value = String(text || '').trim();
-  if (!value) throw new Error('Aucun texte à lire.');
+  if (!value) throw new Error(translate('common.speech.empty'));
   stopSpeechPlayback();
   let response;
   try {
@@ -62,16 +65,11 @@ export async function speakEdge(text, { signal, onEnd, onError, lang = 'fr' } = 
   if (!response?.ok) {
     if (window.speechSynthesis && window.SpeechSynthesisUtterance)
       return speakBrowser(value, { lang, onEnd, onError });
-    let message = 'La lecture vocale est indisponible.';
-    try {
-      const data = await response.json();
-      if (data?.error) message = data.error;
-    } catch {}
-    throw new Error(message);
+    throw new Error(translate('common.speech.unavailable'));
   }
   const blob = await response.blob();
   if (!blob.size || !blob.type.startsWith('audio/'))
-    throw new Error('La lecture vocale n’a pas renvoyé un son lisible.');
+    throw new Error(translate('common.speech.invalid'));
   remoteUrl = URL.createObjectURL(blob);
   const audio = new Audio(remoteUrl);
   remoteAudio = audio;

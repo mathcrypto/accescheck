@@ -11,7 +11,13 @@ import { findPractices, validateRequirements } from '../discovery.mjs';
 import { createPracticeStore } from '../practice-store.mjs';
 import { criteria } from '../core.mjs';
 import { collectReviewSources } from './review-sources.mjs';
+import { getTranslator } from '../i18n-core.mjs';
 const encoder = new TextEncoder();
+const specialtyKeys = {
+  'Médecin généraliste': 'generalPractitioner',
+  'Dentiste, chirurgien dentiste': 'dentist',
+  Kinésithérapeute: 'physiotherapist',
+};
 async function signingKey(secret) {
   return crypto.subtle.importKey(
     'raw',
@@ -34,7 +40,7 @@ async function seal(data, secret) {
     ).join(''),
   };
 }
-async function restore(state, secret) {
+async function restore(state, secret, t) {
   if (!state)
     return {
       history: [],
@@ -61,7 +67,7 @@ async function restore(state, secret) {
       encoder.encode(JSON.stringify(data)),
     ))
   )
-    throw new Error('Conversation expirée ou modifiée. Effacez-la pour recommencer.');
+    throw new Error(t('search.errors.expired'));
   return structuredClone(data);
 }
 function query(proposal) {
@@ -104,18 +110,23 @@ function resultContext(results) {
     ),
   };
 }
-function summary(proposal) {
+function summary(proposal, t = getTranslator()) {
   if (!proposal) return '';
+  const specialty = Object.hasOwn(specialtyKeys, proposal.specialty)
+    ? specialtyKeys[proposal.specialty]
+    : null;
   return [
-    proposal.specialty || 'Profession sans préférence',
+    specialty
+      ? t(`results.specialties.${specialty}`)
+      : proposal.specialty || t('search.recap.noProfession'),
     proposal.origin
       ? `${proposal.origin.label} · ${proposal.origin.postcode || ''}`
-      : 'Sans contrainte géographique',
+      : t('search.recap.noLocation'),
     proposal.radiusKm === null
-      ? 'Rayon sans limite précise'
-      : `${proposal.radiusKm} km à vol d’oiseau`,
-    ...proposal.needs.keys.map((key) => criteria[key].label),
-    proposal.needs.minWidth ? `Passage ≥ ${proposal.needs.minWidth} cm` : '',
+      ? t('search.recap.noRadius')
+      : t('search.recap.radius', { radius: proposal.radiusKm }),
+    ...proposal.needs.keys.map((key) => t(`criteria.${key}`)),
+    proposal.needs.minWidth ? t('search.recap.width', { width: proposal.needs.minWidth }) : '',
     ...proposal.notes,
   ]
     .filter(Boolean)
@@ -135,6 +146,7 @@ export async function runSearchAgent(
   { signal, emit = () => {} } = {},
 ) {
   const input = chatInput(body);
+  const t = getTranslator(input.lang);
   const empty = {
     state: null,
     question: null,
@@ -144,17 +156,21 @@ export async function runSearchAgent(
     results: null,
   };
   if (input.action === 'directory') {
-    emit({ type: 'status', text: 'Ouverture de l’annuaire public' });
-    const results = await findPractices(env.DB, {
-      confirmed: true,
-      needs: { keys: [], minWidth: null },
-      page: input.page || 1,
-    });
+    emit({ type: 'status', text: t('search.status.directory') });
+    const results = await findPractices(
+      env.DB,
+      {
+        confirmed: true,
+        needs: { keys: [], minWidth: null },
+        page: input.page || 1,
+      },
+      input.lang,
+    );
     return {
       ...empty,
       mode: 'directory',
-      reply: 'Annuaire public : aucun besoin ni lieu n’a été interprété.',
-      notice: 'Mode dégradé sans agent. Les besoins d’accès restent à vérifier sur chaque fiche.',
+      reply: t('search.directory.reply'),
+      notice: t('search.directory.notice'),
       results,
     };
   }
@@ -163,15 +179,13 @@ export async function runSearchAgent(
       ...empty,
       mode: 'consent',
       state: input.state || null,
-      reply: env.OPENAI_API_KEY
-        ? 'Votre accord est nécessaire pour envoyer votre demande complète, le lieu et le contexte de cette conversation à OpenAI. Évitez les noms et coordonnées personnels.'
-        : 'L’agent OpenAI est indisponible. Vous pouvez consulter l’annuaire public en mode dégradé.',
+      reply: env.OPENAI_API_KEY ? t('search.consent.required') : t('search.consent.unavailable'),
       actions: [
-        ...(env.OPENAI_API_KEY ? [{ id: 'consent', label: 'Accepter et poursuivre' }] : []),
-        { id: 'directory', label: 'Consulter l’annuaire public' },
+        ...(env.OPENAI_API_KEY ? [{ id: 'consent', label: t('search.actions.consent') }] : []),
+        { id: 'directory', label: t('search.actions.directory') },
       ],
     };
-  const state = await restore(input.state, env.OPENAI_API_KEY);
+  const state = await restore(input.state, env.OPENAI_API_KEY, t);
   state.autoReviewIds ??= state.practiceIds.slice(0, 3);
   if (input.displayedPracticeIds) {
     const rows = state.lastResults?.practices || [];
@@ -183,7 +197,7 @@ export async function runSearchAgent(
       new Set(ids).size !== ids.length ||
       ids.some((id, index) => !byId.has(id) || priority(byId.get(id)) !== priority(rows[index]))
     )
-      throw new Error('Ordre des fiches invalide. Actualisez la recherche.');
+      throw new Error(t('search.errors.cardOrder'));
     if (rows.length) {
       state.lastResults.practices = ids.map((id) => byId.get(id));
       state.practiceIds = ids;
@@ -191,12 +205,15 @@ export async function runSearchAgent(
   }
 
   if (input.action === 'page') {
-    if (!state.confirmed || !state.proposal)
-      throw new Error('Confirmez une recherche avant de changer de page.');
-    const results = await findPractices(env.DB, {
-      ...query(state.proposal),
-      page: input.page || 1,
-    });
+    if (!state.confirmed || !state.proposal) throw new Error(t('search.errors.confirmBeforePage'));
+    const results = await findPractices(
+      env.DB,
+      {
+        ...query(state.proposal),
+        page: input.page || 1,
+      },
+      input.lang,
+    );
     return {
       ...empty,
       state: await seal(
@@ -208,8 +225,8 @@ export async function runSearchAgent(
         },
         env.OPENAI_API_KEY,
       ),
-      summary: summary(state.proposal),
-      reply: 'Résultats de la recherche confirmée.',
+      summary: summary(state.proposal, t),
+      reply: t('search.results.reply'),
       results,
     };
   }
@@ -218,23 +235,20 @@ export async function runSearchAgent(
     const option =
       state.question?.id === input.answer.field &&
       state.question.options.find((option) => option.value === input.answer.value);
-    if (!option) throw new Error('Ce choix ne correspond plus à la question actuelle.');
+    if (!option) throw new Error(t('search.errors.staleChoice'));
     message = option.label;
   }
   if (input.action === 'confirm') {
-    if (!state.proposal) throw new Error('Aucune proposition à confirmer.');
+    if (!state.proposal) throw new Error(t('search.errors.noProposal'));
     state.confirmed = true;
-    message = 'Je confirme exactement ce récapitulatif : ' + summary(state.proposal);
+    message = t('search.confirmation.message', { summary: summary(state.proposal, t) });
   } else {
     state.confirmed = false;
     state.proposal = null;
     state.notes = [];
   }
-  if (!message) throw new Error('Écrivez votre demande.');
-  if (state.history.length >= 30)
-    throw new Error(
-      'Cette conversation a atteint sa limite. Effacez-la avant une nouvelle recherche.',
-    );
+  if (!message) throw new Error(t('search.errors.empty'));
+  if (state.history.length >= 30) throw new Error(t('search.errors.historyLimit'));
   state.history.push({ role: 'user', content: message });
   const store = createPracticeStore(env.DB);
   const catalog = await store.catalog();
@@ -262,17 +276,20 @@ export async function runSearchAgent(
   const warnings = new Set();
   async function execute(name, args) {
     const schema = Object.hasOwn(toolSchemas, name) ? toolSchemas[name] : null;
-    if (!schema) throw new Error('Outil inconnu.');
+    if (!schema) throw new Error(t('search.errors.unknownTool'));
     const parsed = schema.safeParse(args);
-    if (!parsed.success) throw new Error('Arguments de l’outil invalides.');
+    if (!parsed.success) throw new Error(t('search.errors.invalidTool'));
     const value = parsed.data;
     if (name === 'geocode_place') {
-      emit({ type: 'status', text: 'Recherche géographique IGN' });
-      const places = await geocodePlace(value, (url, options) =>
-        transport(url, { ...options, signal: AbortSignal.any([options.signal, deadline]) }),
+      emit({ type: 'status', text: t('search.status.geography') });
+      const places = await geocodePlace(
+        value,
+        (url, options) =>
+          transport(url, { ...options, signal: AbortSignal.any([options.signal, deadline]) }),
+        input.lang,
       );
       if (Object.keys(state.locations).length + places.length > 20)
-        throw new Error('Trop de lieux étudiés. Demandez une précision.');
+        throw new Error(t('search.errors.locationLimit'));
       return places.map((place) => {
         const ref = crypto.randomUUID();
         state.locations[ref] = place;
@@ -280,22 +297,18 @@ export async function runSearchAgent(
       });
     }
     if (name === 'prepare_search') {
-      if (state.confirmed && !results)
-        throw new Error(
-          'Cette recherche est déjà confirmée. Utilisez search_practices avec la proposition confirmée, sans la préparer à nouveau.',
-        );
+      if (state.confirmed && !results) throw new Error(t('search.errors.alreadyConfirmed'));
       const origin =
         value.locationRef && Object.hasOwn(state.locations, value.locationRef)
           ? state.locations[value.locationRef]
           : null;
-      if (value.locationRef && !origin) throw new Error('Lieu non vérifié par IGN.');
-      if (value.radiusKm !== null && !origin)
-        throw new Error('Un rayon nécessite un point IGN vérifié.');
+      if (value.locationRef && !origin) throw new Error(t('search.errors.unverifiedLocation'));
+      if (value.radiusKm !== null && !origin) throw new Error(t('search.errors.radiusLocation'));
       if (value.specialty && !catalog.specialties.includes(value.specialty))
-        throw new Error('Profession absente du catalogue.');
-      validateRequirements(value.needs);
+        throw new Error(t('search.errors.profession'));
+      validateRequirements(value.needs, input.lang);
       if (value.needs.minWidth !== null && !value.needs.keys.includes('width'))
-        throw new Error('La largeur nécessite le critère passage large.');
+        throw new Error(t('search.errors.width'));
       const proposal = {
         origin,
         specialty: value.specialty || '',
@@ -306,7 +319,7 @@ export async function runSearchAgent(
       if (state.confirmed && searchCriteriaKey(state.proposal) === searchCriteriaKey(proposal))
         return {
           proposalId: state.proposal.id,
-          summary: summary(state.proposal),
+          summary: summary(state.proposal, t),
           requiresUserConfirmation: false,
         };
       results = null;
@@ -319,15 +332,15 @@ export async function runSearchAgent(
       state.confirmed = false;
       return {
         proposalId: state.proposal.id,
-        summary: summary(state.proposal),
+        summary: summary(state.proposal, t),
         requiresUserConfirmation: true,
       };
     }
     if (name === 'search_practices') {
       if (!state.confirmed || state.proposal?.id !== value.proposalId)
-        throw new Error('Le patient doit confirmer cette proposition avant la recherche.');
-      emit({ type: 'status', text: 'Recherche des cabinets dans Accès Libre' });
-      results = await findPractices(env.DB, query(state.proposal));
+        throw new Error(t('search.errors.confirmBeforeSearch'));
+      emit({ type: 'status', text: t('search.status.searching') });
+      results = await findPractices(env.DB, query(state.proposal), input.lang);
       state.lastResults = resultContext(results);
       state.page = 1;
       state.practiceIds = results.results.map((practice) => practice.id);
@@ -335,17 +348,16 @@ export async function runSearchAgent(
       return results;
     }
     if (!state.practiceIds.includes(value.practiceId))
-      throw new Error('Consultez uniquement une fiche issue des résultats vérifiés.');
+      throw new Error(t('search.errors.resultScope'));
     if (name === 'read_practice') {
-      emit({ type: 'status', text: 'Consultation des preuves de la fiche' });
+      emit({ type: 'status', text: t('search.status.evidence') });
       return await store.get(value.practiceId);
     }
     if (state.page !== 1 || !state.autoReviewIds.includes(value.practiceId))
-      throw new Error('Les avis de cette fiche nécessitent une demande depuis son bouton dédié.');
-    if (input.reviewConsent !== true)
-      throw new Error('Un accord distinct est nécessaire pour consulter les avis.');
-    if (reviewsUsed++ >= 1) throw new Error('Limite de recherche web atteinte pour ce tour.');
-    emit({ type: 'status', text: 'Recherche web sur l’identité publique du cabinet' });
+      throw new Error(t('search.errors.reviewScope'));
+    if (input.reviewConsent !== true) throw new Error(t('search.errors.reviewConsent'));
+    if (reviewsUsed++ >= 1) throw new Error(t('search.errors.reviewLimit'));
+    emit({ type: 'status', text: t('search.status.reviews') });
     const result = await collectReviewSources(
       { practiceId: value.practiceId, consent: true },
       env,
@@ -358,9 +370,8 @@ export async function runSearchAgent(
   // Function outputs and reasoning items stay together: https://developers.openai.com/api/docs/guides/function-calling
   for (let step = 0; step < 7 && tokensLeft >= 1000; step++) {
     deadline.throwIfAborted();
-    if (JSON.stringify(history).length > 120000)
-      throw new Error('Contexte trop volumineux. Précisez votre recherche.');
-    emit({ type: 'status', text: 'L’agent OpenAI examine votre demande' });
+    if (JSON.stringify(history).length > 120000) throw new Error(t('search.errors.contextSize'));
+    emit({ type: 'status', text: t('search.status.thinking') });
     const options = {
       method: 'POST',
       redirect: 'error',
@@ -390,20 +401,17 @@ export async function runSearchAgent(
       }),
     };
     inputBytesLeft -= encoder.encode(options.body).length;
-    if (inputBytesLeft < 0)
-      throw new Error('Limite de contexte de recherche atteinte. Précisez votre demande.');
+    if (inputBytesLeft < 0) throw new Error(t('search.errors.contextLimit'));
     let response;
     try {
       response = await transport('https://api.openai.com/v1/responses', options);
     } catch {
       deadline.throwIfAborted();
-      throw new Error('L’agent est injoignable. Réessayez ou ouvrez l’annuaire public.');
+      throw new Error(t('search.errors.unreachable'));
     }
     if (!response.ok)
       throw new Error(
-        response.status === 429
-          ? 'Limite OpenAI atteinte. Réessayez plus tard ou ouvrez l’annuaire public.'
-          : 'L’agent OpenAI est indisponible. Réessayez ou ouvrez l’annuaire public.',
+        response.status === 429 ? t('search.errors.rateLimit') : t('search.errors.unavailable'),
       );
     const data = await response.json();
     if (
@@ -411,14 +419,14 @@ export async function runSearchAgent(
       !Array.isArray(data.output) ||
       JSON.stringify(data.output).length > 120000
     )
-      throw new Error('Réponse de l’agent incomplète. Réessayez votre demande.');
+      throw new Error(t('search.errors.incomplete'));
     const used = data.usage?.output_tokens;
     tokensLeft -= Number.isInteger(used) && used > 0 ? Math.min(used, 2400) : 2400;
     history.push(...data.output);
     const calls = data.output.filter((item) => item.type === 'function_call');
     if (calls.length) {
       for (const call of calls) {
-        if (++toolsUsed > 8) throw new Error('Limite d’outils atteinte. Précisez votre recherche.');
+        if (++toolsUsed > 8) throw new Error(t('search.errors.toolLimit'));
         let output;
         try {
           output = await execute(call.name, JSON.parse(call.arguments));
@@ -447,17 +455,13 @@ export async function runSearchAgent(
         ),
       );
     } catch {
-      throw new Error('La réponse de l’agent n’a pas pu être vérifiée. Réessayez.');
+      throw new Error(t('search.errors.unverifiedReply'));
     }
-    if (state.confirmed && !results)
-      throw new Error(
-        'La recherche confirmée n’a pas été exécutée par l’agent. Réessayez pour lancer cette même recherche.',
-      );
+    if (state.confirmed && !results) throw new Error(t('search.errors.unexecuted'));
     const awaitingConfirmation = Boolean(state.proposal && !state.confirmed);
     if (awaitingConfirmation) {
       answer.question = null;
-      answer.reply =
-        'Vérifiez ces critères, puis confirmez pour lancer la recherche. Vous pouvez les corriger dans votre message.';
+      answer.reply = t('search.confirmation.required');
     }
     state.question = answer.question;
     if (answer.question) {
@@ -465,27 +469,25 @@ export async function runSearchAgent(
         (option) => !['__free__', '__unknown__'].includes(option.value),
       );
       answer.question.options.push(
-        { label: 'Saisir ma réponse', value: '__free__' },
-        { label: 'Je ne sais pas', value: '__unknown__' },
+        { label: t('search.actions.typeAnswer'), value: '__free__' },
+        { label: t('search.actions.unknown'), value: '__unknown__' },
       );
     }
     state.history.push({
       role: 'assistant',
-      content: JSON.stringify({ ...answer, summary: summary(state.proposal) }),
+      content: JSON.stringify({ ...answer, summary: summary(state.proposal, t) }),
     });
     return {
       ...empty,
       ...answer,
       notice: [...warnings].join(' '),
       state: await seal(state, env.OPENAI_API_KEY),
-      summary: summary(state.proposal),
-      actions: awaitingConfirmation ? [{ id: 'confirm', label: 'Confirmer et chercher' }] : [],
+      summary: summary(state.proposal, t),
+      actions: awaitingConfirmation ? [{ id: 'confirm', label: t('search.actions.confirm') }] : [],
       results,
       reviews,
       mode: 'agent',
     };
   }
-  throw new Error(
-    'Limite de recherche atteinte. Précisez votre demande ; aucune recherche supplémentaire n’a été lancée.',
-  );
+  throw new Error(t('search.errors.searchLimit'));
 }

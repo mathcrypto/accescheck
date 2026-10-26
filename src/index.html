@@ -1,34 +1,31 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{common.language}}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#ffffff" />
-    <meta
-      name="description"
-      content="Décrivez vos besoins, confirmez vos critères et préparez votre rendez-vous médical."
-    />
-    <title>AccèsCheck · Préparer votre rendez-vous</title>
+    <meta name="description" content="{{home.meta.description}}" />
+    <title>{{home.meta.title}}</title>
     <style>
       /*PAGE_STYLE*/
     </style>
   </head>
   <body class="home">
-    <a class="skip" href="#recherche">Aller à la recherche</a>
+    <a class="skip" href="#recherche">{{home.skip}}</a>
     <div class="ambient" aria-hidden="true"><canvas id="asciiFlow"></canvas></div>
     <!--SITE_HEADER-->
     <main id="main">
       <section class="intro" aria-labelledby="introTitle">
         <figure class="intro-photo">
           <img
-            src="data:image/jpeg;base64,/*HOSPITAL_IMAGE*/"
-            alt="Façade vitrée d’un hôpital derrière des branches d’arbres."
+            src="/*HOSPITAL_IMAGE*/"
+            alt="{{home.photo.alt}}"
             width="1800"
             height="1200"
             fetchpriority="high"
           />
           <figcaption class="photo-credit">
-            Photo d’illustration ·
+            {{home.photo.credit}}
             <a
               href="https://unsplash.com/photos/modern-hospital-building-with-trees-in-foreground-aYvI1HC7wM0"
               target="_blank"
@@ -39,73 +36,67 @@
         </figure>
         <div class="intro-copy flow-protected">
           <div>
-            <p class="eyebrow">Avant votre rendez-vous</p>
-            <h1 id="introTitle">Trouvez un cabinet adapté à vos besoins.</h1>
+            <p class="eyebrow">{{home.hero.eyebrow}}</p>
+            <h1 id="introTitle">{{home.hero.title}}</h1>
           </div>
           <div class="intro-description">
-            <p>
-              Décrivez vos besoins d’accès. Comparez les informations des cabinets et préparez les
-              questions à leur poser.
-            </p>
+            <p>{{home.hero.description}}</p>
             <a class="intro-link" href="#recherche"
-              >Décrire mes besoins <span aria-hidden="true">↓</span></a
+              >{{common.nav.describe}} <span aria-hidden="true">↓</span></a
             >
-            <p>Votre profil d’accès se crée directement à partir de cette conversation.</p>
+            <p>{{home.hero.profileNote}}</p>
           </div>
         </div>
       </section>
-      <section
-        id="recherche"
-        class="search-stage"
-        aria-label="Chat de recherche de cabinet"
-        tabindex="-1"
-      >
+      <section id="recherche" class="search-stage" aria-label="{{home.chat.region}}" tabindex="-1">
         <div id="searchPanel" class="search-panel flow-protected">
-          <h2 class="search-intro" id="chatTitle">
-            De quoi avez-vous besoin pour votre rendez-vous ?
-          </h2>
-          <section id="profileSaved" class="profile-inline" hidden aria-label="Profil enregistré">
-            <strong>Vos besoins sont déjà là.</strong>
+          <h2 class="search-intro" id="chatTitle">{{home.chat.title}}</h2>
+          <section
+            id="profileSaved"
+            class="profile-inline"
+            hidden
+            aria-label="{{home.profile.savedLabel}}"
+          >
+            <strong>{{home.profile.savedTitle}}</strong>
             <p id="profileSavedSummary"></p>
-            <button id="reuseProfile" class="text-button" type="button">Utiliser mon profil</button>
-            <a href="/profil">Consulter ou supprimer mon profil</a>
+            <button id="reuseProfile" class="text-button" type="button">
+              {{home.profile.use}}
+            </button>
+            <a href="/profil?lang={{common.language}}">{{home.profile.manage}}</a>
           </section>
           <details id="chatFold" class="chat-fold">
-            <summary id="chatFoldSummary" hidden>Conversation de recherche</summary>
+            <summary id="chatFoldSummary" hidden>{{home.chat.history}}</summary>
             <div
               id="chatHistory"
               class="chat-history"
               tabindex="0"
               role="region"
-              aria-label="Conversation de recherche"
+              aria-label="{{home.chat.history}}"
             >
-              <div id="thread" class="thread" role="log" aria-label="Échanges"></div>
+              <div id="thread" class="thread" role="log" aria-label="{{home.chat.thread}}"></div>
               <div id="agentActivity" class="agent-activity" hidden>
                 <span class="agent-mark" aria-hidden="true"><!--AGENT_MARK--></span>
                 <span id="activityText" role="status" aria-live="polite" aria-atomic="true"></span>
-                <button id="stopSearch" class="text-button" type="button">Interrompre</button>
+                <button id="stopSearch" class="text-button" type="button">
+                  {{home.chat.stop}}
+                </button>
               </div>
             </div>
           </details>
           <form id="descriptionForm">
-            <label class="sr-only" for="description">Votre message</label>
+            <label class="sr-only" for="description">{{home.chat.message}}</label>
             <div class="search-bar">
               <input
                 id="description"
                 name="description"
                 type="text"
                 maxlength="2000"
-                placeholder="Un dentiste à Lyon, une entrée sans marche…"
+                placeholder="{{home.chat.placeholder}}"
                 autocomplete="off"
                 required
                 aria-describedby="descriptionHelp"
               />
-              <button
-                id="local"
-                class="search-arrow"
-                type="submit"
-                aria-label="Envoyer mon message"
-              >
+              <button id="local" class="search-arrow" type="submit" aria-label="{{home.chat.send}}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" /></svg>
               </button>
             </div>
@@ -117,54 +108,43 @@
             hidden
             aria-labelledby="profileOfferTitle"
           >
-            <h3 id="profileOfferTitle">Profil extrait de votre demande</h3>
+            <h3 id="profileOfferTitle">{{home.profile.offerTitle}}</h3>
             <p id="profileOfferSummary"></p>
-            <p class="hint">
-              Corrigez les critères dans le chat avant de les enregistrer si nécessaire.
-            </p>
+            <p class="hint">{{home.profile.correctionHelp}}</p>
             <label class="checkbox"
-              ><input id="profileInlineConsent" type="checkbox" />Je confirme ces besoins et
-              j’accepte de les garder sur cet appareil pendant 30 jours.</label
+              ><input id="profileInlineConsent" type="checkbox" />{{home.profile.consent}}</label
             >
-            <p class="hint">
-              Ce navigateur conserve uniquement les critères et la largeur. Les autres utilisateurs
-              de cet appareil peuvent les voir.
-            </p>
+            <p class="hint">{{home.profile.privacy}}</p>
             <button id="saveInlineProfile" class="text-button" type="button" disabled>
-              Enregistrer mon profil d’accès
+              {{home.profile.save}}
             </button>
             <p id="profileInlineStatus" class="hint" role="status"></p>
           </section>
           <div class="chat-controls">
             <div class="chat-controls-start">
-              <button id="clear" class="text-button" type="button">Tout effacer</button>
+              <button id="clear" class="text-button" type="button">{{home.actions.clear}}</button>
               <label class="checkbox vision-toggle"
-                ><input id="visionMode" type="checkbox" /><span>Texte agrandi</span></label
+                ><input id="visionMode" type="checkbox" /><span
+                  >{{home.actions.largerText}}</span
+                ></label
               >
-              <button id="readPage" class="text-button" type="button">Lire la page</button>
+              <button id="readPage" class="text-button" type="button">{{home.actions.read}}</button>
             </div>
             <details class="ai-option">
-              <summary>Assistance OpenAI</summary>
-              <p id="descriptionHelp" class="privacy">
-                La recherche locale reste disponible. Avec votre accord, les messages de besoins et,
-                pour « Lire la page », le texte visible à résumer sont transmis à OpenAI. Aucun
-                historique de conversation n’est conservé. Seuls les critères du profil peuvent être
-                gardés sur cet appareil, après un accord distinct. Ne donnez pas votre nom ni vos
-                coordonnées.
-              </p>
+              <summary>{{home.assistance.title}}</summary>
+              <p id="descriptionHelp" class="privacy">{{home.assistance.privacy}}</p>
               <label class="checkbox"
-                ><input id="consent" type="checkbox" />J’accepte l’envoi de ma demande, du lieu et
-                du contexte de cette conversation à OpenAI.</label
+                ><input id="consent" type="checkbox" />{{home.assistance.consent}}</label
               >
               <label class="checkbox"
-                ><input id="reviewConsent" type="checkbox" disabled />Enrichir les trois premières
-                fiches avec des avis publics (OpenAI).</label
+                ><input
+                  id="reviewConsent"
+                  type="checkbox"
+                  disabled
+                />{{home.assistance.reviewsConsent}}</label
               >
-              <p class="hint">
-                Seule l’identité publique du cabinet est utilisée. Les fiches suivantes sont
-                enrichies à la demande.
-              </p>
-              <p id="aiStatus" class="hint">Vérification de l’agent…</p>
+              <p class="hint">{{home.assistance.reviewsHelp}}</p>
+              <p id="aiStatus" class="hint">{{home.assistance.checking}}</p>
             </details>
           </div>
           <section
@@ -174,32 +154,29 @@
             hidden
           >
             <div class="results-heading">
-              <p class="results-kicker">Résultats · hors conversation</p>
-              <h2 id="resultsTitle" tabindex="-1">Les informations pour votre visite</h2>
+              <p class="results-kicker">{{home.results.eyebrow}}</p>
+              <h2 id="resultsTitle" tabindex="-1">{{home.results.title}}</h2>
               <div id="resultsCriteria" class="results-criteria chat-recap" hidden></div>
-              <div id="resultsSummary">Vos critères d’abord. La proximité ensuite.</div>
+              <div id="resultsSummary">{{home.results.priority}}</div>
             </div>
             <div id="resultStatus"></div>
             <div id="results" aria-busy="false"></div>
             <div id="pagination" class="actions"></div>
-            <p id="dataset" class="footnote">
-              Sources : Accès Libre pour les cabinets ; IGN pour les adresses. Les faits déclarés
-              restent visibles avec leur provenance.
-            </p>
+            <p id="dataset" class="footnote">{{home.results.provenance}}</p>
           </section>
         </div>
       </section>
     </main>
     <footer class="footer flow-protected">
       <span class="footer-sources"
-        >Sources&nbsp;:
+        >{{common.sources}}
         <a href="https://acceslibre.beta.gouv.fr/" target="_blank" rel="noopener noreferrer"
           >Accès Libre</a
         >
         ·
         <a href="https://www.doctolib.fr/" target="_blank" rel="noopener noreferrer">Doctolib</a>
       </span>
-      <a href="/#recherche">Chercher un cabinet</a>
+      <a href="/?lang={{common.language}}#recherche">{{home.footer.search}}</a>
     </footer>
     <script>
       /*PAGE_SCRIPT*/

@@ -1,5 +1,5 @@
 import { criteria, evidenceState } from './core.mjs';
-import { locale } from './i18n.js';
+import { locale, lang, t } from './i18n.js';
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -15,28 +15,25 @@ function sourceLink(label, value, hosts) {
     link.href = url.href;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.setAttribute('aria-label', label + ' (nouvel onglet)');
+    link.setAttribute('aria-label', t('results.newTab', { label }));
     return link;
   } catch {
     return null;
   }
 }
 function factText(field, key) {
-  if (!field || field.value === null || field.value === undefined) return 'Inconnu';
-  return key === 'width' ? field.value + ' cm' : field.value ? 'Oui' : 'Non';
+  if (!field || field.value === null || field.value === undefined) return t('results.unknown');
+  return key === 'width' ? field.value + ' cm' : t(field.value ? 'results.yes' : 'results.no');
 }
 function stateLabel(field) {
-  return (
-    {
-      declared: 'Déclaré',
-      unknown: 'Inconnu',
-      stale: 'Ancien · à confirmer',
-      contradictory: 'Contradictoire · à confirmer',
-      photo: 'Appuyé par une photo',
-      patient: 'Confirmé par des patients',
-    }[evidenceState(field)] || 'Inconnu'
-  );
+  const state = evidenceState(field);
+  return t(`results.${['stale', 'contradictory'].includes(state) ? 'evidence' : 'trust'}.${state}`);
 }
+const specialtyKeys = {
+  'Médecin généraliste': 'generalPractitioner',
+  'Dentiste, chirurgien dentiste': 'dentist',
+  Kinésithérapeute: 'physiotherapist',
+};
 export function practiceCard(practice, origin = null, notes = []) {
   const article = element('article', 'practice-card');
   article.dataset.practice = practice.id;
@@ -45,7 +42,15 @@ export function practiceCard(practice, origin = null, notes = []) {
   const identity = element('div');
   identity.append(
     element('h3', '', practice.name),
-    element('p', 'specialty', practice.specialty + ' · Cabinet ou établissement'),
+    element(
+      'p',
+      'specialty',
+      (Object.hasOwn(specialtyKeys, practice.specialty)
+        ? t(`results.specialties.${specialtyKeys[practice.specialty]}`)
+        : practice.specialty) +
+        ' · ' +
+        t('results.practiceType'),
+    ),
   );
   header.append(
     identity,
@@ -58,10 +63,10 @@ export function practiceCard(practice, origin = null, notes = []) {
             ? 'pending'
             : 'declared'),
       !practice.checks?.length
-        ? 'Accès non évalué'
+        ? t('results.status.none')
         : practice.needsConfirmation || notes.length
-          ? 'À confirmer'
-          : 'Critères documentés',
+          ? t('results.status.pending')
+          : t('results.status.declared'),
     ),
   );
   const location = element('div', 'practice-location');
@@ -71,30 +76,26 @@ export function practiceCard(practice, origin = null, notes = []) {
       'p',
       'distance',
       practice.distanceKm === null || practice.distanceKm === undefined
-        ? 'Distance non calculée'
-        : practice.distanceKm.toLocaleString(locale, { maximumFractionDigits: 1 }) +
-            ' km de votre adresse' +
-            (origin?.approximate ? ' · depuis le centre du lieu choisi' : ''),
+        ? t('results.distanceUnknown')
+        : t('results.distance', {
+            distance: practice.distanceKm.toLocaleString(locale, { maximumFractionDigits: 1 }),
+          }) + (origin?.approximate ? ' · ' + t('results.approximateOrigin') : ''),
     ),
   );
   article.append(header, location);
   const facts = element('ul', 'facts');
   const highlights = element('ul', 'facts fact-highlights');
   for (const check of practice.checks || []) {
-    const label = criteria[check.key].label + ' : ' + factText({ value: check.value }, check.key);
-    const trust = {
-      unknown: 'Inconnu',
-      declared: 'Déclaré',
-      stale: 'Ancien',
-      contradictory: 'Contradictoire',
-      photo: 'Appuyé par une photo',
-      patient: 'Confirmé par des patients',
-    }[check.state];
+    const label = t(`criteria.${check.key}`) + ' : ' + factText({ value: check.value }, check.key);
+    const trust = t(`results.trust.${check.state}`);
     highlights.append(
       element(
         'li',
         check.fit,
-        label + ' · ' + trust + (check.fit === 'unknown' ? ' · À confirmer' : ''),
+        label +
+          ' · ' +
+          trust +
+          (check.fit === 'unknown' ? ' · ' + t('results.status.pending') : ''),
       ),
     );
     facts.append(
@@ -104,68 +105,50 @@ export function practiceCard(practice, origin = null, notes = []) {
         label +
           ' · ' +
           trust +
-          (check.fit === 'unknown' ? ' · À confirmer' : '') +
+          (check.fit === 'unknown' ? ' · ' + t('results.status.pending') : '') +
           ' · ' +
           (check.source || 'Accès Libre') +
           (check.date
             ? ' · ' + new Date(check.date).toLocaleDateString(locale)
-            : ' · date non renseignée'),
+            : ' · ' + t('results.dateUnknown')),
       ),
     );
   }
   for (const question of notes) {
-    const text = question + ' : non documenté · à confirmer auprès du cabinet';
+    const text = t('results.noteUnknown', { question });
     facts.append(element('li', 'unknown', text));
   }
   if (!practice.checks?.length && !notes.length)
-    facts.append(
-      element(
-        'li',
-        'unknown',
-        'Aucun besoin d’accès comparé. Consultez les informations déclarées avant votre visite.',
-      ),
-    );
+    facts.append(element('li', 'unknown', t('results.emptyChecks')));
   article.append(highlights);
   const details = element('details');
   details.append(
-    element(
-      'summary',
-      '',
-      notes.length ? 'Détails · besoins à confirmer' : 'Détails et provenance',
-    ),
-    element('p', 'hint', 'Identité individuelle non vérifiée.'),
+    element('summary', '', notes.length ? t('results.detailsNeeds') : t('results.details')),
+    element('p', 'hint', t('results.identityUnknown')),
     facts,
   );
   const allFacts = element('dl');
   for (const [key, field] of Object.entries(practice.evidence || {})) {
     allFacts.append(
-      element('dt', '', criteria[key]?.label || key),
+      element('dt', '', criteria[key] ? t(`criteria.${key}`) : key),
       element('dd', '', factText(field, key) + ' · ' + stateLabel(field)),
     );
   }
   details.append(
     allFacts,
-    element(
-      'p',
-      '',
-      'Source : ' +
-        (practice.source || 'Accès Libre') +
-        '. Les dates absentes restent non renseignées. Une déclaration n’est pas une garantie d’accès.',
-    ),
-    element(
-      'p',
-      '',
-      'Inscription RPPS : non vérifiée. Secteur, tarifs et Carte Vitale : non renseignés dans cette source. Aucune note globale n’est calculée.',
-    ),
+    element('p', '', t('results.source', { source: practice.source || 'Accès Libre' })),
+    element('p', '', t('results.registration')),
   );
   article.append(details);
   const links = element('div', 'card-links');
-  const source = sourceLink('Fiche Accès Libre ↗', practice.sourceUrl, ['acceslibre.beta.gouv.fr']);
+  const source = sourceLink(t('results.links.accessible'), practice.sourceUrl, [
+    'acceslibre.beta.gouv.fr',
+  ]);
   if (source) {
     source.textContent = 'Accès Libre ↗';
     links.append(source);
   }
-  const booking = sourceLink('Fiche Doctolib ↗', practice.doctolibUrl, [
+  const booking = sourceLink(t('results.links.doctolib'), practice.doctolibUrl, [
     'doctolib.fr',
     'www.doctolib.fr',
   ]);
@@ -181,29 +164,17 @@ export function practiceCard(practice, origin = null, notes = []) {
         .filter(Boolean)
         .join(' '),
     );
-    const lookup = sourceLink('Chercher sur Doctolib ↗', search.href, ['www.google.com']);
-    lookup.setAttribute(
-      'aria-label',
-      'Chercher la fiche Doctolib de ce cabinet sur Google (nouvel onglet)',
-    );
+    const lookup = sourceLink(t('results.links.lookup'), search.href, ['www.google.com']);
+    lookup.setAttribute('aria-label', t('results.links.lookupLabel'));
     links.append(lookup);
-    details.append(
-      element(
-        'p',
-        'hint',
-        'Aucun profil Doctolib dans la source : le lien cherche la fiche via Google, sans garantie.',
-      ),
-    );
+    details.append(element('p', 'hint', t('results.links.lookupHelp')));
   }
-  const companion = element('a', 'card-action', 'Préparer ↗');
-  companion.title = 'Préparer l’échange';
-  companion.href = '/consultation?practice=' + encodeURIComponent(practice.id);
+  const companion = element('a', 'card-action', t('results.links.prepare'));
+  companion.title = t('results.links.prepareTitle');
+  companion.href = '/consultation?practice=' + encodeURIComponent(practice.id) + '&lang=' + lang;
   companion.target = '_blank';
   companion.rel = 'noopener noreferrer';
-  companion.setAttribute(
-    'aria-label',
-    'Préparer l’échange (nouvel onglet, votre recherche reste ouverte)',
-  );
+  companion.setAttribute('aria-label', t('results.links.prepareLabel'));
   links.append(companion);
   article.append(links);
   return article;

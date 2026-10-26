@@ -1,5 +1,7 @@
 # Cohérence des pages et langues
 
+La traduction repose désormais sur [des clés sémantiques i18next et des fichiers JSON FR/EN](i18n.md), avec un rendu localisé dès la réponse initiale et une photo mise en cache séparément.
+
 L’accueil et ses résultats, `/profil` et `/consultation` utilisent le même menu, la même marque et le même favicon. Le profil intégré n’affiche plus de numéro de variante. Les textes de confidentialité distinguent la conversation non conservée des critères enregistrés volontairement sur cet appareil.
 
 Le sélecteur FR/EN est disponible sur les trois pages. Une langue explicite dans l’URL prime sur la préférence mémorisée ; les liens internes anglais la transmettent même si le navigateur refuse le stockage. Changer de langue pendant une consultation contenant des messages ou notes utilise le même avertissement de sortie que les autres liens : annuler conserve le travail, confirmer efface la session.

@@ -5,8 +5,7 @@ import {
   saveProfile,
   profileDescription,
 } from './profile-core.mjs';
-import { criteria } from './core.mjs';
-import { translate } from './i18n.js';
+import { t } from './i18n.js';
 const $ = (id) => document.getElementById(id);
 let candidate = null;
 let stored = null;
@@ -29,9 +28,11 @@ function refresh() {
   $('profileSaved').hidden = !stored;
   if (stored)
     $('profileSavedSummary').textContent =
-      (stored.fictional ? 'EXEMPLE FICTIF · ' : '') +
-      stored.keys.map((key) => criteria[key].label).join(' · ') +
-      (stored.minWidth !== null ? ` · Passage ≥ ${stored.minWidth} cm` : '');
+      (stored.fictional ? t('profile.fictionalPrefix') : '') +
+      stored.keys.map((key) => t(`criteria.${key}`)).join(' · ') +
+      (stored.minWidth !== null
+        ? ' · ' + t('profile.summaryWidth', { width: stored.minWidth })
+        : '');
 }
 export function offerProfile(value, revision = draftRevision) {
   candidate = null;
@@ -47,9 +48,11 @@ export function offerProfile(value, revision = draftRevision) {
       fictional: fictionalContext,
     });
     $('profileOfferSummary').textContent =
-      (candidate.fictional ? 'EXEMPLE FICTIF · ' : '') +
-      candidate.keys.map((key) => criteria[key].label).join(' · ') +
-      (candidate.minWidth !== null ? ` · Passage ≥ ${candidate.minWidth} cm` : '');
+      (candidate.fictional ? t('profile.fictionalPrefix') : '') +
+      candidate.keys.map((key) => t(`criteria.${key}`)).join(' · ') +
+      (candidate.minWidth !== null
+        ? ' · ' + t('profile.summaryWidth', { width: candidate.minWidth })
+        : '');
     $('profileOffer').hidden = false;
   } catch {
     /* An incomplete proposal is not a reusable profile. */
@@ -62,31 +65,27 @@ $('saveInlineProfile').addEventListener('click', () => {
   try {
     if (!candidate) return;
     saveProfile(localStorage, candidate, $('profileInlineConsent').checked);
-    $('profileInlineStatus').textContent =
-      'Critères enregistrés pour 30 jours. La conversation et le lieu ne sont pas conservés.';
+    $('profileInlineStatus').textContent = t('profile.status.saved');
     $('profileInlineConsent').checked = false;
     $('saveInlineProfile').disabled = true;
     refresh();
   } catch {
-    $('profileInlineStatus').textContent =
-      'Ce navigateur refuse l’enregistrement du profil. Votre recherche reste utilisable.';
+    $('profileInlineStatus').textContent = t('profile.status.saveFailed');
   }
 });
 $('reuseProfile').addEventListener('click', () => {
   refresh();
   if (!stored) return;
   if ($('description').value.trim()) {
-    $('chatStatus').textContent =
-      'Votre message en cours est conservé. Affichez-le ou effacez-le avant de reprendre le profil.';
+    $('chatStatus').textContent = t('profile.status.draft');
     return;
   }
   draftRevision++;
   fictionalContext ||= stored.fictional;
   offerProfile(null);
-  $('description').value = translate(profileDescription(stored)).replaceAll('\n', ' ');
+  $('description').value = profileDescription(stored, t).replaceAll('\n', ' ');
   $('description').focus();
-  $('chatStatus').textContent =
-    'Profil préparé, sans envoi. Vérifiez votre accord OpenAI avant d’envoyer la demande.';
+  $('chatStatus').textContent = t('profile.status.prepared');
 });
 window.addEventListener('storage', (event) => {
   if (event.key === profileKey || event.key === null) refresh();
