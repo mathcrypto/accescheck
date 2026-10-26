@@ -31,6 +31,7 @@ export default defineConfig([
       'src/search-results.js',
       'src/review-cards.js',
       'src/home.js',
+      'src/i18n.js',
       'src/ambient.js',
       'scripts/live-reload-client.js',
       'prototype/client.js',

@@ -44,3 +44,12 @@ test('an incomplete or failed provider reply is an error, so the page is read in
     ),
   );
 });
+test('an English page summary is requested in English', async () => {
+  let sent;
+  await summarizePage({ text: 'Page', consent: true, lang: 'en' }, env, async (url, options) => {
+    sent = JSON.parse(options.body);
+    return reply('Summary.');
+  });
+  assert.match(sent.instructions, /anglais/);
+  await assert.rejects(summarizePage({ text: 'Page', consent: true, lang: 'de' }, env, () => {}));
+});

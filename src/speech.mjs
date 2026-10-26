@@ -35,10 +35,11 @@ export async function generateSpeech(
   )
     return fail('Vitesse de lecture invalide.', 400);
 
+  const english = body.lang === 'en';
   try {
     const audio = await edgeSynthesize(body.text.trim(), {
-      voice: speechConfig(env).edgeVoice,
-      lang: 'fr-FR',
+      voice: english ? 'en-GB-SoniaNeural' : speechConfig(env).edgeVoice,
+      lang: english ? 'en-GB' : 'fr-FR',
     });
     return new Response(audio, {
       headers: {

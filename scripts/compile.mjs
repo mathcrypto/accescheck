@@ -19,7 +19,7 @@ async function page(templatePath, entryPoint, stylePath) {
     .replace(
       '<!--HOME_CONTROLS-->',
       templatePath === 'src/index.html'
-        ? '<button id="pauseMotion" type="button" aria-pressed="false">Mettre les animations en pause</button>'
+        ? '<button id="pauseMotion" type="button" aria-pressed="false">Mettre les animations en pause</button><button id="langSwitch" type="button"></button>'
         : '',
     );
   template = template

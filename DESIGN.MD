@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Help someone compare declared access information before a medical appointment, then communicate during the visit. Keep the name **AccèsCheck**. Write interface text in French, using direct sentences that explain the next action.
+Help someone compare declared access information before a medical appointment, then communicate during the visit. Keep the name **AccèsCheck**. Write interface text in French, using direct sentences that explain the next action. The home page also offers English through the menu's language switch: add each new French phrase to the dictionary in `src/i18n.js`.
 
 ## Visual language
 

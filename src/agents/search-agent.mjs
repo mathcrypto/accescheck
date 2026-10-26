@@ -243,6 +243,7 @@ export async function runSearchAgent(
     proposal: state.proposal,
     confirmed: state.confirmed,
     reviewConsent: input.reviewConsent === true,
+    language: input.lang || 'fr',
     results: state.lastResults,
     professions: catalog.specialties,
     criteria,
