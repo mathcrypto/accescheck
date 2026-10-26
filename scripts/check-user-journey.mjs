@@ -173,7 +173,7 @@ try {
       await page.locator('#notes').fill('Autres notes fictives.');
       await page.locator('.brand').click();
       await page.locator('#confirmLeave').click();
-      await page.waitForURL(base + '/');
+      await page.waitForURL(base + '/?lang=fr');
       await page.goBack();
       assert.equal(await page.locator('#notes').inputValue(), '');
       assert.equal(await page.locator('#transcript .message').count(), 0);
