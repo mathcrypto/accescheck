@@ -132,6 +132,7 @@ try {
   assert.equal(await page.locator('#consent').isChecked(), false);
   assert.equal(report.posts.length, 1, 'Reusing a profile never sends a request');
   await page.locator('#profileSaved a').click();
+  await page.waitForLoadState();
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
   assert.match(await page.locator('#savedProfileFacts').innerText(), /Step-free entrance/);
   assert.match(
@@ -151,6 +152,7 @@ try {
 
   await menu(page);
   await page.locator('.menu a').filter({ hasText: 'During the visit' }).click();
+  await page.waitForLoadState();
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
   await page.locator('[data-phrase]').first().click();
   assert.equal(await page.locator('#reply').inputValue(), 'Could you repeat that, please?');
@@ -196,6 +198,7 @@ try {
   assert.equal(await blocked.locator('html').getAttribute('lang'), 'en');
   await menu(blocked);
   await blocked.locator('.menu a').filter({ hasText: 'My access profile' }).click();
+  await blocked.waitForLoadState();
   assert.equal(await blocked.locator('html').getAttribute('lang'), 'en');
   assert.match(
     await blocked.locator('#profileStatus').innerText(),
