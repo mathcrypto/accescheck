@@ -37,7 +37,7 @@ AccèsCheck never calls a place accessible. Each fact carries its status: _decla
 2. The agent asks only for what is missing, checks the place with IGN (the national mapping agency), and shows a recap. Nothing runs until you click **Confirm and search**.
 3. Results open with the **best match**. Chips show each criterion as declared, unknown or a known obstacle. The first three cards get a review sentiment from public sources.
 4. **Search on Doctolib** finds the practice's booking page. **Prepare** opens the consultation page in a new tab, where you can follow the visit in large print, type replies and have them read aloud.
-5. **Read the page** asks OpenAI for a short spoken summary and reads it. **Larger text** enlarges messages, buttons and cards. The menu switches between French and English.
+5. **Read the page** asks OpenAI for a short spoken summary and reads it. **Larger text** enlarges messages, buttons and cards. The shared menu switches between French and English on the home, profile and consultation pages. Your own words remain unchanged; speech recognition remains French.
 
 ## Agent architecture
 

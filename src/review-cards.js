@@ -1,4 +1,5 @@
 import { safeReviewUrl } from './review-core.mjs';
+import { locale } from './i18n.js';
 const node = (tag, text = '', className = '') => {
   const item = document.createElement(tag);
   item.textContent = text;
@@ -19,7 +20,7 @@ function render(content, data) {
   content.replaceChildren(
     node(
       'p',
-      `${data.coverage.matchedSources} source(s) attribuable(s) · ${data.coverage.distinctSites} site(s). Consulté le ${new Date(data.checkedAt).toLocaleDateString('fr-FR')}. Collecte partielle.`,
+      `${data.coverage.matchedSources} source(s) attribuable(s) · ${data.coverage.distinctSites} site(s). Consulté le ${new Date(data.checkedAt).toLocaleDateString(locale)}. Collecte partielle.`,
       'hint',
     ),
   );

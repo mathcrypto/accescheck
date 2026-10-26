@@ -32,6 +32,18 @@ test('draft carries fiction and correction provenance', () => {
   assert.ok(d.includes('Vous · écrit'));
   assert.equal(buildDraft([]), '');
 });
+test('draft translates its own labels without rewriting the conversation', () => {
+  const text = 'Vous · écrit, corrigé : Non. Mon récapitulatif.';
+  const seen = [];
+  const draft = buildDraft([{ speaker: 'patient', text, demo: true, corrected: true }], (value) => {
+    seen.push(value);
+    return 'EN[' + value + ']';
+  });
+  assert.ok(draft.startsWith('EN[EXEMPLE FICTIF'));
+  assert.ok(draft.includes('EN[Vous · écrit · corrigé]'));
+  assert.ok(draft.endsWith('\n' + text));
+  assert.ok(!seen.some((value) => value.includes(text)));
+});
 test('message validation rejects empty or excessive input', () => {
   for (const text of ['', '   ', null, 'a'.repeat(4001)])
     assert.throws(() => validateMessage(text));

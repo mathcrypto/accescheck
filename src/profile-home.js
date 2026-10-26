@@ -6,6 +6,7 @@ import {
   profileDescription,
 } from './profile-core.mjs';
 import { criteria } from './core.mjs';
+import { translate } from './i18n.js';
 const $ = (id) => document.getElementById(id);
 let candidate = null;
 let stored = null;
@@ -82,7 +83,7 @@ $('reuseProfile').addEventListener('click', () => {
   draftRevision++;
   fictionalContext ||= stored.fictional;
   offerProfile(null);
-  $('description').value = profileDescription(stored);
+  $('description').value = translate(profileDescription(stored)).replaceAll('\n', ' ');
   $('description').focus();
   $('chatStatus').textContent =
     'Profil préparé, sans envoi. Vérifiez votre accord OpenAI avant d’envoyer la demande.';

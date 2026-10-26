@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Help someone compare declared access information before a medical appointment, then communicate during the visit. Keep the name **AccèsCheck**. Write interface text in French, using direct sentences that explain the next action. The home page also offers English through the menu's language switch: add each new French phrase to the dictionary in `src/i18n.js`.
+Help someone compare declared access information before a medical appointment, then communicate during the visit. Keep the name **AccèsCheck**. Write interface text in French, using direct sentences that explain the next action. Home, profile and consultation also offer English through the shared menu's language switch: add each new French phrase to `src/i18n.js` or the consultation dictionary in `src/consultation-i18n.js`. Preserve the selected interface language through navigation. Never translate the user's words, transcriptions, editable notes or practice identities. Synthetic labels and draft headings may be translated. Changing language must respect the consultation's leave warning.
 
 ## Visual language
 
