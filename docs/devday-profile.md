@@ -30,4 +30,14 @@ Le profil n’est pas chiffré par l’application. Toute personne utilisant ce 
 - `python3 -m unittest discover -s test -p 'test_*.py'`.
 - `scripts/check-profile.mjs` : demande ordinaire dans le chat, correction invalidant l’offre précédente, sauvegarde explicite, rechargement, reprise sans envoi, absence de conversation persistée, suppression, corruption, expiration, stockage refusé, gestion vide et stockée aux largeurs 320/390/768/1440.
 
-Les réponses de l’agent sont contrôlées dans les tests. Aucun appel IA payant ni test sur des données de santé réelles n’est exécuté.
+Les réponses de l’agent sont contrôlées dans les tests automatiques. Ces tests ne font aucun appel IA payant et n’utilisent pas de données de santé réelles.
+
+## Vérification ponctuelle avec l’IA réelle
+
+Le 26 octobre 2026, après l’autorisation explicite de l’utilisateur « testa avec L’IA réelle », un navigateur isolé a exécuté le vrai parcours sur le lien VPN HTTPS, sans interception API, IGN ou fournisseur. Le modèle effectivement configuré était `gpt-5.4-mini` ; aucune clé ni configuration n’a été modifiée. Les avis ont été désactivés. Aucune recherche confirmée, réservation ou lecture audio n’a été lancée.
+
+Avec une demande synthétique de dentiste à Lyon 3e, rayon 3 km, entrée et trajet sans marche et passage minimal de 90 cm, l’agent a produit les trois critères `stepFree`, `route`, `width` et la largeur 90. La proposition observée a demandé environ 4,2 secondes lors du parcours complet. Une correction dans la même conversation a conservé les critères et remplacé 90 par 95 cm en environ 3,2 secondes. Chaque sauvegarde a requis un nouvel accord local. Le rechargement et la reprise ont restauré les 95 cm sans envoyer de demande ni accepter le consentement IA. La page de gestion a affiché puis supprimé ce profil synthétique.
+
+Trois requêtes POST `/api/chat` ont été émises au total : un premier essai dont le lecteur de corps streaming CDP a échoué malgré une réponse de l’application correcte, puis les deux demandes du parcours complet observées via le DOM. Ce nombre ne représente pas le nombre d’appels au modèle : une requête chat peut en effectuer plusieurs, et leur nombre n’a pas été mesuré. Aucun autre POST n’a été émis et aucune erreur JavaScript n’a été observée.
+
+Le rapport et les captures sans données personnelles réelles de ce scénario fictif sont conservés localement dans `output/profile-live/`. Ils ne contiennent ni clé, en-tête d’autorisation, état signé ou historique brut. Le profil créé pendant le test a été effacé et le navigateur isolé fermé. Ce contrôle ponctuel ne constitue pas une évaluation générale du modèle ; aucun appel live n’est intégré à `npm test`.
