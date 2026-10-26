@@ -6,6 +6,7 @@ import { collectReviewSources } from './agents/review-sources.mjs';
 import { summarizePage } from './agents/page-summary.mjs';
 import { chatResponse } from './agents/chat-response.mjs';
 import { findPractices, geocode } from './discovery.mjs';
+import { extractAccessProfile } from './agents/profile-extract.mjs';
 
 const headers = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -76,25 +77,32 @@ async function importRequest(request, env, path) {
   return json({ error: 'Route introuvable.' }, 404);
 }
 
-export function createHandler({ home, consultationPage }) {
+export function createHandler({ home, consultationPage, profilePage }) {
   return {
     async fetch(request, env = {}) {
       const url = new URL(request.url);
       try {
         if (
           request.method === 'GET' &&
-          ['/', '/consultation', '/consultation/'].includes(url.pathname)
+          ['/', '/consultation', '/consultation/', '/profil', '/profil/'].includes(url.pathname)
         )
-          return new Response(url.pathname === '/' ? home : consultationPage, {
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'no-store',
-              'X-Content-Type-Options': 'nosniff',
-              'Referrer-Policy': 'no-referrer',
-              'Content-Security-Policy':
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+          return new Response(
+            url.pathname === '/'
+              ? home
+              : url.pathname.startsWith('/profil')
+                ? profilePage
+                : consultationPage,
+            {
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-store',
+                'X-Content-Type-Options': 'nosniff',
+                'Referrer-Policy': 'no-referrer',
+                'Content-Security-Policy':
+                  "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+              },
             },
-          });
+          );
         if (
           request.method === 'GET' &&
           ['/assistant', '/assistant/', '/cabinets', '/cabinets/'].includes(url.pathname)
@@ -131,6 +139,8 @@ export function createHandler({ home, consultationPage }) {
           return json({ ok: true, version: '0.5.0' });
         if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
         const body = await readJson(request, url.pathname === '/api/chat' ? 64000 : 12000);
+        if (url.pathname === '/api/profile-extract')
+          return json(await extractAccessProfile(body, env, fetch, request.signal));
         if (url.pathname === '/api/locations')
           return json({ locations: await geocode(body.query) });
         if (url.pathname === '/api/reviews')

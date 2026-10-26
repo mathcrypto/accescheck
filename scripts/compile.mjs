@@ -7,6 +7,7 @@ const sharedHeader = await readFile('src/header.html', 'utf8');
 const routes = {
   'src/index.html': '/',
   'src/consultation.html': '/consultation',
+  'src/profile.html': '/profil',
 };
 
 async function page(templatePath, entryPoint, stylePath) {
@@ -51,6 +52,7 @@ const pages = {
     (await readFile('src/assets/hospital.jpg')).toString('base64'),
   ),
   consultationPage: await page('src/consultation.html', 'src/companion.js', 'src/consultation.css'),
+  profilePage: await page('src/profile.html', 'src/profile.js', 'src/profile.css'),
 };
 await mkdir('worker', { recursive: true });
 await build({

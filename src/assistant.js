@@ -5,6 +5,7 @@ import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
 import { practiceCard } from './search-results.js';
 import { collectVisibleText, speakEdge, stopSpeechPlayback } from './page-speech.js';
+import { offerProfile } from './profile-home.js';
 let readController = null;
 const $ = (id) => document.getElementById(id);
 let state = null;
@@ -47,6 +48,7 @@ function setResultsMode(on, summary = '') {
   }
 }
 function clearResults() {
+  offerProfile(null);
   setResultsMode(false);
   $('resultsSection').hidden = true;
   $('results').replaceChildren();
@@ -150,6 +152,8 @@ async function ask(input, choiceLabel = '', echo = true) {
     });
     if (active !== controller) return;
     state = data.state;
+    if (data.mode === 'agent' && state?.proposal?.needs && !data.question)
+      offerProfile(state.proposal.needs);
     for (const review of data.reviews || []) reviewCache.set(review.practiceId, review);
     while (reviewCache.size > 50) reviewCache.delete(reviewCache.keys().next().value);
     directoryMode = data.mode === 'directory';

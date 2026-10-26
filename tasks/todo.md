@@ -9,3 +9,10 @@
 - [x] search-agent (priorité ajoutée) : boucle Responses, géocodage structuré et preuves géographiques, consentement/contextes, budgets/arrêt, évaluations.
 - [x] review-sentiment : tendances attribuées, contradictions/doublons, insuffisance et classement.
 - [x] Parcours final navigateur : 320, 390, 768, 1440 px, clavier, erreurs, annulation, consultation.
+
+## Variante DevDay : profil réutilisable
+
+- [x] Extraction depuis la demande, relecture/modification du profil et sauvegarde volontaire.
+- [x] Réutilisation volontaire dans recherche, effacement et expiration.
+- [x] Tests frontières/consentement/erreurs, npm check, navigateur quatre tailles.
+- [x] Revue, commit isolé et lien preview vérifié.

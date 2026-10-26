@@ -127,3 +127,11 @@ Le smoke test final a trouvé le chat et les avis déployés mais `available:fal
 ### Alignement du modèle utilisateur
 
 Branche `fix/preferred-api-model` : conserver `gpt-5.4-mini`, faire respecter `OPENAI_MODEL` par le moteur principal en l’absence de surcharge dédiée, et aligner les exemples et valeurs par défaut. Tests contrôlés uniquement ; aucun appel de génération payant et aucune modification de la session Codex ni du fichier `.env` utilisateur.
+
+## Variante DevDay : profil réutilisable
+
+Demande explicite utilisateur du 26 octobre : extraction de profil par agent depuis la requête et conservation pour une prochaine fois. Variante isolée depuis dc36c32. Stocker uniquement critères structurés confirmés et largeur, localement sur cet appareil après accord distinct, jamais conversation, diagnostic, identité, adresse ou état signé. Effacement, modification, expiration et réutilisation explicites ; aucun envoi au fournisseur avant consentement IA. Préserver recherche et validation de son état côté serveur. Démo fictive indépendante des appels payants.
+
+Livré : offre de sauvegarde depuis le chat agent, page de proposition/édition, reprise explicite sans envoi, profil fictif conservant son marqueur, expiration à 30 jours puis purge à la lecture, suppression et erreurs de stockage. Le rechargement reprojette les seuls critères validés ; l’extraction verrouille l’édition et la sauvegarde pour éviter un ancien profil enregistré pendant un calcul.
+
+Vérifié : 175 tests Node, 4 tests Python, format/lint/build/artefact. Chromium couvre les quatre tailles, la sauvegarde/reprise après rechargement, l’absence de conversation persistée, le retrait de consentement avec réponse tardive, l’effacement, la corruption, l’expiration et le stockage refusé. Fournisseur simulé uniquement. Revue/commit/lien final restent à la coordination principale.

@@ -1330,3 +1330,30 @@ body.home.vision .ai-option > summary {
     scroll-padding-bottom: 96px;
   }
 }
+
+.profile-inline {
+  margin: 16px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--paper);
+  text-align: left;
+}
+.profile-inline h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.profile-inline p {
+  margin: 8px 0;
+}
+.profile-inline button,
+.profile-inline a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 16px;
+}
+.profile-inline a {
+  color: var(--ink);
+  font-size: 14px;
+}
