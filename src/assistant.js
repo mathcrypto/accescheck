@@ -1,4 +1,5 @@
 import { renderMessage, renderRecap } from './chat-content.js';
+import { lang } from './i18n.js';
 import { rankByReputation } from './review-core.mjs';
 import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
@@ -134,6 +135,7 @@ async function ask(input, choiceLabel = '', echo = true) {
         ...input,
         state,
         consent: $('consent').checked,
+        lang,
         reviewConsent: $('reviewConsent').checked,
       }),
       signal: active.signal,
@@ -290,7 +292,7 @@ $('readPage').onclick = async () => {
         const response = await fetch('/api/page-summary', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, consent: true }),
+          body: JSON.stringify({ text, consent: true, lang }),
           signal: readController.signal,
         });
         const data = await response.json();

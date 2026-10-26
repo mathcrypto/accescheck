@@ -1,4 +1,5 @@
 /** Microsoft Edge neural TTS helpers (via /api/speech). */
+import { lang } from './i18n.js';
 
 export function collectVisibleText(selectors, { maxChars = 4000, cardLimit = 3 } = {}) {
   const parts = [];
@@ -49,7 +50,7 @@ export async function speakEdge(text, { signal, onEnd, onError } = {}) {
   const response = await fetch('/api/speech', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-    body: JSON.stringify({ text: value, consent: true, provider: 'edge' }),
+    body: JSON.stringify({ text: value, consent: true, provider: 'edge', lang }),
     signal,
   });
   if (!response.ok) {

@@ -1,5 +1,13 @@
+import { applyLanguage, lang, setLang } from './i18n.js';
 import './assistant.js';
 import './ambient.js';
+
+applyLanguage();
+const langButton = document.getElementById('langSwitch');
+// Each label is written in its own language so it stays readable whatever the current one.
+langButton.textContent = lang === 'en' ? 'Français' : 'English';
+langButton.lang = lang === 'en' ? 'fr' : 'en';
+langButton.addEventListener('click', () => setLang(lang === 'en' ? 'fr' : 'en'));
 
 const motionButton = document.getElementById('pauseMotion');
 motionButton.addEventListener('click', () => {

@@ -14,7 +14,7 @@ export async function summarizePage(body, env = {}, transport = fetch, signal) {
     !body ||
     typeof body !== 'object' ||
     Array.isArray(body) ||
-    Object.keys(body).some((key) => !['text', 'consent'].includes(key))
+    Object.keys(body).some((key) => !['text', 'consent', 'lang'].includes(key))
   )
     throw new Error('Seul le texte visible de la page peut être résumé.');
   if (body.consent !== true)
@@ -25,6 +25,8 @@ export async function summarizePage(body, env = {}, transport = fetch, signal) {
     throw Object.assign(new Error('Résumé indisponible. La lecture complète reste possible.'), {
       status: 503,
     });
+  if (body.lang !== undefined && !['fr', 'en'].includes(body.lang))
+    throw new Error('Langue de résumé invalide.');
   const model = env.OPENAI_MODEL || defaultModel;
   let response;
   try {
@@ -39,7 +41,10 @@ export async function summarizePage(body, env = {}, transport = fetch, signal) {
       body: JSON.stringify({
         model,
         store: false,
-        instructions,
+        instructions:
+          body.lang === 'en'
+            ? instructions + '\nRédige le résumé en anglais, en gardant les noms propres.'
+            : instructions,
         input: [{ role: 'user', content: [{ type: 'input_text', text: body.text.trim() }] }],
         ...(model.startsWith('gpt-4') ? {} : { reasoning: { effort: 'low' } }),
         max_output_tokens: 1200,

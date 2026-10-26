@@ -1127,6 +1127,9 @@ summary,
   color: white;
   background: var(--ink);
 }
+html[lang='en'] #results[data-page='1'] > .practice-card:first-child::before {
+  content: 'Best match · access, distance, reviews';
+}
 .chat-choices:has(button:disabled) {
   display: none;
 }
