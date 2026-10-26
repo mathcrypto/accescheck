@@ -1,5 +1,4 @@
 /** Microsoft Edge neural TTS helpers (via /api/speech). */
-import { lang } from './i18n.js';
 
 export function collectVisibleText(selectors, { maxChars = 4000, cardLimit = 3 } = {}) {
   const parts = [];
@@ -32,6 +31,7 @@ let remoteUrl = null;
 export function stopSpeechPlayback() {
   try {
     remoteAudio?.pause();
+    window.speechSynthesis?.cancel();
   } catch {}
   remoteAudio = null;
   if (remoteUrl) {
@@ -43,17 +43,25 @@ export function stopSpeechPlayback() {
 }
 
 /** Microsoft Edge neural TTS. Clicking Lire is the user action that sends text to Microsoft. */
-export async function speakEdge(text, { signal, onEnd, onError } = {}) {
+export async function speakEdge(text, { signal, onEnd, onError, lang = 'fr' } = {}) {
   const value = String(text || '').trim();
   if (!value) throw new Error('Aucun texte à lire.');
   stopSpeechPlayback();
-  const response = await fetch('/api/speech', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-    body: JSON.stringify({ text: value, consent: true, provider: 'edge', lang }),
-    signal,
-  });
-  if (!response.ok) {
+  let response;
+  try {
+    response = await fetch('/api/speech', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
+      body: JSON.stringify({ text: value, consent: true, provider: 'edge', lang }),
+      signal,
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') throw error;
+  }
+  // Microsoft's service can refuse the hosting servers: fall back to the browser's own voice.
+  if (!response?.ok) {
+    if (window.speechSynthesis && window.SpeechSynthesisUtterance)
+      return speakBrowser(value, { lang, onEnd, onError });
     let message = 'La lecture vocale est indisponible.';
     try {
       const data = await response.json();
@@ -77,4 +85,17 @@ export async function speakEdge(text, { signal, onEnd, onError } = {}) {
   };
   await audio.play();
   return audio;
+}
+
+function speakBrowser(text, { lang, onEnd, onError }) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang === 'en' ? 'en-GB' : 'fr-FR';
+  utterance.voice =
+    speechSynthesis
+      .getVoices()
+      .find((voice) => voice.lang.startsWith(lang === 'en' ? 'en' : 'fr')) || null;
+  utterance.onend = () => onEnd?.();
+  utterance.onerror = () => onError?.();
+  speechSynthesis.speak(utterance);
+  return utterance;
 }
