@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readFile } from 'node:fs/promises';
+import { copyFile, readFile, unlink } from 'node:fs/promises';
 
 const exec = promisify(execFile);
 const client = await readFile(new URL('./live-reload-client.js', import.meta.url), 'utf8');
@@ -11,6 +11,7 @@ const client = await readFile(new URL('./live-reload-client.js', import.meta.url
 export async function createLiveReload(root = fileURLToPath(new URL('..', import.meta.url))) {
   let worker,
     version = Date.now(),
+    previousDevWorker = '',
     timer,
     building = false,
     queued = false,
@@ -18,10 +19,18 @@ export async function createLiveReload(root = fileURLToPath(new URL('..', import
   const clients = new Set();
   const build = async () => {
     await exec(process.execPath, [join(root, 'scripts/compile.mjs')], { cwd: root });
-    const next = await import(
-      pathToFileURL(join(root, 'worker/index.js')).href + '?dev=' + ++version
-    );
+    // Copy to a fresh file path instead of ?dev= query busting: Node cannot resolve
+    // bare imports like node-edge-tts from a module URL that includes a query string.
+    const nextPath = join(root, 'worker', `index.dev.${++version}.js`);
+    await copyFile(join(root, 'worker/index.js'), nextPath);
+    const next = await import(pathToFileURL(nextPath).href);
     worker = next.default;
+    if (previousDevWorker && previousDevWorker !== nextPath) {
+      try {
+        await unlink(previousDevWorker);
+      } catch {}
+    }
+    previousDevWorker = nextPath;
   };
   await build();
   const rebuild = async () => {
