@@ -303,6 +303,7 @@ $('readPage').onclick = async () => {
       $('chatStatus').textContent = '';
     }
     await speakEdge(spoken, {
+      lang,
       signal: readController.signal,
       onEnd: () => setPageReading(false),
       onError: () => setPageReading(false),
