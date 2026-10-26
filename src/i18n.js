@@ -22,13 +22,14 @@ export function setLang(value) {
 }
 
 const en = {
-  'Garder mes besoins pour la prochaine fois →': 'Keep my needs for next time →',
+  'Votre profil d’accès se crée directement à partir de cette conversation.':
+    'Your access profile is created directly from this conversation.',
   'Vos besoins sont déjà là.': 'Your access needs are already here.',
   'Utiliser mon profil': 'Use my profile',
-  'Modifier ou supprimer mon profil': 'Edit or delete my profile',
+  'Consulter ou supprimer mon profil': 'View or delete my profile',
   'Profil enregistré': 'Saved profile',
   'Mon profil d’accès': 'My access profile',
-  'Ne plus tout réexpliquer ?': 'Keep your access needs for next time?',
+  'Profil extrait de votre demande': 'Profile extracted from your request',
   'Corrigez les critères dans le chat avant de les enregistrer si nécessaire.':
     'Correct the criteria in the chat before saving them if necessary.',
   'Je confirme ces besoins et j’accepte de les garder sur cet appareil pendant 30 jours.':

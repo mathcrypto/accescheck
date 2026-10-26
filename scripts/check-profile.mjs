@@ -23,18 +23,70 @@ try {
   const page = await context.newPage();
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('request', (request) => {
-    if (request.method() === 'POST') posts.push(request.url());
+    if (request.method() === 'POST') posts.push(new URL(request.url()).pathname);
   });
-  await page.goto(base + '/profil');
-  assert.equal(await page.locator('#saveProfile').isDisabled(), true);
-  await page.locator('#profileExample').click();
-  assert.equal(posts.length, 0);
-  assert.match(await page.locator('#profileMode').innerText(), /FICTIF/);
-  await page.locator('#profileSaveConsent').check();
-  await page.locator('#saveProfile').click();
-  await page.locator('#savedProfile').waitFor();
-  const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), profileKey);
-  assert.deepEqual(Object.keys(saved).sort(), [
+  await page.route('**/api/ai-config', (route) => route.fulfill({ json: { available: true } }));
+  let nextWidth = 90;
+  const chatRequests = [];
+  await page.route('**/api/chat', async (route) => {
+    chatRequests.push(route.request().postDataJSON());
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const value = {
+      mode: 'agent',
+      reply: 'Vérifiez ces critères.',
+      summary: `Entrée sans marche, passage de ${nextWidth} cm`,
+      state: {
+        proposal: { needs: { keys: ['stepFree', 'route', 'width'], minWidth: nextWidth } },
+        history: ['Conversation privée à ne pas conserver'],
+        signature: 'signed-state-not-a-profile',
+      },
+      question: null,
+      actions: [],
+      results: null,
+    };
+    await route.fulfill({
+      contentType: 'application/x-ndjson',
+      body: JSON.stringify({ type: 'result', value }) + '\n',
+    });
+  });
+  await page.goto(base + '/#recherche');
+  await page.locator('details.ai-option > summary').click();
+  await page.locator('#consent').check();
+  await page
+    .locator('#description')
+    .fill('Je cherche un dentiste à Lyon. Entrée sans marche et passage de 90 cm.');
+  await page.locator('#descriptionForm button[type="submit"]').click();
+  await page.locator('#profileOffer').waitFor();
+  assert.match(await page.locator('#profileOfferTitle').innerText(), /extrait de votre demande/);
+  assert.match(await page.locator('#profileOfferSummary').innerText(), /90 cm/);
+  assert.equal(await page.locator('#saveInlineProfile').isDisabled(), true);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.locator('#profileOffer').scrollIntoViewIfNeeded();
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
+      false,
+    );
+    const bounds = await page.locator('#profileOffer').boundingBox();
+    assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width + 1);
+    await page.screenshot({ path: `${output}/chat-offer-${width}.png` });
+  }
+  assert.equal(await page.evaluate((key) => localStorage.getItem(key), profileKey), null);
+  await page.locator('#profileInlineConsent').check();
+  await page.locator('#description').fill('Correction : il me faut 95 cm de passage.');
+  assert.equal(await page.locator('#profileOffer').isHidden(), true);
+  assert.equal(await page.locator('#profileInlineConsent').isChecked(), false);
+  nextWidth = 95;
+  await page.locator('#descriptionForm button[type="submit"]').click();
+  assert.equal(await page.locator('#profileOffer').isHidden(), true);
+  await page.locator('#profileOffer').waitFor();
+  assert.match(await page.locator('#profileOfferSummary').innerText(), /95 cm/);
+  assert.equal(await page.locator('#saveInlineProfile').isDisabled(), true);
+  await page.locator('#profileInlineConsent').check();
+  await page.locator('#saveInlineProfile').click();
+  const stored = await page.evaluate((key) => localStorage.getItem(key), profileKey);
+  const profile = JSON.parse(stored);
+  assert.deepEqual(Object.keys(profile).sort(), [
     'expiresAt',
     'fictional',
     'keys',
@@ -42,16 +94,41 @@ try {
     'savedAt',
     'version',
   ]);
-  assert.equal(saved.fictional, true);
-  assert.equal(saved.minWidth, 90);
-  assert.equal(saved.expiresAt - saved.savedAt, 30 * 24 * 60 * 60 * 1000);
-  assert.equal(await page.locator('#profileRequest').inputValue(), '');
+  assert.equal(profile.minWidth, 95);
+  assert.equal(profile.expiresAt - profile.savedAt, 30 * 24 * 60 * 60 * 1000);
+  assert.doesNotMatch(
+    stored,
+    /dentiste|Lyon|Correction|Conversation|signature|signed-state|history|proposal/,
+  );
+  assert.equal(chatRequests.length, 2);
+  assert.ok(chatRequests.every((request) => request.consent === true));
+  checks.push(
+    'Normal request creates profile through the existing agent; correction immediately invalidates the old offer and requires fresh confirmation',
+  );
+
   await page.reload();
-  assert.match(await page.locator('#savedProfileSummary').innerText(), /FICTIF/);
-  assert.equal(await page.locator('#profileWidth').inputValue(), '90');
-  assert.equal(await page.locator('#profileCriteria [value="stepFree"]').isChecked(), true);
-  assert.deepEqual(errors, []);
-  assert.equal(await page.locator('#profileSaveConsent').isChecked(), false);
+  await page.locator('#reuseProfile').waitFor();
+  assert.equal(await page.locator('#consent').isChecked(), false);
+  await page.locator('#description').fill('Mon texte en cours');
+  await page.locator('#reuseProfile').click();
+  assert.equal(await page.locator('#description').inputValue(), 'Mon texte en cours');
+  await page.locator('#description').fill('');
+  await page.locator('#reuseProfile').click();
+  assert.match(await page.locator('#description').inputValue(), /95 cm/);
+  assert.equal(posts.length, 2, 'Reuse cannot send the prepared request');
+  assert.equal(await page.locator('#consent').isChecked(), false);
+  checks.push(
+    'Reload restores the saved criteria; reuse preserves a draft and never sends or accepts AI consent',
+  );
+
+  await page.goto(base + '/profil');
+  assert.equal(
+    await page.locator('textarea, input, form').count(),
+    0,
+    'Management must not duplicate extraction or manual profiling',
+  );
+  assert.match(await page.locator('#savedProfileFacts').innerText(), /Entrée sans marche/);
+  assert.match(await page.locator('#savedProfileWidth').innerText(), /95 cm/);
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     assert.equal(
@@ -61,127 +138,42 @@ try {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: `${output}/${width}.png`, fullPage: true });
   }
-  checks.push(
-    'Fictional demonstration without requests; opt-in storage, exact allowlist, 30-day lifetime, reload and four responsive sizes',
-  );
-
-  await page.goto(base + '/#recherche');
-  await page.locator('#reuseProfile').waitFor();
-  await page.locator('#description').fill('Mon message en cours');
-  await page.locator('#reuseProfile').click();
-  assert.equal(await page.locator('#description').inputValue(), 'Mon message en cours');
-  await page.locator('#description').fill('');
-  await page.locator('#reuseProfile').click();
-  assert.match(await page.locator('#description').inputValue(), /fictif/);
-  assert.match(await page.locator('#description').inputValue(), /90 cm/);
-  assert.equal(posts.length, 0);
-  assert.equal(await page.locator('#consent').isChecked(), false);
-  checks.push(
-    'Reuse prepares composer without sending or accepting AI consent; existing draft is preserved',
-  );
-
-  await page.route('**/api/chat', (route) =>
-    route.fulfill({
-      contentType: 'application/x-ndjson',
-      body:
-        JSON.stringify({
-          type: 'result',
-          value: {
-            mode: 'agent',
-            reply: 'Vérifiez ces critères.',
-            summary: 'Entrée sans marche',
-            state: { proposal: { needs: { keys: ['stepFree', 'route'], minWidth: null } } },
-            question: null,
-            actions: [],
-            results: null,
-          },
-        }) + '\n',
-    }),
-  );
-  await page.locator('#description').fill('Ma demande privée de test, ne pas conserver');
-  await page.locator('#descriptionForm button[type="submit"]').click();
-  await page.locator('#profileOffer').waitFor();
-  assert.equal(await page.locator('#saveInlineProfile').isDisabled(), true);
-  await page.locator('#profileInlineConsent').check();
-  await page.locator('#saveInlineProfile').click();
-  const inline = await page.evaluate((key) => localStorage.getItem(key), profileKey);
-  assert.doesNotMatch(inline, /demande privée|proposal|signature|history|lieu/);
-  assert.equal(JSON.parse(inline).fictional, false);
-  assert.deepEqual(JSON.parse(inline).keys, ['stepFree', 'route']);
-  await page.locator('#clear').click();
-  assert.equal(await page.locator('#profileOffer').isHidden(), true);
-  await page.reload();
-  await page.locator('#reuseProfile').waitFor();
-  await page.locator('#reuseProfile').click();
-  assert.match(await page.locator('#description').inputValue(), /Entrée sans marche/);
-  checks.push(
-    'Normal agent query offers a structured profile; save excludes conversation/state; clear invalidates offer but saved profile remains available',
-  );
-
-  await page.goto(base + '/profil');
   await page.locator('#deleteProfile').click();
   assert.equal(await page.evaluate((key) => localStorage.getItem(key), profileKey), null);
-  assert.equal(await page.locator('#savedProfile').isHidden(), true);
-  await page.evaluate((key) => localStorage.setItem(key, '{bad json'), profileKey);
-  await page.reload();
-  assert.equal(await page.evaluate((key) => localStorage.getItem(key), profileKey), null);
-  checks.push('Delete and corrupt storage are handled without persisting private content');
-  await page.evaluate(
-    (key) =>
-      localStorage.setItem(
-        key,
-        JSON.stringify({
-          keys: ['stepFree'],
-          minWidth: null,
-          fictional: false,
-          version: 1,
-          savedAt: 1,
-          expiresAt: 1 + 30 * 24 * 60 * 60 * 1000,
-        }),
-      ),
-    profileKey,
+  assert.equal(await page.locator('#profileEmpty').isVisible(), true);
+  assert.equal(
+    await page.locator('#describeNeeds').evaluate((element) => element === document.activeElement),
+    true,
   );
-  await page.reload();
-  assert.equal(await page.evaluate((key) => localStorage.getItem(key), profileKey), null);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
+      false,
+    );
+    await page.screenshot({ path: `${output}/empty-${width}.png`, fullPage: true });
+  }
+  checks.push(
+    'Management shows saved criteria without a second form, deletes with predictable keyboard focus, and handles saved/empty layouts at four widths',
+  );
 
-  await page.route('**/api/profile-extract', (route) =>
-    route.fulfill({ json: { keys: ['hearing'], minWidth: null, requiresConfirmation: true } }),
-  );
-  await page.locator('#profileRequest').fill('Je suis malentendant');
-  assert.equal(await page.locator('#extractProfile').isDisabled(), true);
-  await page.locator('#profileAiConsent').check();
-  await page.locator('#extractProfile').click();
-  await page.waitForFunction(() =>
-    document.getElementById('profileStatus').textContent.includes('Proposition prête'),
-  );
-  assert.equal(await page.locator('#profileCriteria [value="hearing"]').isChecked(), true);
-  assert.equal(await page.evaluate((key) => localStorage.getItem(key), profileKey), null);
-  assert.equal(await page.locator('#saveProfile').isDisabled(), true);
-  await page.locator('#profileSaveConsent').check();
-  await page.locator('#profileCriteria [value="stepFree"]').check();
-  assert.equal(await page.locator('#saveProfile').isDisabled(), true);
-  checks.push(
-    'Controlled agent extraction requires separate AI consent and fresh storage confirmation after edits',
-  );
-  await page.unroute('**/api/profile-extract');
-  await page.route('**/api/profile-extract', async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    await route.fulfill({ json: { keys: ['width'], minWidth: 95, requiresConfirmation: true } });
-  });
-  await page.locator('#extractProfile').click();
-  await page.locator('#stopProfile').waitFor();
-  assert.equal(await page.locator('#profileCriteria [value="stepFree"]').isDisabled(), true);
-  assert.equal(await page.locator('#profileSaveConsent').isDisabled(), true);
-  assert.equal(await page.locator('#saveProfile').isDisabled(), true);
-  await page.locator('#profileAiConsent').uncheck();
-  await page.waitForTimeout(800);
-  assert.equal(await page.locator('#profileCriteria [value="stepFree"]').isChecked(), true);
-  assert.equal(await page.locator('#profileCriteria [value="width"]').isChecked(), false);
-  assert.match(await page.locator('#profileStatus').innerText(), /interrompue/);
-  assert.equal(await page.evaluate((key) => localStorage.getItem(key), profileKey), null);
-  checks.push(
-    'Expired records are purged; pending extraction locks edits and save, consent withdrawal ignores its late response',
-  );
+  for (const raw of [
+    '{bad json',
+    JSON.stringify({
+      keys: ['stepFree'],
+      minWidth: null,
+      fictional: false,
+      version: 1,
+      savedAt: 1,
+      expiresAt: 1 + 30 * 24 * 60 * 60 * 1000,
+    }),
+  ]) {
+    await page.evaluate(([key, value]) => localStorage.setItem(key, value), [profileKey, raw]);
+    await page.reload();
+    assert.equal(await page.evaluate((key) => localStorage.getItem(key), profileKey), null);
+    assert.equal(await page.locator('#profileEmpty').isVisible(), true);
+  }
+  checks.push('Corrupt and expired records are removed without crashes');
 
   const blocked = await browser.newContext();
   await blocked.addInitScript(() =>
@@ -194,13 +186,12 @@ try {
   const blockedPage = await blocked.newPage();
   blockedPage.on('pageerror', (error) => errors.push(error.message));
   await blockedPage.goto(base + '/profil');
-  await blockedPage.locator('#profileExample').click();
-  await blockedPage.locator('#profileSaveConsent').check();
-  await blockedPage.locator('#saveProfile').click();
-  assert.match(await blockedPage.locator('#saveProfileStatus').innerText(), /refuse/);
+  assert.match(await blockedPage.locator('#profileStatus').innerText(), /indisponible/);
+  assert.equal(await blockedPage.locator('#describeNeeds').isVisible(), true);
   await blocked.close();
-  checks.push('Unavailable storage reports an error without breaking the page');
+  checks.push('Storage refused leaves the ordinary needs-description entry usable');
   assert.deepEqual(errors, []);
+  assert.ok(posts.every((path) => path === '/api/chat'));
   await writeFile(
     `${output}/report.json`,
     JSON.stringify({ base, checks, errors, posts: posts.length }, null, 2),

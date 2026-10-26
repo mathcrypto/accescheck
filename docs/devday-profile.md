@@ -1,35 +1,33 @@
-# Variante DevDay : ne plus tout réexpliquer
+# Variante DevDay : le profil extrait de la demande
 
-Branche `feature/devday-profile`, page `/profil`. L’utilisateur a explicitement demandé le 26 octobre 2026 de proposer un profil depuis la requête et de le conserver pour une prochaine recherche. Cette variante constitue une exception volontaire et bornée à la règle habituelle de non-persistance des besoins.
+Branche `feature/devday-profile`. Le point d’entrée unique est `/#recherche`, la conversation **Décrire mes besoins**. `/profil` sert uniquement à consulter et supprimer le profil déjà enregistré, ou à revenir dans la conversation pour le modifier.
 
-## Depuis la recherche habituelle
+L’utilisateur a explicitement demandé le 26 octobre 2026 de conserver un profil pour une prochaine recherche, puis précisé que l’agent doit l’extraire directement depuis cette conversation. Cette variante constitue une exception volontaire et bornée à la règle habituelle de non-persistance des besoins.
 
-Après que l’agent a formulé une proposition structurée, le chat offre de garder les critères d’accès. Le patient peut les faire corriger dans sa demande avant de confirmer l’accord de conservation. Seuls les identifiants de critères et une largeur éventuelle sont extraits de la proposition ; l’état signé, le texte de conversation, les lieux et les questions libres ne sont jamais conservés.
+## Un seul parcours
 
-Au prochain chargement, « Utiliser mon profil » prépare le champ de recherche avec une description déterministe. Il ne l’envoie pas et ne coche pas le consentement OpenAI. Un message en cours n’est pas écrasé. La profession, le lieu et la confirmation de recherche restent à préciser comme avant.
+1. Le patient décrit sa recherche et ses besoins dans le chat habituel, avec le consentement OpenAI existant.
+2. L’agent de recherche produit déjà une proposition structurée. Le navigateur en extrait uniquement les identifiants de critères d’accès et une largeur éventuelle, sans appel IA supplémentaire. L’offre **Profil extrait de votre demande** montre exactement ces valeurs.
+3. Le patient peut écrire une correction dans le chat. Dès qu’il commence cette correction, l’ancienne offre et son accord de stockage sont invalidés. Après la nouvelle réponse, il relit et donne un accord distinct avant **Enregistrer mon profil d’accès**.
+4. Au prochain chargement, **Utiliser mon profil** prépare le champ de recherche sans l’envoyer ni accepter le consentement OpenAI. Un brouillon en cours n’est pas écrasé. La profession, le lieu et la confirmation de recherche restent à préciser comme avant.
+5. **Consulter ou supprimer mon profil** ouvre `/profil`. La modification se fait en revenant dans Décrire mes besoins ; cette page ne comporte aucun formulaire d’extraction ou de saisie manuelle des critères.
 
-## Depuis la page du profil
+L’offre est invalidée lors d’une nouvelle demande, d’une correction du texte, de la reprise d’un profil enregistré et de l’effacement de la conversation. La signature et les validations serveur de l’état de recherche sont inchangées. Le navigateur ne conserve jamais cet état signé, l’historique, les questions libres, les lieux ou la demande initiale.
 
-Le patient décrit ses besoins, accepte séparément l’envoi à OpenAI puis clique pour demander une proposition. `/api/profile-extract` réutilise l’agent de besoins existant. Les questions libres du modèle et la demande initiale ne font pas partie du profil. Le patient relit et modifie les critères et la largeur avant un accord distinct de stockage local.
-
-Les contrôles d’édition et de sauvegarde sont désactivés pendant une extraction. Les corrections invalident l’accord de stockage ; aucune nouvelle valeur n’est sauvegardée automatiquement. L’exemple fictif est écrit à l’avance et ne fait aucun appel IA. S’il est enregistré, son marqueur fictif reste conservé et est réintroduit dans la demande de recherche.
+Le formulaire autonome, l’exemple autonome et `/api/profile-extract` ont été supprimés pour éviter de demander au patient de réexpliquer ses besoins ailleurs. `interpretNeeds` et ses usages historiques sont inchangés. Les anciens profils sauvegardés restent compatibles ; ceux issus d’un ancien exemple gardent leur marqueur fictif et ne se font pas passer pour des besoins réels.
 
 ## Conservation
 
-Le navigateur conserve un seul objet versionné avec les critères, la largeur, le marqueur fictif et les dates de conservation. Aucun compte, synchronisation entre appareils, stockage serveur, conversation, nom, diagnostic, adresse ou état signé. L’utilisateur peut modifier le profil ou supprimer son enregistrement.
+Le navigateur conserve un seul objet versionné avec les critères, la largeur, un éventuel marqueur fictif et les dates de conservation. Aucun compte, synchronisation entre appareils, stockage serveur, conversation, nom, diagnostic, adresse ou état signé.
 
-Le profil expire après 30 jours. Il n’est plus réutilisable après cette date et est supprimé à la prochaine lecture/ouverture de l’application : un navigateur fermé ne permet pas d’exécuter une purge en arrière-plan. Les objets corrompus, de durée incohérente ou contenant des champs supplémentaires sont aussi supprimés lors de la lecture. Le refus de stockage par le navigateur est signalé sans bloquer la recherche.
+Le profil expire après 30 jours. Il n’est plus réutilisable après cette date et est supprimé à la prochaine lecture/ouverture de l’application : un navigateur fermé ne permet pas d’exécuter une purge en arrière-plan. Les objets corrompus, de durée incohérente ou contenant des champs supplémentaires sont supprimés à la lecture. Le refus de stockage est signalé sans bloquer la recherche.
 
-Le profil n’est pas chiffré par l’application. Toute personne utilisant ce même navigateur peut le voir ; la page le signale avant l’accord. La conservation est déconseillée sur un appareil partagé. Les noms et coordonnées visibles dans une demande ne sont pas rendus anonymes par cette fonctionnalité ; l’agent existant rejette les motifs usuels de coordonnées avant envoi, sans promesse d’anonymisation générale.
+Le profil n’est pas chiffré par l’application. Toute personne utilisant ce navigateur peut le voir ; le chat le signale avant l’accord de conservation. La conservation est déconseillée sur un appareil partagé.
 
 ## Vérification
 
 - `npm run check` : format, lint, tests, build et validation de l’artefact.
 - `python3 -m unittest discover -s test -p 'test_*.py'`.
-- `scripts/check-profile.mjs` : démonstration sans envoi, stockage explicite et borné, rechargement, reprise sans envoi, conversation non conservée, effacement, corruption, consentements distincts, erreurs de stockage et largeurs 320/390/768/1440.
+- `scripts/check-profile.mjs` : demande ordinaire dans le chat, correction invalidant l’offre précédente, sauvegarde explicite, rechargement, reprise sans envoi, absence de conversation persistée, suppression, corruption, expiration, stockage refusé, gestion vide et stockée aux largeurs 320/390/768/1440.
 
-Les tests utilisent des réponses fournisseur contrôlées. Aucun appel IA payant ni test sur des données de santé réelles n’est exécuté.
-
-## Revue finale
-
-Revue indépendante par un agent non auteur. Parcours complet vérifié aussi sur le lien VPN HTTPS : requête normale contrôlée, consentement local distinct, rechargement, reprise sans envoi et suppression. Le test de conservation détecte une mutation isolée de la limite exacte d’expiration. Aucun appel payant n’a servi à ces vérifications.
+Les réponses de l’agent sont contrôlées dans les tests. Aucun appel IA payant ni test sur des données de santé réelles n’est exécuté.

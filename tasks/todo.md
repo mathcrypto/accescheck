@@ -12,7 +12,7 @@
 
 ## Variante DevDay : profil réutilisable
 
-- [x] Extraction depuis la demande, relecture/modification du profil et sauvegarde volontaire.
-- [x] Réutilisation volontaire dans recherche, effacement et expiration.
+- [x] Extraction depuis Décrire mes besoins uniquement ; correction via le chat et sauvegarde volontaire.
+- [x] Réutilisation volontaire, gestion sans formulaire parallèle, effacement et expiration.
 - [x] Tests frontières/consentement/erreurs, npm check, navigateur quatre tailles.
-- [x] Revue, commit isolé et lien preview vérifié.
+- [x] Revue, commit isolé et lien preview vérifié après recentrage sur le chat.

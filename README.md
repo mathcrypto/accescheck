@@ -75,7 +75,7 @@ Details: [search agent](docs/search-agent.md) · [reviews and reputation](docs/r
 ## Privacy
 
 - Nothing reaches OpenAI before you tick the consent box. Without it, you can still browse the public directory, which interprets none of your text.
-- The server keeps no account, access profile or request log. Your conversation stays in the tab's memory and disappears when you close it. This experimental branch offers an optional, reviewed access profile stored only in this browser for reuse; it contains structured criteria and an optional width, never the conversation or location. It expires after 30 days and is removed at the next read. See [the profile experiment](docs/devday-profile.md) for editing and deletion.
+- The server keeps no account, access profile or request log. Your conversation stays in the tab's memory and disappears when you close it. This experimental branch lets the search agent extract an optional access profile directly from the normal needs conversation, reviewed before storing it only in this browser for reuse; it contains structured criteria and an optional width, never the conversation or location. It expires after 30 days and is removed at the next read. The profile page only shows or deletes it; corrections happen in the same needs conversation. See [the profile experiment](docs/devday-profile.md).
 - The review search sends only the practice's public name and address.
 - Do not type your name or contact details: the chat sends your text as written.
 

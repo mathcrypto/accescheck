@@ -19,7 +19,8 @@ function refresh() {
   if (stored)
     $('profileSavedSummary').textContent =
       (stored.fictional ? 'EXEMPLE FICTIF · ' : '') +
-      stored.keys.map((key) => criteria[key].label).join(' · ');
+      stored.keys.map((key) => criteria[key].label).join(' · ') +
+      (stored.minWidth !== null ? ` · Passage ≥ ${stored.minWidth} cm` : '');
 }
 export function offerProfile(value) {
   candidate = null;
@@ -63,12 +64,14 @@ $('reuseProfile').addEventListener('click', () => {
       'Votre message en cours est conservé. Affichez-le ou effacez-le avant de reprendre le profil.';
     return;
   }
+  offerProfile(null);
   $('description').value = profileDescription(stored);
   $('description').focus();
   $('chatStatus').textContent =
     'Profil préparé, sans envoi. Vérifiez votre accord OpenAI avant d’envoyer la demande.';
 });
 window.addEventListener('storage', (event) => {
-  if (event.key === profileKey) refresh();
+  if (event.key === profileKey || event.key === null) refresh();
 });
+$('description').addEventListener('input', () => offerProfile(null));
 refresh();

@@ -8,7 +8,6 @@ import {
   readProfile,
   profileDescription,
 } from '../src/profile-core.mjs';
-import { extractAccessProfile } from '../src/agents/profile-extract.mjs';
 import { createHandler } from '../src/handler.mjs';
 
 const needs = { keys: ['stepFree', 'width'], minWidth: 90 };
@@ -73,79 +72,23 @@ test('fictional profiles stay fictional and reuse contains no private conversati
   assert.match(profileDescription(needs), /90 cm/);
   assert.match(profileDescription(needs), /profession et le lieu/);
 });
-test('extraction reuses the agent but returns no questions, conversation, diagnosis or provider secrets', async () => {
-  let calls = 0;
-  const provider = async (_url, options) => {
-    calls++;
-    const sent = JSON.parse(options.body);
-    assert.equal(sent.store, false);
-    return Response.json({
-      status: 'completed',
-      output: [
-        {
-          content: [
-            {
-              type: 'output_text',
-              text: JSON.stringify({
-                ...needs,
-                questions: ['Information libre à ne pas conserver'],
-              }),
-            },
-          ],
-        },
-      ],
-    });
-  };
-  await assert.rejects(
-    extractAccessProfile(
-      { description: 'Sans marche', consent: false },
-      { OPENAI_API_KEY: 'secret' },
-      provider,
-    ),
-  );
-  assert.equal(calls, 0);
-  const result = await extractAccessProfile(
-    { description: 'Une entrée sans marche et 90 cm de passage', consent: true },
-    { OPENAI_API_KEY: 'secret' },
-    provider,
-  );
-  assert.deepEqual(result, { ...needs, requiresConfirmation: true });
-  assert.doesNotMatch(JSON.stringify(result), /Information libre|secret/);
-});
-
-test('profile routes preserve origin checks, body bounds and explicit consent', async () => {
+test('profile management is read-only and the separate extraction endpoint does not exist', async () => {
   const handler = createHandler({
     home: 'home',
     consultationPage: 'visit',
     profilePage: 'profile',
   });
-  const page = await handler.fetch(new Request('http://localhost/profil'));
-  assert.equal(await page.text(), 'profile');
-  assert.equal(page.headers.get('cache-control'), 'no-store');
-  const request = (body, origin) =>
+  for (const path of ['/profil', '/profil/']) {
+    const page = await handler.fetch(new Request('http://localhost' + path));
+    assert.equal(await page.text(), 'profile');
+    assert.equal(page.headers.get('cache-control'), 'no-store');
+  }
+  const obsolete = await handler.fetch(
     new Request('http://localhost/api/profile-extract', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(origin ? { Origin: origin } : {}) },
-      body: JSON.stringify(body),
-    });
-  assert.equal(
-    (
-      await handler.fetch(request({ description: 'Sans marche', consent: false }), {
-        OPENAI_API_KEY: 'not-used',
-      })
-    ).status,
-    400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: 'Sans marche', consent: true }),
+    }),
   );
-  assert.equal(
-    (
-      await handler.fetch(
-        request({ description: 'Sans marche', consent: true }, 'https://other.example'),
-      )
-    ).status,
-    403,
-  );
-  assert.equal(
-    (await handler.fetch(request({ description: 'x'.repeat(12000), consent: true }))).status,
-    413,
-  );
+  assert.equal(obsolete.status, 404);
 });

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>AccèsCheck · Mes besoins, une seule fois</title>
+    <title>AccèsCheck · Mon profil d’accès</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 8v48M11 20l42 24M11 44l42-24' stroke='%23bd292e' stroke-width='9'/%3E%3C/svg%3E"
@@ -18,112 +18,52 @@
     <main id="main" tabindex="-1">
       <header class="page-heading">
         <p class="eyebrow">Ne plus tout réexpliquer · Variante 04</p>
-        <h1>Vos besoins, une seule fois.</h1>
+        <h1>Votre profil d’accès.</h1>
         <p>
-          Décrivez ce qui compte pour vous. L’agent propose un profil d’accès que vous vérifiez
-          avant de le garder pour la prochaine visite.
+          L’agent extrait vos besoins directement dans la conversation « Décrire mes besoins ». Vous
+          choisissez ensuite de les conserver depuis le chat pour la prochaine fois.
         </p>
       </header>
-      <div class="workspace">
-        <section aria-labelledby="requestTitle">
-          <p class="step">01 · Votre demande</p>
-          <h2 id="requestTitle">Dites-le avec vos mots.</h2>
-          <form id="profileForm">
-            <label for="profileRequest">Vos besoins d’accès, sans nom ni coordonnées</label>
-            <textarea
-              id="profileRequest"
-              rows="5"
-              maxlength="2000"
-              autocomplete="off"
-              placeholder="Je me déplace en fauteuil. Il me faut une entrée sans marche et un passage de 90 cm…"
-            ></textarea>
-            <p class="hint">
-              L’agent propose des besoins pratiques. Il ne déduit pas de diagnostic.
-            </p>
-            <label class="consent"
-              ><input id="profileAiConsent" type="checkbox" />J’accepte l’envoi de cette demande à
-              OpenAI pour proposer mes critères.</label
-            >
-            <div class="actions">
-              <button id="extractProfile" type="submit" class="primary" disabled>
-                Proposer mon profil</button
-              ><button id="stopProfile" type="button" hidden>Interrompre</button>
-            </div>
-          </form>
-          <button id="profileExample" type="button" class="text-button">
-            Essayer une demande fictive, sans envoi
-          </button>
-          <p id="profileStatus" role="status"></p>
-          <details class="privacy-details">
-            <summary>Ce qui reste privé</summary>
-            <p>
-              La demande est transmise uniquement après votre accord et votre clic. L’application ne
-              conserve ni la demande ni une conversation. Le traitement par OpenAI suit les
-              conditions du fournisseur.
-            </p>
-            <p>
-              Le profil enregistré contient uniquement des critères d’accès et une largeur
-              éventuelle. Aucun nom, lieu, diagnostic ou texte libre n’est conservé.
-            </p>
-          </details>
-        </section>
-        <section aria-labelledby="reviewTitle">
-          <p class="step">02 · À vérifier par vous</p>
-          <h2 id="reviewTitle">Votre profil d’accès.</h2>
-          <p id="profileMode" class="hint">Vous pouvez aussi choisir vos critères directement.</p>
-          <fieldset id="profileCriteria">
-            <legend class="sr-only">Critères du profil à confirmer</legend>
-          </fieldset>
-          <label for="profileWidth" class="field-label"
-            >Largeur de passage minimale mesurée, en cm</label
-          ><input
-            id="profileWidth"
-            type="number"
-            min="40"
-            max="200"
-            inputmode="numeric"
-            placeholder="Je ne sais pas"
-          />
-          <p class="hint">
-            Une largeur inconnue reste inconnue. Aucune mesure n’est déduite du fauteuil.
-          </p>
-          <div class="save-block">
-            <label class="consent"
-              ><input id="profileSaveConsent" type="checkbox" />Je confirme ces critères et
-              j’accepte de les conserver sur cet appareil pendant 30 jours.</label
-            >
-            <p class="hint">
-              Toute personne utilisant ce navigateur pourra voir ce profil. Évitez un appareil
-              partagé. Aucun compte ni synchronisation.
-            </p>
-            <button id="saveProfile" type="button" class="primary" disabled>
-              Enregistrer sur cet appareil
-            </button>
-            <p id="saveProfileStatus" role="status"></p>
-          </div>
-        </section>
-      </div>
+      <section id="profileEmpty" aria-labelledby="emptyTitle">
+        <h2 id="emptyTitle">Votre profil se crée dans la recherche.</h2>
+        <p>
+          Décrivez vos besoins avec vos mots. L’agent vous propose des critères à vérifier, puis un
+          enregistrement facultatif sur cet appareil.
+        </p>
+        <a id="describeNeeds" class="button primary" href="/#recherche">Décrire mes besoins</a>
+      </section>
       <section id="savedProfile" class="saved-profile" aria-labelledby="savedTitle" hidden>
-        <div>
-          <p class="step">03 · La prochaine fois</p>
-          <h2 id="savedTitle">Prêt pour une nouvelle recherche.</h2>
-          <p id="savedProfileSummary"></p>
-          <p id="profileExpiry" class="hint"></p>
-        </div>
+        <p class="step">À partir de votre demande</p>
+        <h2 id="savedTitle">Les besoins que vous avez confirmés.</h2>
+        <p id="profileMode" class="hint"></p>
+        <ul id="savedProfileFacts"></ul>
+        <p id="savedProfileWidth"></p>
+        <p id="profileExpiry" class="hint"></p>
         <div class="actions">
-          <a href="/#recherche" class="button">Ouvrir la recherche</a
-          ><button id="deleteProfile" type="button">Supprimer mon profil</button>
+          <a href="/#recherche" class="button primary">Modifier via Décrire mes besoins</a>
+          <button id="deleteProfile" type="button">Supprimer mon profil</button>
         </div>
         <p class="hint">
-          Sur l’accueil, « Utiliser mon profil » prépare votre demande sans l’envoyer. Le lieu et le
-          professionnel sont redemandés à chaque recherche.
+          Sur l’accueil, « Utiliser mon profil » prépare votre demande sans l’envoyer. Décrivez une
+          correction dans le chat pour obtenir un nouveau profil à confirmer.
         </p>
       </section>
+      <p id="profileStatus" role="status"></p>
+      <aside class="privacy" aria-labelledby="privacyTitle">
+        <h2 id="privacyTitle">Vous gardez la main.</h2>
+        <p>
+          Seuls les critères et la largeur éventuelle sont conservés dans ce navigateur, après votre
+          accord distinct. Ni la demande, ni la conversation, ni le lieu ne sont enregistrés.
+        </p>
+        <p>
+          Le profil expire après 30 jours et est supprimé à la prochaine lecture après expiration.
+          Aucun compte ni synchronisation entre appareils. Les autres utilisateurs de ce navigateur
+          peuvent le voir : évitez un appareil partagé.
+        </p>
+      </aside>
       <footer>
-        <a href="/#recherche">Revenir à la recherche accompagnée</a
-        ><span
-          >Profil d’accès confirmé par vous, sans garantie sur l’accessibilité d’un cabinet.</span
-        >
+        <a href="/#recherche">Revenir à Décrire mes besoins</a
+        ><span>Un profil confirmé ne garantit pas l’accessibilité d’un cabinet.</span>
       </footer>
     </main>
     <script>

@@ -6,7 +6,6 @@ import { collectReviewSources } from './agents/review-sources.mjs';
 import { summarizePage } from './agents/page-summary.mjs';
 import { chatResponse } from './agents/chat-response.mjs';
 import { findPractices, geocode } from './discovery.mjs';
-import { extractAccessProfile } from './agents/profile-extract.mjs';
 
 const headers = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -139,8 +138,6 @@ export function createHandler({ home, consultationPage, profilePage }) {
           return json({ ok: true, version: '0.5.0' });
         if (request.method !== 'POST') return json({ error: 'Route introuvable.' }, 404);
         const body = await readJson(request, url.pathname === '/api/chat' ? 64000 : 12000);
-        if (url.pathname === '/api/profile-extract')
-          return json(await extractAccessProfile(body, env, fetch, request.signal));
         if (url.pathname === '/api/locations')
           return json({ locations: await geocode(body.query) });
         if (url.pathname === '/api/reviews')
