@@ -7,6 +7,7 @@ import {
   supportsCallAudio,
 } from './companion-core.mjs';
 import { collectVisibleText, speakEdge, stopSpeechPlayback } from './page-speech.js';
+import { applyLanguage, lang, translate } from './i18n.js';
 let readController = null;
 const $ = (id) => document.getElementById(id);
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -32,11 +33,11 @@ let sharedStream = null,
   captionFatal = false,
   silentRestarts = 0;
 const status = (text, error = false) => {
-  $('status').textContent = text;
+  $('status').textContent = translate(text);
   $('status').classList.toggle('error', error);
   const feedback = document.querySelector('dialog[open] .dialog-status');
   if (feedback) {
-    feedback.textContent = text;
+    feedback.textContent = translate(text);
     feedback.hidden = !text;
     feedback.classList.toggle('error', error);
   }
@@ -44,7 +45,7 @@ const status = (text, error = false) => {
 function micState(text, active = false) {
   if (sharedStream && text === 'Microphone coupé') text = 'Son d’onglet connecté · en pause';
   $('micText').textContent = text;
-  document.title = active ? '● Sous-titres — AccèsCheck' : 'Mon rendez-vous — AccèsCheck';
+  document.title = translate(active ? '● Sous-titres — AccèsCheck' : 'AccèsCheck — L’échange');
   $('micState').classList.toggle('recording', active);
   $('pauseCaptions').disabled = !active && !starting;
   $('startCaptions').disabled = !Recognition || active || starting || speaking;
@@ -232,7 +233,7 @@ function render() {
     edit.type = 'button';
     edit.dataset.messageId = m.id;
     edit.textContent = 'Corriger';
-    edit.setAttribute('aria-label', 'Corriger : ' + m.text.slice(0, 45));
+    edit.setAttribute('aria-label', translate('Corriger une phrase'));
     edit.onclick = () => {
       editingId = m.id;
       $('editText').value = m.text;
@@ -344,6 +345,7 @@ async function speak(text, { announce = false } = {}) {
   micState('Microphone coupé');
   try {
     await speakEdge(value, {
+      lang,
       onEnd: () => {
         speaking = false;
         setPageReading(false);
@@ -626,7 +628,7 @@ $('speakReply').onclick = async () => {
 document.querySelectorAll('[data-phrase]').forEach(
   (b) =>
     (b.onclick = () => {
-      $('reply').value = b.dataset.phrase;
+      $('reply').value = translate(b.dataset.phrase);
       $('reply').focus();
       status('Phrase préparée. Choisissez « Afficher » ou « Lire ma réponse ».');
     }),
@@ -652,10 +654,16 @@ $('loadDemo').onclick = () => {
   pauseCaptions(false);
   stopSpeech();
   demoActive = true;
-  append('Bonjour. Qu’aimeriez-vous aborder pendant cette consultation ?', 'doctor', true);
-  append('Pouvez-vous parler plus lentement ? Je lis les sous-titres.', 'patient', true);
   append(
-    'Bien sûr. Nous pouvons prendre le temps de lire et de corriger les phrases ensemble.',
+    translate('Bonjour. Qu’aimeriez-vous aborder pendant cette consultation ?'),
+    'doctor',
+    true,
+  );
+  append(translate('Pouvez-vous parler plus lentement ? Je lis les sous-titres.'), 'patient', true);
+  append(
+    translate(
+      'Bien sûr. Nous pouvons prendre le temps de lire et de corriger les phrases ensemble.',
+    ),
     'doctor',
     true,
   );
@@ -743,7 +751,7 @@ document.querySelector('[role=tablist]').onkeydown = (e) => {
   }
 };
 function draft() {
-  const text = buildDraft(messages);
+  const text = buildDraft(messages, translate);
   if (!text) {
     $('notesWarning').textContent =
       'Ajoutez une phrase à la conversation avant de préparer vos notes.';
@@ -790,8 +798,8 @@ $('copyNotes').onclick = async () => {
   }
   try {
     await navigator.clipboard.writeText(
-      'NOTES PERSONNELLES ' +
-        ($('reviewed').checked ? '— relues' : '— NON VALIDÉES') +
+      translate('NOTES PERSONNELLES ') +
+        translate($('reviewed').checked ? '— relues' : '— NON VALIDÉES') +
         '\n\n' +
         $('notes').value,
     );
@@ -804,7 +812,9 @@ $('copyNotes').onclick = async () => {
 };
 $('readGuide').onclick = () =>
   speak(
-    'Vous êtes dans l’échange AccèsCheck. Le bouton Démarrer les sous-titres active l’écoute après votre accord. Dans Votre réponse, écrivez une phrase, puis choisissez Afficher ou Lire ma réponse. Le médecin entend cette voix seulement si l’appareil est près de lui, ou si le son de cette page est partagé dans l’appel. Cette lecture ne décrit pas votre environnement physique.',
+    translate(
+      'Vous êtes dans l’échange AccèsCheck. Le bouton Démarrer les sous-titres active l’écoute après votre accord. Dans Votre réponse, écrivez une phrase, puis choisissez Afficher ou Lire ma réponse. Le médecin entend cette voix seulement si l’appareil est près de lui, ou si le son de cette page est partagé dans l’appel. Cette lecture ne décrit pas votre environnement physique.',
+    ),
   );
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
@@ -819,7 +829,7 @@ window.addEventListener('pagehide', () => {
   $('clearSession').onclick();
 });
 $('supportInfo').textContent = Recognition
-  ? 'Le microphone ne démarre jamais automatiquement. En cas d’indisponibilité, utilisez « Saisir aussi les paroles du soignant ».'
+  ? 'Le microphone ne démarre jamais automatiquement. En cas d’indisponibilité, utilisez « Saisir les paroles du soignant ».'
   : 'Reconnaissance vocale indisponible dans ce navigateur. La saisie manuelle reste utilisable.';
 micState('Microphone coupé');
 refreshSpeechControls();
@@ -980,7 +990,7 @@ $('copyReplyForCall').onclick = async () => {
 updateConnection();
 
 $('quickVoiceTest').onclick = () =>
-  speak('Bonjour. Vous pouvez faire lire vos messages pendant votre rendez-vous.');
+  speak(translate('Bonjour. Vous pouvez faire lire vos messages pendant votre rendez-vous.'));
 
 function setVisionMode(on, announce = true) {
   const enabled = Boolean(on);
@@ -1013,12 +1023,15 @@ $('readPage').onclick = async () => {
         });
   const script =
     text ||
-    'Page AccèsCheck, échange de consultation. Aucun message n’est encore affiché. Démarrez les sous-titres ou écrivez une réponse.';
+    translate(
+      'Page AccèsCheck, échange de consultation. Aucun message n’est encore affiché. Démarrez les sous-titres ou écrivez une réponse.',
+    );
   setPageReading(true);
   speaking = true;
   try {
     readController = new AbortController();
     await speakEdge(script, {
+      lang,
       signal: readController.signal,
       onEnd: () => {
         speaking = false;
@@ -1082,3 +1095,4 @@ window.accescompanionSession = Object.freeze({
   },
   clear: () => $('clearSession').click(),
 });
+applyLanguage();

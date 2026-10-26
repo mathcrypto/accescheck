@@ -4,14 +4,20 @@ export const speakerLabel = (speaker) =>
     doctor: 'Soignant · écrit',
     captured: 'Parole',
   })[speaker] || 'Message';
-export function buildDraft(messages) {
+export function buildDraft(messages, translate = (text) => text) {
   if (!messages.length) return '';
   const demo = messages.some((m) => m.demo);
   return (
-    (demo ? 'EXEMPLE FICTIF — ne pas utiliser comme notes médicales.\n\n' : '') +
-    'BROUILLON DE CONVERSATION — À RELIRE AVEC LE SOIGNANT\nTranscription non vérifiée, sans interprétation ni synthèse médicale.\n\n' +
+    (demo ? translate('EXEMPLE FICTIF — ne pas utiliser comme notes médicales.') + '\n\n' : '') +
+    translate('BROUILLON DE CONVERSATION — À RELIRE AVEC LE SOIGNANT') +
+    '\n' +
+    translate('Transcription non vérifiée, sans interprétation ni synthèse médicale.') +
+    '\n\n' +
     messages
-      .map((m) => `${speakerLabel(m.speaker)}${m.corrected ? ' · corrigé' : ''}\n${m.text}`)
+      .map(
+        (m) =>
+          `${translate(speakerLabel(m.speaker) + (m.corrected ? ' · corrigé' : ''))}\n${m.text}`,
+      )
       .join('\n\n')
   );
 }

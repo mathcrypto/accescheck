@@ -36,3 +36,41 @@ test('a sentence wrapped over several lines in the HTML source still matches', (
     'Find a practice that fits your needs.',
   );
 });
+test('profile management and reusable request labels are translated', () => {
+  assert.equal(translate('Votre profil d’accès.'), 'Your access profile.');
+  assert.equal(translate('Largeur minimale confirmée : 95 cm.'), 'Confirmed minimum width: 95 cm.');
+  assert.equal(translate('Passage ≥ 95 cm'), 'Clear width ≥ 95 cm');
+  assert.equal(translate('Profil supprimé de cet appareil.'), 'Profile deleted from this device.');
+});
+test('an explicit language still works when browser storage is refused', async () => {
+  const previous = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem() {
+      throw new Error('Storage refused');
+    },
+    setItem() {
+      throw new Error('Storage refused');
+    },
+  };
+  try {
+    const isolated = await import('../src/i18n.js?storage-refused');
+    assert.equal(isolated.lang, 'en');
+  } finally {
+    globalThis.localStorage = previous;
+  }
+});
+test('directory fallback notices, consent and geographic warnings are translated', () => {
+  assert.equal(
+    translate('Annuaire public : aucun besoin ni lieu n’a été interprété.'),
+    'Public directory: no needs or location have been interpreted.',
+  );
+  assert.equal(
+    translate('Mode dégradé sans agent. Les besoins d’accès restent à vérifier sur chaque fiche.'),
+    'Fallback mode without an agent. Access needs still need to be checked on each card.',
+  );
+  assert.equal(
+    translate('Évitez les noms et coordonnées personnels.'),
+    'Avoid names and personal contact details.',
+  );
+  assert.equal(translate('Lieu non vérifié par IGN.'), 'Location not verified by IGN.');
+});

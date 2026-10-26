@@ -1,4 +1,5 @@
 import { criteria, evidenceState } from './core.mjs';
+import { locale } from './i18n.js';
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -71,7 +72,7 @@ export function practiceCard(practice, origin = null, notes = []) {
       'distance',
       practice.distanceKm === null || practice.distanceKm === undefined
         ? 'Distance non calculée'
-        : practice.distanceKm.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) +
+        : practice.distanceKm.toLocaleString(locale, { maximumFractionDigits: 1 }) +
             ' km de votre adresse' +
             (origin?.approximate ? ' · depuis le centre du lieu choisi' : ''),
     ),
@@ -107,7 +108,7 @@ export function practiceCard(practice, origin = null, notes = []) {
           ' · ' +
           (check.source || 'Accès Libre') +
           (check.date
-            ? ' · ' + new Date(check.date).toLocaleDateString('fr-FR')
+            ? ' · ' + new Date(check.date).toLocaleDateString(locale)
             : ' · date non renseignée'),
       ),
     );

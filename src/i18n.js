@@ -1,27 +1,69 @@
-// Interface language for the home page. French is the source text; English is applied by
+// Interface language shared by all pages. French is the source text; English is applied by
 // replacing known French phrases in rendered text, so existing renderers stay unchanged.
 // shortcut: phrase replacement, not message keys; move to keyed messages if more languages come.
+import { consultationEnglish } from './consultation-i18n.js';
 function storedLang() {
+  const requested = new URLSearchParams(globalThis.location?.search || '').get('lang');
+  if (requested === 'en' || requested === 'fr') {
+    try {
+      localStorage.setItem('lang', requested);
+    } catch {}
+    return requested;
+  }
   try {
-    const requested = new URLSearchParams(location.search).get('lang');
-    if (requested === 'en' || requested === 'fr') localStorage.setItem('lang', requested);
     return localStorage.getItem('lang');
   } catch {
     return null;
   }
 }
 export const lang = storedLang() === 'en' ? 'en' : 'fr';
-
-export function setLang(value) {
-  try {
-    localStorage.setItem('lang', value);
-  } catch {}
-  const url = new URL(location.href);
-  url.searchParams.set('lang', value);
-  location.href = url.href;
-}
+export const locale = lang === 'en' ? 'en-GB' : 'fr-FR';
 
 const en = {
+  ...consultationEnglish,
+  'AccèsCheck · Mon profil d’accès': 'AccèsCheck · My access profile',
+  'Aller au profil d’accès': 'Go to access profile',
+  'Pour vos prochaines recherches': 'For your next searches',
+  'Votre profil d’accès.': 'Your access profile.',
+  'L’agent extrait vos besoins directement dans la conversation « Décrire mes besoins ». Vous choisissez ensuite de les conserver depuis le chat pour la prochaine fois.':
+    'The agent extracts your needs directly from the “Describe my needs” conversation. You can then choose to save them from the chat for next time.',
+  'Votre profil se crée dans la recherche.': 'Your profile starts in the search.',
+  'Décrivez vos besoins avec vos mots. L’agent vous propose des critères à vérifier, puis un enregistrement facultatif sur cet appareil.':
+    'Describe your needs in your own words. The agent suggests criteria to check, which you can choose to save on this device.',
+  'À partir de votre demande': 'From your request',
+  'Les besoins que vous avez confirmés.': 'The needs you have confirmed.',
+  'EXEMPLE FICTIF conservé · ne représente pas vos besoins réels.':
+    'Saved FICTIONAL EXAMPLE · does not represent your real needs.',
+  'Critères extraits par l’agent de votre demande, puis confirmés par vous.':
+    'Criteria extracted from your request by the agent, then confirmed by you.',
+  'Largeur minimale non renseignée : aucune mesure supposée.':
+    'Minimum width unknown: no measurement assumed.',
+  'Largeur minimale confirmée :': 'Confirmed minimum width:',
+  'Réutilisable sur ce navigateur jusqu’au': 'Reusable in this browser until',
+  'Modifier via Décrire mes besoins': 'Edit through Describe my needs',
+  'Supprimer mon profil': 'Delete my profile',
+  'Sur l’accueil, « Utiliser mon profil » prépare votre demande sans l’envoyer. Décrivez une correction dans le chat pour obtenir un nouveau profil à confirmer.':
+    'On the home page, “Use my profile” prepares your request without sending it. Describe a correction in the chat to get a new profile to confirm.',
+  'Vous gardez la main.': 'You stay in control.',
+  'Seuls les critères et la largeur éventuelle sont conservés dans ce navigateur, après votre accord distinct. Ni la demande, ni la conversation, ni le lieu ne sont enregistrés.':
+    'Only the criteria and optional width are saved in this browser, with your separate consent. The request, conversation and location are not saved.',
+  'Le profil expire après 30 jours et est supprimé à la prochaine lecture après expiration. Aucun compte ni synchronisation entre appareils. Les autres utilisateurs de ce navigateur peuvent le voir : évitez un appareil partagé.':
+    'The profile expires after 30 days and is deleted the next time it is read after expiry. There is no account or sync between devices. Other people using this browser can see it: avoid shared devices.',
+  'Revenir à Décrire mes besoins': 'Back to Describe my needs',
+  'Un profil confirmé ne garantit pas l’accessibilité d’un cabinet.':
+    'A confirmed profile does not guarantee that a practice is accessible.',
+  'La mémoire de ce navigateur est indisponible. Vous pouvez continuer à décrire vos besoins sans les conserver.':
+    'Browser storage is unavailable. You can still describe your needs without saving them.',
+  'Profil supprimé de cet appareil.': 'Profile deleted from this device.',
+  'La suppression a échoué. Vérifiez les réglages de stockage du navigateur.':
+    'Deletion failed. Check your browser storage settings.',
+  'Exemple fictif à tester, pas mes besoins réels.':
+    'Fictional example for testing, not my real needs.',
+  'Pour ma recherche, voici mes besoins d’accès à vérifier :':
+    'For my search, these are my access needs to check:',
+  'Passage utile d’au moins': 'Clear width of at least',
+  'Demandez-moi la profession et le lieu pour cette nouvelle recherche.':
+    'Ask me for the profession and location for this new search.',
   'EXEMPLE FICTIF · ': 'FICTIONAL EXAMPLE · ',
   'Votre profil d’accès se crée directement à partir de cette conversation.':
     'Your access profile is created directly from this conversation.',
@@ -77,8 +119,8 @@ const en = {
   'Lire la page': 'Read the page',
   'Je prépare un résumé de la page': 'Preparing a summary of the page',
   'Assistance OpenAI': 'OpenAI assistance',
-  'La recherche locale reste disponible. Avec votre accord, les messages de besoins et, pour « Lire la page », le texte visible à résumer sont transmis à OpenAI. Aucun texte n’est enregistré par l’application. Ne donnez pas votre nom ni vos coordonnées.':
-    'Local search remains available. With your consent, your needs messages and, for “Read the page”, the visible text to summarise are sent to OpenAI. The app stores no text. Do not give your name or contact details.',
+  'La recherche locale reste disponible. Avec votre accord, les messages de besoins et, pour « Lire la page », le texte visible à résumer sont transmis à OpenAI. Aucun historique de conversation n’est conservé. Seuls les critères du profil peuvent être gardés sur cet appareil, après un accord distinct. Ne donnez pas votre nom ni vos coordonnées.':
+    'Local search remains available. With your consent, your needs messages and, for “Read the page”, the visible text to summarise are sent to OpenAI. Conversation history is not saved. Only profile criteria can be kept on this device with separate consent. Do not give your name or contact details.',
   'J’accepte l’envoi de ma demande, du lieu et du contexte de cette conversation à OpenAI.':
     'I agree to send my request, the location and this conversation’s context to OpenAI.',
   'Enrichir les trois premières fiches avec des avis publics (OpenAI).':
@@ -117,6 +159,35 @@ const en = {
   'Je ne sais pas': 'I don’t know',
   Réessayer: 'Retry',
   'Consulter l’annuaire public': 'Open the public directory',
+  'Ouverture de l’annuaire public': 'Opening the public directory',
+  'Annuaire public : aucun besoin ni lieu n’a été interprété.':
+    'Public directory: no needs or location have been interpreted.',
+  'Mode dégradé sans agent. Les besoins d’accès restent à vérifier sur chaque fiche.':
+    'Fallback mode without an agent. Access needs still need to be checked on each card.',
+  'L’agent OpenAI est indisponible. Vous pouvez consulter l’annuaire public en mode dégradé.':
+    'The OpenAI agent is unavailable. You can browse the public directory in fallback mode.',
+  'Évitez les noms et coordonnées personnels.': 'Avoid names and personal contact details.',
+  'Résultats de la recherche confirmée.': 'Results for the confirmed search.',
+  'Ordre des fiches invalide. Actualisez la recherche.': 'Invalid card order. Refresh the search.',
+  'Confirmez une recherche avant de changer de page.': 'Confirm a search before changing page.',
+  'Ce choix ne correspond plus à la question actuelle.':
+    'This choice no longer matches the current question.',
+  'Aucune proposition à confirmer.': 'There is no proposal to confirm.',
+  'Lieu non vérifié par IGN.': 'Location not verified by IGN.',
+  'Un rayon nécessite un point IGN vérifié.': 'A radius requires an IGN-verified location.',
+  'Profession absente du catalogue.': 'Profession missing from the catalogue.',
+  'La largeur nécessite le critère passage large.': 'A width requires the wide entrance criterion.',
+  'Un accord distinct est nécessaire pour consulter les avis.':
+    'Separate consent is needed to check reviews.',
+  'Limite de recherche web atteinte pour ce tour.': 'Web search limit reached for this turn.',
+  'Contexte trop volumineux. Précisez votre recherche.':
+    'The context is too large. Narrow down your search.',
+  'Limite de contexte de recherche atteinte. Précisez votre demande.':
+    'Search context limit reached. Narrow down your request.',
+  'Limite d’outils atteinte. Précisez votre recherche.':
+    'Tool limit reached. Narrow down your search.',
+  'Limite de recherche atteinte. Précisez votre demande ; aucune recherche supplémentaire n’a été lancée.':
+    'Search limit reached. Narrow down your request; no further search was started.',
   'Vous pouvez aussi consulter les fiches publiques sans interprétation de votre demande.':
     'You can also browse the public cards without your request being interpreted.',
   'Vous pouvez reprendre cette demande ou écrire une correction.':
@@ -168,11 +239,13 @@ const en = {
   'Communication en LSF': 'French Sign Language (LSF)',
   'Aménagements sensoriels': 'Sensory adjustments',
   'Communication adaptée': 'Adapted communication',
-  'Passage ≥': 'Passage ≥',
+  'Passage ≥': 'Clear width ≥',
 
   // Results and cards
   'Résultats · hors conversation': 'Results · outside the conversation',
   'Les informations pour votre visite': 'Information for your visit',
+  'Détails · besoins à confirmer': 'Details · needs to confirm',
+  'Fiche Accès Libre ↗': 'Accès Libre card ↗',
   'Accessibilité, puis proximité, puis réputation si renseignée.':
     'Accessibility first, then distance, then reputation when known.',
   'fiche(s) · page': 'card(s) · page',
@@ -293,16 +366,24 @@ export const translate = (text) =>
     : text;
 
 // The patient's own words and practice identities are never rewritten.
-const untouched = '.bubble.user .say, .practice-card h3, .address, script, style';
+const untouched =
+  '.bubble.user .say, .practice-card h3, .address, #transcript .say, #interim, #practiceName, #practiceAddress, #langSwitch, script, style';
 function translateNode(node) {
   if (node.nodeType === Node.TEXT_NODE) {
-    if (node.parentElement?.closest(untouched)) return;
+    if (node.parentElement?.closest(untouched + ', textarea')) return;
     const value = translate(node.nodeValue);
     if (value !== node.nodeValue) node.nodeValue = value;
     return;
   }
   if (node.nodeType !== Node.ELEMENT_NODE || node.closest(untouched)) return;
+  if (node.matches('a[href^="/"]') && !node.getAttribute('href').startsWith('//')) {
+    const url = new URL(node.href);
+    url.searchParams.set('lang', lang);
+    const href = url.pathname + url.search + url.hash;
+    if (node.getAttribute('href') !== href) node.setAttribute('href', href);
+  }
   for (const name of ['placeholder', 'aria-label', 'title', 'alt', 'content']) {
+    if (name === 'aria-label' && node.matches('.practice-card')) continue;
     const value = node.getAttribute(name);
     if (value && translate(value) !== value) node.setAttribute(name, translate(value));
   }
@@ -311,6 +392,14 @@ function translateNode(node) {
 
 export function applyLanguage() {
   document.documentElement.lang = lang;
+  const switchLink = document.getElementById('langSwitch');
+  const next = lang === 'en' ? 'fr' : 'en';
+  const url = new URL(location.href);
+  url.searchParams.set('lang', next);
+  switchLink.textContent = next === 'fr' ? 'Français' : 'English';
+  switchLink.lang = next;
+  switchLink.hreflang = next;
+  switchLink.href = url.pathname + url.search + url.hash;
   if (lang !== 'en') return;
   document.title = translate(document.title);
   translateNode(document.head);
@@ -326,6 +415,6 @@ export function applyLanguage() {
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: ['placeholder', 'aria-label', 'title'],
+    attributeFilter: ['placeholder', 'aria-label', 'title', 'alt', 'content', 'href'],
   });
 }

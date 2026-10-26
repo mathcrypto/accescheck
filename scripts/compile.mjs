@@ -4,6 +4,10 @@ import { resolve } from 'node:path';
 
 const sharedStyles = await readFile('src/ui.css', 'utf8');
 const sharedHeader = await readFile('src/header.html', 'utf8');
+const brandMark = sharedHeader.match(/<svg[\s\S]*?<\/svg>/)[0];
+const favicon = `<link rel="icon" href="data:image/svg+xml;base64,${Buffer.from(
+  brandMark.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '),
+).toString('base64')}">`;
 const routes = {
   'src/index.html': '/',
   'src/consultation.html': '/consultation',
@@ -20,12 +24,13 @@ async function page(templatePath, entryPoint, stylePath) {
     .replace(
       '<!--HOME_CONTROLS-->',
       templatePath === 'src/index.html'
-        ? '<button id="pauseMotion" type="button" aria-pressed="false">Mettre les animations en pause</button><button id="langSwitch" type="button"></button>'
+        ? '<button id="pauseMotion" type="button" aria-pressed="false">Mettre les animations en pause</button>'
         : '',
     );
   template = template
     .replace('<!--SITE_HEADER-->', header)
-    .replace('<!--AGENT_MARK-->', sharedHeader.match(/<svg[\s\S]*?<\/svg>/)[0]);
+    .replace('<!--AGENT_MARK-->', brandMark)
+    .replace('</head>', favicon + '\n</head>');
   if (stylePath) {
     const styles = await readFile(stylePath, 'utf8');
     template = template.replace('/*PAGE_STYLE*/', () => styles + '\n' + sharedStyles);

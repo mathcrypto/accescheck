@@ -1,5 +1,5 @@
 import { renderMessage, renderRecap } from './chat-content.js';
-import { lang } from './i18n.js';
+import { lang, locale } from './i18n.js';
 import { rankByReputation } from './review-core.mjs';
 import { readChatResponse } from './chat-events.mjs';
 import { mountReviewCards } from './review-cards.js';
@@ -197,7 +197,7 @@ async function ask(input, choiceLabel = '', echo = true) {
       );
       $('dataset').textContent =
         'Accès Libre · export du ' +
-        new Date(result.dataset.exportedAt).toLocaleDateString('fr-FR') +
+        new Date(result.dataset.exportedAt).toLocaleDateString(locale) +
         '. ' +
         result.counts.knownObstaclesExcluded +
         ' obstacle(s) connu(s) exclu(s). Distances depuis votre adresse, aucun itinéraire vérifié.';

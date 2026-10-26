@@ -1,5 +1,6 @@
 import { criteria } from './core.mjs';
 import { profileKey, readProfile } from './profile-core.mjs';
+import { applyLanguage, locale } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 function refresh() {
@@ -22,7 +23,7 @@ function refresh() {
         ? 'Largeur minimale non renseignée : aucune mesure supposée.'
         : `Largeur minimale confirmée : ${profile.minWidth} cm.`;
     $('profileExpiry').textContent =
-      `Réutilisable sur ce navigateur jusqu’au ${new Date(profile.expiresAt).toLocaleDateString('fr-FR')}.`;
+      `Réutilisable sur ce navigateur jusqu’au ${new Date(profile.expiresAt).toLocaleDateString(locale)}.`;
   } catch {
     $('savedProfile').hidden = true;
     $('profileEmpty').hidden = false;
@@ -45,3 +46,4 @@ window.addEventListener('storage', (event) => {
   if (event.key === profileKey || event.key === null) refresh();
 });
 refresh();
+applyLanguage();
