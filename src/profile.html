@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AccèsCheck · Mon profil d’accès</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 8v48M11 20l42 24M11 44l42-24' stroke='%23bd292e' stroke-width='9'/%3E%3C/svg%3E"
+    />
+    <style>
+      /*PAGE_STYLE*/
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Aller au profil d’accès</a>
+    <!--SITE_HEADER-->
+    <main id="main" tabindex="-1">
+      <header class="page-heading">
+        <p class="eyebrow">Ne plus tout réexpliquer · Variante 04</p>
+        <h1>Votre profil d’accès.</h1>
+        <p>
+          L’agent extrait vos besoins directement dans la conversation « Décrire mes besoins ». Vous
+          choisissez ensuite de les conserver depuis le chat pour la prochaine fois.
+        </p>
+      </header>
+      <section id="profileEmpty" aria-labelledby="emptyTitle">
+        <h2 id="emptyTitle">Votre profil se crée dans la recherche.</h2>
+        <p>
+          Décrivez vos besoins avec vos mots. L’agent vous propose des critères à vérifier, puis un
+          enregistrement facultatif sur cet appareil.
+        </p>
+        <a id="describeNeeds" class="button primary" href="/#recherche">Décrire mes besoins</a>
+      </section>
+      <section id="savedProfile" class="saved-profile" aria-labelledby="savedTitle" hidden>
+        <p class="step">À partir de votre demande</p>
+        <h2 id="savedTitle">Les besoins que vous avez confirmés.</h2>
+        <p id="profileMode" class="hint"></p>
+        <ul id="savedProfileFacts"></ul>
+        <p id="savedProfileWidth"></p>
+        <p id="profileExpiry" class="hint"></p>
+        <div class="actions">
+          <a href="/#recherche" class="button primary">Modifier via Décrire mes besoins</a>
+          <button id="deleteProfile" type="button">Supprimer mon profil</button>
+        </div>
+        <p class="hint">
+          Sur l’accueil, « Utiliser mon profil » prépare votre demande sans l’envoyer. Décrivez une
+          correction dans le chat pour obtenir un nouveau profil à confirmer.
+        </p>
+      </section>
+      <p id="profileStatus" role="status"></p>
+      <aside class="privacy" aria-labelledby="privacyTitle">
+        <h2 id="privacyTitle">Vous gardez la main.</h2>
+        <p>
+          Seuls les critères et la largeur éventuelle sont conservés dans ce navigateur, après votre
+          accord distinct. Ni la demande, ni la conversation, ni le lieu ne sont enregistrés.
+        </p>
+        <p>
+          Le profil expire après 30 jours et est supprimé à la prochaine lecture après expiration.
+          Aucun compte ni synchronisation entre appareils. Les autres utilisateurs de ce navigateur
+          peuvent le voir : évitez un appareil partagé.
+        </p>
+      </aside>
+      <footer>
+        <a href="/#recherche">Revenir à Décrire mes besoins</a
+        ><span>Un profil confirmé ne garantit pas l’accessibilité d’un cabinet.</span>
+      </footer>
+    </main>
+    <script>
+      /*PAGE_SCRIPT*/
+    </script>
+  </body>
+</html>

@@ -127,3 +127,11 @@ Le smoke test final a trouvé le chat et les avis déployés mais `available:fal
 ### Alignement du modèle utilisateur
 
 Branche `fix/preferred-api-model` : conserver `gpt-5.4-mini`, faire respecter `OPENAI_MODEL` par le moteur principal en l’absence de surcharge dédiée, et aligner les exemples et valeurs par défaut. Tests contrôlés uniquement ; aucun appel de génération payant et aucune modification de la session Codex ni du fichier `.env` utilisateur.
+
+## Variante DevDay : profil réutilisable
+
+Demande explicite utilisateur du 26 octobre : extraction de profil par l’agent depuis la conversation Décrire mes besoins et conservation pour une prochaine fois. Stocker uniquement les critères structurés confirmés et la largeur, localement sur cet appareil après accord distinct, jamais conversation, diagnostic, identité, adresse ou état signé.
+
+L’entrée unique est `/#recherche`. Le navigateur utilise la proposition structurée que l’agent de recherche produit déjà, sans nouvel appel IA. Une correction, une nouvelle demande, un effacement ou une reprise invalident l’ancienne offre et son accord de conservation. `/profil` consulte/supprime le profil ; modifier revient dans le même chat. Le formulaire et l’endpoint d’extraction autonomes sont supprimés.
+
+Stockage antérieur compatible, expiration à 30 jours puis purge à la prochaine lecture, réutilisation sans envoi automatique et gestion du refus de stockage. Les tests contrôlent la demande ordinaire, une correction avant sauvegarde, le rechargement et la reprise, la suppression, les erreurs et les quatre largeurs d’écran. Aucun appel fournisseur payant.

@@ -22,6 +22,30 @@ export function setLang(value) {
 }
 
 const en = {
+  'EXEMPLE FICTIF · ': 'FICTIONAL EXAMPLE · ',
+  'Votre profil d’accès se crée directement à partir de cette conversation.':
+    'Your access profile is created directly from this conversation.',
+  'Vos besoins sont déjà là.': 'Your access needs are already here.',
+  'Utiliser mon profil': 'Use my profile',
+  'Consulter ou supprimer mon profil': 'View or delete my profile',
+  'Profil enregistré': 'Saved profile',
+  'Mon profil d’accès': 'My access profile',
+  'Profil extrait de votre demande': 'Profile extracted from your request',
+  'Corrigez les critères dans le chat avant de les enregistrer si nécessaire.':
+    'Correct the criteria in the chat before saving them if necessary.',
+  'Je confirme ces besoins et j’accepte de les garder sur cet appareil pendant 30 jours.':
+    'I confirm these needs and agree to keep them on this device for 30 days.',
+  'Ce navigateur conserve uniquement les critères et la largeur. Les autres utilisateurs de cet appareil peuvent les voir.':
+    'This browser keeps only the criteria and width. Other people using this device can see them.',
+  'Enregistrer mon profil d’accès': 'Save my access profile',
+  'Critères enregistrés pour 30 jours. La conversation et le lieu ne sont pas conservés.':
+    'Criteria saved for 30 days. The conversation and location are not saved.',
+  'Ce navigateur refuse l’enregistrement du profil. Votre recherche reste utilisable.':
+    'This browser could not save the profile. You can still search.',
+  'Votre message en cours est conservé. Affichez-le ou effacez-le avant de reprendre le profil.':
+    'Your current message is kept. Send or clear it before using your profile.',
+  'Profil préparé, sans envoi. Vérifiez votre accord OpenAI avant d’envoyer la demande.':
+    'Profile prepared without sending. Check your OpenAI consent before sending the request.',
   // Page, header and composer
   'AccèsCheck · Préparer votre rendez-vous': 'AccèsCheck · Prepare your appointment',
   'Décrivez vos besoins, confirmez vos critères et préparez votre rendez-vous médical.':
